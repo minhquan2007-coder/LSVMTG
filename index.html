@@ -1,186 +1,550 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="stylecss/style.css">
+    <title>Trắc Nghiệm Lịch Sử Văn Minh </title>
     <style>
-        .container{
-    max-width:960px;
-    margin:36px auto;
-    padding:20px;
-}
-header h1{
-    margin:0 0 8px;
-    font-size:1.4rem
-}
-header p{
-    margin:0;
-    color:#6b7280;
-}
-.drop1{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:18px;
-    margin-top:18px
-}
-.card{
-    background:#fff;
-    border-radius:12px;
-    padding:14px;
-    box-shadow:0 6px 18px rgba(15,23,42,0.06)
-}
-.meta{
-    font-size:0.85rem;
-    color:#6b7280;
-    margin-top:8px
-}
-.items{
-    display:flex;
-    flex-wrap:wrap;
-    gap:8px
-}
-.item{
-    padding:8px 12px;
-    border-radius:8px;
-    border:1px dashed #d1d5db;
-    background:#fff;
-    cursor:grab;
-    user-select:none
-} 
-.item [aria-grabbed="true"] {
-    outline:2px dashed #2563eb;
-    cursor:grabbing
-}
-.list{
-    display:flex;
-    flex-wrap:wrap;
-    gap:8px
-}
-.btn{
-    padding:6px 12px;
-    border-radius:8px;
-    border:none;
-    background-color: #2563eb;
-    color:white;
-    cursor:pointer;
-}
-.hint{
-    color:#6b7280;
-    font-size:0.9rem;
-    gap:10px;
-}
-.zone-title{
-    font-weight:600;
-    margin-bottom:6px;
-    color:#6b7280;
-}
-.drop2{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:12px
-}
-.dropzone{
-    min-height:160px;
-    border-radius:10px;
-    border:2px dashed #e6edf8;
-    padding:12px;
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-    align-items:flex-start
-}
+        /* --- Cập nhật màu nền một chút cho không khí mùa đông --- */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(to bottom, #d7e1ec, #ffffff); /* Nền chuyển màu nhẹ */
+            padding: 20px; 
+            display: flex; 
+            justify-content: center;
+            min-height: 100vh;
+            overflow-x: hidden; /* Ẩn thanh cuộn ngang do tuyết có thể bay ra ngoài */
+        }
+        
+        .quiz-container { 
+            background: #fff; 
+            width: 900px; 
+            max-width: 100%; 
+            padding: 30px; 
+            border-radius: 15px; /* Bo tròn hơn chút */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+            z-index: 10; /* Đảm bảo hộp câu hỏi nằm trên tuyết */
+            position: relative;
+        }
+        
+        h1 { text-align: center; color: #2c3e50; }
+        .stats { text-align: center; margin-bottom: 20px; font-weight: bold; color: #555; }
+        
+        .question-box { margin-bottom: 20px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; background: #fff;}
+        .question-title { background: #f1f8ff; padding: 15px; font-weight: 600; border-bottom: 1px solid #ddd; color: #003e6b; }
+        
+        .answer-label { display: block; padding: 12px 15px; cursor: pointer; border-bottom: 1px solid #eee; transition: 0.2s; }
+        .answer-label:hover { background: #fafafa; }
+        .answer-label:last-child { border-bottom: none; }
+        
+        /* Màu kết quả */
+        .correct { background-color: #d4edda !important; color: #155724; font-weight: bold; }
+        .correct::after { content: " ✓ Đúng"; float: right; }
+        .wrong { background-color: #f8d7da !important; color: #721c24; text-decoration: line-through; opacity: 0.8; }
+        .wrong::after { content: " ✕ Sai"; float: right; text-decoration: none; }
+        .disabled { pointer-events: none; }
 
+        /* Nút phân trang */
+        .pagination { display: flex; justify-content: center; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+        .page-btn { padding: 8px 15px; border: 1px solid #ddd; background: #fff; cursor: pointer; border-radius: 4px; }
+        .page-btn.active { background: #3498db; color: white; border-color: #3498db; }
+        .page-btn:hover:not(.active) { background: #eee; }
+
+        .nav-btn { background: #2c3e50; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; transition: background 0.3s;}
+        .nav-btn:hover { background: #34495e; }
+        .nav-btn:disabled { background: #ccc; cursor: not-allowed; }
+
+        /* --- CSS CHO HIỆU ỨNG TUYẾT RƠI --- */
+        .snowflake {
+            position: fixed;
+            top: -50px; /* Xuất phát cao hơn vì ảnh lớn hơn */
+            background-image: url(snowflake_2744-fe0f.png); 
+            background-size: contain;
+            background-repeat: no-repeat;
+            pointer-events: none; 
+            z-index: 9999; /* Để tuyết rơi TRÊN CÙNG (phủ lên cả bài thi) cho đẹp, hoặc để 1 nếu muốn nằm dưới */
+            opacity: 0.8;
+            animation: fall linear forwards;
+        }
+        .description {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+        @keyframes fall {
+            to {
+                /* Rơi xuống đáy màn hình và trôi dạt ngang ngẫu nhiên */
+                transform: translate(var(--drift-x), 105vh) rotate(360deg);
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>HTML5 Drag & Drop — Mô tả và Thiết kế</h1>
-            <p>Ví dụ thực tế có hỗ trợ bàn phím và fallback cho cảm ứng. Kéo thả các phần tử vào vùng nhận.</p>
-        </header>
-        <section class="drop1">
-          <div class="card">
-            <h2>Các phần tử có thể kéo</h2>
-            <p class="meta">Sử dụng chuột hoặc Tab để chọn.</p>
-            <div class="items" role="list" id="palette">
-              <button class="item" role="listitem" draggable="true" aria-grabbed="false">Táo</button>
-              <button class="item" role="listitem" draggable="true" aria-grabbed="false">Chuối</button>
-              <button class="item" role="listitem" draggable="true"   aria-grabbed="false">Cà rốt</button>
-              <button class="item" role="listitem" draggable="true" aria-grabbed="false">Cải bó xôi</button>
-            </div><br>
-            <div class="controls">
-              <div class="hint">Kéo vào một trong hai vùng bên phải</div>
-              <button id="reset" class="btn" type="button">Đặt lại</button>
-            </div>
-          </div>
-        <div>
-        <div class="card" style="margin-bottom:12px">
-          <h2>Khu vực nhận</h2>
-          <div class="drop2">
-            <div class="dropzone" tabindex="0" aria-dropeffect="none"  aria-label="Vùng nhận trái cây">
-              <div class="zone-title">Trái cây</div>
-              <div class="list" role="list" aria-live="polite"></div>
-            </div>
-            <div class="dropzone" tabindex="0" aria-dropeffect="none" aria-label="Vùng nhận rau">
-              <div class="zone-title">Rau củ</div>
-              <div class="list" role="list" aria-live="polite"></div>
-            </div>
-          </div>
-        </div>
-      <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        const items = document.querySelectorAll(".item");
-        const zones = document.querySelectorAll(".dropzone");
-        const resetBtn = document.getElementById("reset");
-        let draggedItem = null;
-      //kéo  
-      items.forEach(item => {
-          item.addEventListener("dragstart", e => {
-          draggedItem = item;
-          e.dataTransfer.effectAllowed = "move";
-          e.dataTransfer.setData("text/plain", item.textContent);
-          item.setAttribute("aria-grabbed", "true");
-        });
-        item.addEventListener("dragend", () => {
-          item.setAttribute("aria-grabbed", "false");
-          draggedItem = null;
-        });
-      });
-      //vùng nhận
-      zones.forEach(zone => {
-          zone.addEventListener("dragover", e => {
-            e.preventDefault(); //thả
-            zone.classList.add("over");
-          });
-          zone.addEventListener("dragleave", () => {
-            zone.classList.remove("over");
-          });
-          zone.addEventListener("drop", e => {
-            e.preventDefault();
-            zone.classList.remove("over");
-            if (draggedItem) {
-              zone.querySelector(".list").appendChild(draggedItem);
-              draggedItem.setAttribute("aria-grabbed", "false");
-              draggedItem = null;
-            }
-          });
-      });
-        //reset
-        resetBtn.addEventListener("click", () => {
-            const palette = document.getElementById("palette");
-              document.querySelectorAll(".dropzone .item").forEach(it => {
-                palette.appendChild(it);
-                });
-        });
-      });
-      </script>
+
+<div class="quiz-container">
+    <h1>Đề thi LỊCH SỬ VĂN MINH THẾ GIỚI</h1>
+    <p class="description">Lưu ý câu hỏi trong đây phục vụ cho mục đích ôn tập và tham khảo. Ký tên : Minh Quân </p>
+    <div class="stats" id="global-stats">Đã làm: 0/306 | Đúng: 0</div>
+    
+    <div id="quiz-area"></div>
+
+    <div class="pagination">
+        <button class="nav-btn" id="prev-btn" onclick="changePage(-1)">❮ Trang Trước</button>
+        <span id="page-info" style="align-self: center; font-weight: bold;">Trang 1</span>
+        <button class="nav-btn" id="next-btn" onclick="changePage(1)">Trang Sau ❯</button>
     </div>
+    
+    <div style="text-align: center; margin-top: 15px;">
+        Chọn trang: <select id="page-select" onchange="goToPage(this.value)"></select>
+    </div>
+</div>
+
+<script>
+    // --- PHẦN DỮ LIỆU CÂU HỎI (Giữ nguyên 306 câu) ---
+    const allQuestions = [
+        { q: "1. Nhận định nào về Văn Minh là đúng?", a: { A: "Văn minh có bề dày lịch sử từ khi con người xuất hiện", B: "Văn minh chỉ xuất hiện ở giai đoạn cao của văn hóa", C: "Văn Minh xuất hiện khi xã hội có sự phân hóa giàu nghèo", D: "Khái niệm Văn Minh và Văn Hóa không có sự khác biệt" }, true: "B" },
+        { q: "2. Hãy lựa chọn đáp án đúng về trung tâm văn minh lớn của phương Đông cổ đại", a: { A: "Ấn Độ, Trung Quốc, Nhật Bản, Đông Nam Á", B: "Trung Quốc, Lưỡng Hà, Nhật Bản, Ai Cập", C: "Trung Quốc, Lưỡng Hà, Ấn Độ, Ai Cập", D: "Nhật Bản, Lưỡng Hà, Đông Nam Á, Ấn Độ" }, true: "C" },
+        { q: "3. Văn minh Lưỡng Hà nằm ở khu vực nào sau đây?", a: { A: "Tây Âu", B: "Trung Đông", C: "Nam Á", D: "Trung Á" }, true: "B" },
+        { q: "4. Văn minh Ả Rập xuất hiện từ thời kỳ:", a: { A: "Cổ đại", B: "Cận đại", C: "Hiện đại", D: "Trung đại" }, true: "D" },
+        { q: "5. Ai Cập là tặng phẩm của dòng sông nào?", a: { A: "Sông Hoàng Hà", B: "Sông Hằng", C: "Sông Nile", D: "Sông Lưỡng Hà" }, true: "C" },
+        { q: "6. Các Pharaong tiến hành xây dựng Kim tự tháp từ khi nào trong cuộc đời của họ?", a: { A: "Khi họ sinh ra", B: "Khi họ lập gia đình", C: "Khi họ lên ngôi", D: "Sau khi họ chết, người con kế vị xây cho" }, true: "C" },
+        { q: "7. Vương triều nào của các Pharaong được mệnh danh là \"thời kỳ Kim tự tháp\"?", a: { A: "Vương triều III, IV", B: "Vương triều II, III", C: "Vương triều IV, V", D: "Vương triều I,II" }, true: "A" },
+        { q: "8. Công trình nào sau đây được Pharaong xây dựng đề tặng vợ?", a: { A: "Đền Loro Gionggrang", B: "Cung A Phòng", C: "Đền Taj Mahan", D: "Vườn treo Babilon" }, true: "A" },
+        { q: "9. Phát minh sớm nhất trong lĩnh vực thiên văn của người Ai Cập là?", a: { A: "La bàn", B: "Lịch", C: "Toán học", D: "Thần học" }, true: "B" },
+        { q: "10. Bộ luật Hammurabi nổi tiếng là của quốc gia cổ đại nào?", a: { A: "Ai cập", B: "Lưỡng Hà", C: "Ả rập", D: "Bắc phi và Tây á" }, true: "B" },
+        { q: "11. Hãy chỉ ra điểm nào sau đây của văn minh khác biệt so với văn hóa?", a: { A: "Văn minh chỉ giả trị kỹ thuật, giá trị tinh thần", B: "Văn minh chỉ thái độ hành xử văn minh lịch sự", C: "Văn minh chi sự thụ hưởng giá trị tinh thần ở trình độ cao", D: "Văn minh chi giá trị vật chất và tỉnh thần ở trình độ cao của các quốc gia" }, true: "D" },
+        { q: "12. Cách hiểu đúng nhất đối với khái niệm văn minh là?", a: { A: "Văn minh là sự tiến bộ về tinh thần của quốc gia", B: "Văn minh là khái niệm thuộc về phương Tây", C: "Dân tộc nào cũng có văn minh", D: "Văn minh là sự tiến bộ về mặt vật chất và tinh thần của các quốc gia" }, true: "D" },
+        { q: "13. Dãy số được người Maya xây dựng theo hệ thống số nào?", a: { A: "20", B: "60", C: "10", D: "12" }, true: "A" },
+        { q: "14. Nội dung của Văn học A rập chủ yếu biểu hiện ở hai mặt?", a: { A: "Truyền thuyết và thơ", B: "Thơ và truyện", C: "Truyện và truyền thuyết", D: "Thơ và tình yêu" }, true: "B" },
+        { q: "15. Tiêu chí hàng đầu để xác định một nền văn minh là khi có sự xuất hiện của?", a: { A: "Chữ viết", B: "Con người", C: "Nhà nước", D: "Chữ viết, nhà nước" }, true: "D" },
+        { q: "16. Bản chất của khái niệm văn minh là chỉ sự?", a: { A: "Tiến bộ", B: "Giá trị", C: "Phát triển", D: "Bền vững" }, true: "A" },
+        { q: "17. Nội dung chính trong văn học của người Lưỡng Hà gồm những bộ phận chủ yếu nào?", a: { A: "Văn học dân gian", B: "Sử thi", C: "Thần thoại", D: "Văn học dân gian, sử thi" }, true: "D" },
+        { q: "18. Bộ luật Hammuarabi của người Lưỡng Hà được chia làm mấy phần?", a: { A: "Một phần", B: "Hai phần", C: "Ba phần", D: "Bốn phần" }, true: "C" },
+        { q: "19. Nghệ thuật tạo hình của người Lưỡng Hà cổ đại bao gồm?", a: { A: "Kiến trúc", B: "Điêu khắc", C: "Hội họa", D: "Kiến trúc, điêu khắc" }, true: "D" },
+        { q: "20. Người Ai Cập phát hiện ra những thành tựu nào trong lĩnh vực khoa học tự nhiên?", a: { A: "Thiên văn", B: "Toán học", C: "Y học", D: "Cả 3 phương án trên đều đúng" }, true: "D" },
+        { q: "21. Người Ai Cập xây dựng kim tự tháp nhiều nhất vào vương triều?", a: { A: "Thứ I và II", B: "Thứ IV và V", C: "Thứ II và III", D: "Thứ III và IV" }, true: "D" },
+        { q: "22. Trị số Pi=3,16 là thành tựu của nền văn minh?", a: { A: "Văn minh Trung Hoa", B: "Văn minh Lưỡng Hà", C: "Văn minh Ai Cập", D: "Văn minh Ấn Độ" }, true: "C" },
+        { q: "23. Người Ai cập cổ đại dùng hình vẽ con nòng nọc để chỉ con số?", a: { A: "10.000", B: "10", C: "100.000", D: "1000" }, true: "C" },
+        { q: "24. Nghệ thuật tạo hình thuở ban đầu của Văn Minh Lưỡng Hà gồm?", a: { A: "Kiến trúc và điêu khắc", B: "Điêu khắc và tháp", C: "Kiến trúc và cung điện", D: "Tượng và kiến trúc" }, true: "A" },
+        { q: "25. Thành tựu kiến trúc nổi bật nhất của Lưỡng Hà là các công trình gồm?", a: { A: "Cung điện, vườn hoa", B: "Thành quách, tháp", C: "Tượng và tháp", D: "Điêu khắc và tượng" }, true: "A" },
+        { q: "26. Về mặt địa hình, Ai Cập là một quốc gia?", a: { A: "Đóng kin", B: "Không đóng kín", C: "Giáp biển", D: "Giáp núi" }, true: "A" },
+        { q: "27. Ai Cập là một quốc gia được chia làm mấy miền?", a: { A: "Một miền thống nhất", B: "Hai miền", C: "Ba miền", D: "Bốn miền" }, true: "B" },
+        { q: "28. Chữ tượng hình được người Ai Cập cổ đại dùng trong bao nhiêu năm?", a: { A: "1000 năm", B: "2000 năm", C: "3000 năm", D: "4000 năm" }, true: "C" },
+        { q: "29. Tượng nhân sư là bức tượng?", a: { A: "Mình sư tử - đầu người", B: "Mình sư tử - đầu dê", C: "Mình sư tử - đầu báo", D: "Mình sư tử, đầu dê, đầu báo" }, true: "A" },
+        { q: "30. Lưỡng Hà là một quốc gia có vị trí địa hình?", a: { A: "Hiểm trở", B: "Để ngỏ ở mọi phía", C: "Đóng kín ở mọi phía", D: "Cả ba phương án trên đều sai" }, true: "B" },
+        { q: "31. Lưỡng Hà là một quốc gia có nguồn tài nguyên quý hiếm đó là?", a: { A: "Đá quý", B: "Kim loại", C: "Đất sét", D: "Than đá" }, true: "C" },
+        { q: "32. Chữ viết ở Lưỡng Hà đầu tiên do người Xume sáng tạo vào?", a: { A: "Cuối thiên niên kỷ IV - TCN", B: "Cuối thiên niên kỷ V- TCN", C: "Cuối thiên niên kỷ VI TCN", D: "Cuối thiên niên kỷ VII TCN" }, true: "A" },
+        { q: "33. Tổng số chữ tiết hình của người Lưỡng Hà trong thời kỳ đầu là?", a: { A: "300 chữ", B: "400 chữ", C: "500 chữ", D: "600 chữ" }, true: "D" },
+        { q: "34. Theo giáo luật Islam (Hồi giáo), vòng đời của tín đồ sẽ được trải nghiệm ở mấy thế giới (côi):", a: { A: "Hai thế giới", B: "Ba thế giới", C: "Bốn thế giới", D: "Năm thế giới" }, true: "A" },
+        { q: "35. Theo giáo luật Islam (Hồi giáo), tín đồ sau khi chết sẽ được:", a: { A: "Thiên táng", B: "Điều táng", C: "Hỏa táng", D: "Địa tang" }, true: "D" },
+        { q: "36. Theo giáo luật Islam (Hồi giáo), tín đồ Islam kiêng ăn:", a: { A: "Thịt lợn", B: "Động vật lưỡng cư", C: "Động vật ăn thịt hoặc có móng vuốt", D: "Cả ba phương án trên đều đúng" }, true: "A" },
+        { q: "37. Người Lưỡng Hà sử dụng bộ chữ tượng hình đầu tiên có bao nhiêu chữ?", a: { A: "2000 chữ", B: "600 chữ", C: "300 chữ", D: "100 chữ" }, true: "A" },
+        { q: "38. Người Ai Cập cổ đại thờ các vị thần nào?", a: { A: "Thần Mặt trời", B: "Thần mặt trăng", C: "Thần Linh", D: "Thần mặt trời và mặt trăng" }, true: "D" },
+        { q: "39. Người Ai Cập cổ đại đặt ra lịch dựa trên kết quả quan sát của?", a: { A: "Các vì sao", B: "Quy luật nước sông Nin", C: "Quy luật mặt trời mọc", D: "Cả 3 phương án trên đều sai" }, true: "B" },
+        { q: "40. Thành tựu toán học đầu tiên của người Lưỡng Hà là?", a: { A: "Đại số", B: "Hình học", C: "Phép đếm", D: "Bộ đếm" }, true: "C" },
+        { q: "41. Người Ai Cập xây dựng kim tự tháp để sử dụng vào mục đích gì trong cuộc sống?", a: { A: "Làm lăng mộ", B: "Làm công trình quân sự", C: "Làm nơi ở cho hoàng tộc", D: "Làm nơi tiến hành các nghi lễ tế thần" }, true: "A" },
+        { q: "42. Người Ai Cập cổ đại sử dụng loại chữ nào buổi ban đầu?", a: { A: "Tượng thanh", B: "Tượng hình", C: "Tượng âm", D: "Chữ cổ latinh" }, true: "B" },
+        { q: "43. Người Ai Cập thờ các vị thần nào trong đời sống tôn giáo của họ?", a: { A: "Các vị thần tự nhiên", B: "Các thần động vật", C: "Thiên thần, địa thần", D: "Tất cả các vị thần trên" }, true: "D" },
+        { q: "44. Người Ai Cập thường sử dụng các thành tựu văn học để ca ngợi?", a: { A: "Các chiến binh", B: "Các Pharaon", C: "Những người xây dựng kim tự tháp", D: "Các vị thần" }, true: "D" },
+        { q: "45. Ai Cập cổ đại là tặng phẩm của sông Nin vì:", a: { A: "Sông Nin bồi đắp phù sa, phát triển nông nghiệp", B: "Sông Nin cung cấp lượng thủy sản dồi dào", C: "Sông Nin thuận tiện cho giao thông đường thủy", D: "Cả 3 phương án trên đều đúng" }, true: "D" },
+        { q: "46. Nguyên nhân chính làm cho đất nước Ai Cập ban đầu hùng mạnh, nhưng sau đó dần suy yếu và bị đế quốc La Mã xâm chiếm vào năm 30 TCN là:", a: { A: "Các Pharaong tập trung mọi nguồn lực để xây dựng kim tự tháp", B: "Cuộc nổi dậy của nông dân và nô lệ", C: "Thiên tai", D: "Sự xâm lược của Đế quốc La Mã" }, true: "B" },
+        { q: "47. Các Pharaong Ai Cập luôn chuẩn bị cho việc ướp xác của mình vì:", a: { A: "Các Pharaong muốn hiến dâng thân xác cho các vị thần", B: "Niềm tin linh hồn là bất biến", C: "Các Pharaong xem cái chết là linh hồn tạm thời về với vị thần bảo hộ", D: "Cả 3 phương án trên đều đúng" }, true: "D" },
+        { q: "48. Vị thần chủ của Quốc gia Ai Cập là:", a: { A: "Amun", B: "Mut", C: "Osiris", D: "Anubis" }, true: "A" },
+        { q: "49. Khi nói đến Vườn hoa trên không và Thành Babilon - một trong bảy kỳ quan của thế giới cổ đại, người ta thường nhắc đến người:", a: { A: "Semites", B: "Libi", C: "Hy Lạp", D: "La Mã" }, true: "A" },
+        { q: "50. Nguyên nhân chính làm cho văn minh Lưỡng Hà lụi tàn vào năm 539 tr.CN là:", a: { A: "Patêsi (Vua) tập trung xây dựng vườn hoa trên không và Thành Babilon", B: "Nước có địa hình để ngỏ mọi phía, không có biên giới bảo vệ", C: "Cuộc nổi dậy của nông dân và nô lệ", D: "Thiên tai" }, true: "D" },
+        { q: "51. Vị thần chủ của Quốc gia Lưỡng Hà là:", a: { A: "Các vị thần tự nhiên", B: "Chim Ưng", C: "Cá sấu", D: "Cả 3 phương án trên đều sai" }, true: "D" },
+        { q: "52. Tín đồ Islam (Hồi giáo) không thờ ảnh tượng, địa vị người họa sĩ rất thấp vì:", a: { A: "Giáo luật cấm các tín đồ hoạt động nghệ thuật", B: "Ala hóa thân hơn 3000 sự vật, không ảnh tượng nào chứa được hóa thân của Ngài", C: "Không cấm các tín đồ hoạt động nghệ thuật", D: "Cả 3 phương án trên đều đúng" }, true: "B" },
+        { q: "53. Nguyên nhân khiến tín đồ Islam (Hồi giáo) không ăn thịt lợn:", a: { A: "Do con lợn ăn tạp", B: "Tôn thờ con lợn", C: "Trong 3 ngày chờ phán xét, con lợn đói quá, đi ăn phân của các loài động vật khác", D: "Cả 3 phương án trên đều sai" }, true: "C" },
+        { q: "54. Ấn Độ là một bán đảo ở?", a: { A: "Nam Á", B: "Tây Á", C: "Bắc Á", D: "Đông Bắc" }, true: "A" },
+        { q: "55. Ấn Độ là một quốc gia được chia làm mấy miền?", a: { A: "Một miền thống nhất", B: "Hai miền", C: "Ba miền", D: "Cả ba phương án trên đều sai" }, true: "B" },
+        { q: "56. Từ rất sớm, người Ấn Độ đã chia một năm thành bao nhiêu tháng?", a: { A: "9 tháng", B: "10 tháng", C: "11 tháng", D: "12 tháng" }, true: "D" },
+        { q: "57. Nghệ thuật tạo hình của người Ấn Độ, phần lớn tập trung vào chủ đề?", a: { A: "Tôn giáo", B: "Văn học", C: "Nghệ thuật", D: "Điêu khắc" }, true: "A" },
+        { q: "58. Bán đảo nào thuộc địa phận của quốc gia Ấn Độ?", a: { A: "Đông Á", B: "Tây Á", C: "Nam Á", D: "Bắc Á" }, true: "C" },
+        { q: "59. Lăng TajMahal là một công trình tiêu biểu nhất của Ấn Độ thời Mogon được xây dựng vào thế kỷ nào?", a: { A: "Thế kỷ XVI", B: "Thế kỷ XVII", C: "Thế kỷ XVIII", D: "Thế kỷ XIX" }, true: "B" },
+        { q: "60. Giữa thiên niên kỷ trước công nguyên, ở Ấn Độ xuất hiện dòng tư tưởng chống lại đạo Bà La Môn, trong đó có đạo?", a: { A: "Đạo Phật", B: "Thiên chúa giáo", C: "Kito giáo", D: "Cao đài" }, true: "A" },
+        { q: "61. Nền văn học của Ấn Độ rất phát triển vào thời cổ đại gồm hai bộ phận quan trọng đó là Veeda và?", a: { A: "Sử thi", B: "Dân gian", C: "Truyền thuyết", D: "Ngụ ngôn" }, true: "A" },
+        { q: "62. Số Pi là 3,1416 được người Ấn Độ đã tính một cách chính xác vào thế kỷ nào?", a: { A: "Thế kỳ III", B: "Thế kỷ IV", C: "Thế kỷ V", D: "Thế kỷ VI" }, true: "D" },
+        { q: "63. Nghệ thuật Ấn Độ thời cổ trung đại nổi bật nhất là các ngành?", a: { A: "Kiến trúc, nghệ thuật", B: "Điêu khắc, kiến trúc", C: "Kiến trúc, hình học", D: "Nghệ thuật, điêu khắc" }, true: "B" },
+        { q: "64. Tôn giáo nào được người Ấn Độ coi trọng về mặt đẳng cấp?", a: { A: "Islam (Hồi giáo)", B: "Thiên chúa giáo", C: "Đạo giáo", D: "Đạo Bà la môn" }, true: "D" },
+        { q: "65. Theo quan niệm của Hindu giáo, Liga là biểu tượng của:", a: { A: "Thần Siva", B: "Không của thần nào", C: "Thần Brahma", D: "Thần Vishnu" }, true: "A" },
+        { q: "66. Ấn Độ là quốc gia sản sinh ra các tôn giáo chính nào?", a: { A: "Thiên chúa giáo", B: "Islam (Hồi giáo)", C: "Nho giáo", D: "Đạo Phật" }, true: "D" },
+        { q: "67. Nội dung chính trong học thuyết của đạo Phật là?:", a: { A: "Tứ diệu đế", B: "Tứ chân đế", C: "Tứ khổ đế", D: "Tứ mệnh đế" }, true: "A" },
+        { q: "68. Trong lĩnh vực Toán học người Ấn độ đã sáng tạo ra?", a: { A: "Sáng tạo hình không gian", B: "Sáng tạo số Pi", C: "Sáng tạo ra 10 chữ số", D: "Sáng tạo ra chữ viết" }, true: "C" },
+        { q: "69. Giữa thiên niên kỷ 1 - TCN, ở Ấn Độ đã xuất hiện một số dòng tư tưởng chống lại đạo Bà la môn là?", a: { A: "Đạo Xích", B: "Đạo hindu", C: "Đạo Thiên chúa giáo", D: "Đạo Phật" }, true: "D" },
+        { q: "70. Hai nội dung chủ yếu trong nền văn học được người Ấn Độ sử dụng là?", a: { A: "Veda và truyền thuyết", B: "Sử thi và truyền thuyết", C: "Truyền thuyết và Veda", D: "Veda và sử thi" }, true: "D" },
+        { q: "71. Người theo Islam (Hồi giáo) thường thờ các ảnh tượng nào trong cuộc sống của họ?", a: { A: "Tượng phật", B: "Ảnh Thánh Ala", C: "Ảnh bà Lamon", D: "Không thờ ảnh tượng." }, true: "D" },
+        { q: "72. Trong chế độ hôn nhân, người Hồi giáo cho phép đàn ông được lấy?", a: { A: "Bốn vợ", B: "Ba vợ.", C: "Hai vợ", D: "Một vợ." }, true: "A" },
+        { q: "73. Đạo Bà La Môn có nội dung rất quan trọng trong giáo lý của mình được ứng dụng trong cuộc sống đó là?", a: { A: "Thờ thần Brama", B: "Không thờ các vị thần khác", C: "Thuyết luân hồi", D: "Thờ các loài động vật" }, true: "A" },
+        { q: "74. Thi nhân nổi tiếng trong thơ Đường của văn học Trung Quốc là?", a: { A: "Khổng Tử", B: "Mạnh Tử.", C: "Lý Bạch.", D: "Ban Cố." }, true: "C" },
+        { q: "75. Thi nhân nổi tiếng trong thơ Đường của văn học Trung Quốc là?", a: { A: "Mạnh Tử", B: "Tuân Tử", C: "Bạch Cư Dị.", D: "Trang Tử" }, true: "C" },
+        { q: "76. Thi nhân nổi tiếng trong thơ Đường của văn học Trung Quốc là?", a: { A: "Tuân Tử", B: "Trang Tử", C: "Đỗ Phủ", D: "Khổng Tử" }, true: "C" },
+        { q: "77. Trung Quốc có bao nhiêu phát minh lớn về kỹ thuật thời Trung đại?", a: { A: "Ba phát minh", B: "Bốn phát minh", C: "Năm phát minh", D: "Sáu phát minh" }, true: "B" },
+        { q: "78. Bát quái gồm mấy quẻ?", a: { A: "Hai quẻ", B: "Bốn quẻ", C: "Sáu quẻ", D: "Tám quẻ" }, true: "D" },
+        { q: "79. Một trong những yếu tố nào sau đây thuộc Ngũ hành trong thuyết âm dương?", a: { A: "Bát quái", B: "Âm dương", C: "Hành mộc", D: "Ngũ Hành" }, true: "C" },
+        { q: "80. Một trong những yếu tố nào sau đây thuộc Ngũ hành trong thuyết âm dương?", a: { A: "Âm dương", B: "Bát quái", C: "Hành Kim", D: "Ngũ Hành" }, true: "C" },
+        { q: "81. Một trong những yếu tố nào sau đây thuộc Ngũ hành trong thuyết âm dương?", a: { A: "Bát quái", B: "Âm dương", C: "Hành thủy", D: "Ngũ Hành" }, true: "C" },
+        { q: "82. Một trong những yếu tố nào sau đây thuộc Ngũ hành trong thuyết âm dương?", a: { A: "Bát quái", B: "Âm dương", C: "Hành thổ", D: "Ngũ Hành" }, true: "C" },
+        { q: "83. Người có công đặt tư tưởng Nho giáo đầu tiên ở Trung Quốc là?", a: { A: "Mạnh Tử", B: "Tuân Tử", C: "Hàn Tử", D: "Khổng Tử" }, true: "D" },
+        { q: "84. Vạn lý trường thành chủ yếu sử dụng nhân công nào để xây dựng?:", a: { A: "Nông dân và thanh niên", B: "Binh lính và tù nhân", C: "Quân chư hầu và thanh niên", D: "Nông dân và binh lính" }, true: "B" },
+        { q: "85. Tư tưởng của Phật giáo trong thời kỳ đầu là:", a: { A: "Đa thần giáo", B: "Vô thần", C: "Duy tâm khách quan", D: "Duy tâm chủ quan" }, true: "B" },
+        { q: "86. Thông tin nào sau đây không chính xác khi nói về tư tưởng của Nho giáo?", a: { A: "Thuyết chính danh định mệnh", B: "Tin trời, ma quỷ là có thật;", C: "Coi trọng giáo dục Tam cương, ngũ thường", D: "Yêu thương con người" }, true: "A" },
+        { q: "87. Tam cương trong Nho giáo gồm những mối quan hệ nào?", a: { A: "Vua tôi", B: "Cha con", C: "Vợ chồng", D: "Cả 3 phương án trên đều đúng" }, true: "D" },
+        { q: "88. Kỹ thuật nào là kỹ thuật được phát minh thời trung đại ở Trung Quốc?", a: { A: "Thuốc đông y", B: "Làm giấy", C: "Luyện kim", D: "Làm gốm" }, true: "B" },
+        { q: "89. Kỹ thuật nào là kỹ thuật được phát minh thời trung đại ở Trung Quốc?", a: { A: "Dệt lụa", B: "In", C: "Y học", D: "Làm gốm" }, true: "B" },
+        { q: "90. Kỹ thuật nào là kỹ thuật được phát minh thời trung đại ở Trung Quốc?", a: { A: "Y học", B: "Gốm", C: "Thuốc súng", D: "Dệt lụa" }, true: "C" },
+        { q: "91. Kỹ thuật nào là kỹ thuật được phát mình thời trung đại ở Trung Quốc?", a: { A: "Dệt lụa", B: "Kim chỉ nam", C: "Y học", D: "Luyện kim" }, true: "B" },
+        { q: "92. Bát quái tượng trưng cho mấy yếu tố vật chất tạo thành thế giới?", a: { A: "Hai yếu tố", B: "Bốn yếu tố", C: "Sáu yếu tố", D: "Tám yếu tố" }, true: "D" },
+        { q: "93. Nội dung quan điểm đạo đức của Khổng Tử bao gồm những mặt quan trọng nào?", a: { A: "Nhân - lễ", B: "Nghĩa - Trí", C: "Tín", D: "Cả 3 phương án trên đều đúng" }, true: "D" },
+        { q: "94. Thi Hương là kỳ thi ở cấp nào trong khoa cử của người Trung Quốc thời Đường?", a: { A: "Cấp làng", B: "Cấp hội", C: "Cấp tỉnh", D: "Cấp xã" }, true: "C" },
+        { q: "95. Trung Quốc là một quốc gia ở phía?", a: { A: "Nam Á", B: "Đông Á", C: "Tây Á", D: "Bắc Á" }, true: "B" },
+        { q: "96. Trung Quốc có mấy con sông lớn?", a: { A: "Không có", B: "Hai sông lớn", C: "Ba sông lớn", D: "Bốn sông lớn" }, true: "B" },
+        { q: "97. Chế độ khoa cử giáo dục của Trung Quốc đến năm bao nhiêu thì bãi bỏ?", a: { A: "1900", B: "1905", C: "1910", D: "1915" }, true: "B" },
+        { q: "98. Nho gia ở Trung Quốc là trường phái coi trọng việc?", a: { A: "Sản xuất", B: "Kinh tế", C: "Học tập", D: "Trị nước" }, true: "D" },
+        { q: "99. Đường lối pháp gia được áp dụng trong cuộc sống của người Trung Quốc là:", a: { A: "Chú trọng SX nông nghiệp, chiến đấu, coi trọng VH, giáo dục", B: "Chú trọng SX nông nghiệp, chiến đấu, không coi trọng VH, giáo dục", C: "Chú trọng SX nông nghiệp, chiến đấu, coi trọng VH, giáo dục", D: "Chú trọng đến giáo dục" }, true: "A" },
+        { q: "100. Tư tưởng của Nho giáo của Khổng Tử được ứng dụng trong cuộc sống gồm bốn mặt nào?", a: { A: "Triết học, trị nước, trị dân, nho giáo", B: "Tư tưởng, giáo dục, trị dân, trị nước", C: "Triết học, đạo đức, chính trị, giáo dục", D: "Chính trị, triết học, trị nước, trị dân" }, true: "C" },
+        { q: "101. Người Trung Quốc đưa ra học thuyết âm dương để giải thích nguồn gốc về?", a: { A: "Vạn vật", B: "Hai sự vật", C: "Một số sự vật", D: "Tất cả sự vật" }, true: "A" },
+        { q: "102. Người Trung Quốc ứng dụng ngũ hành trong thuyết bát quái gồm mấy tác nhân tạo nên sự vật?", a: { A: "Ba tác nhân", B: "Năm tác nhân", C: "Bảy tác nhân", D: "Chín tác nhân" }, true: "B" },
+        { q: "103. Người Trung Quốc thời Đường, thường tổ chức kỳ thi Hội ở?", a: { A: "Đình làng", B: "Kinh đô", C: "Trong chùa", D: "Trong miếu" }, true: "B" },
+        { q: "104. Người Trung Quốc thời Đường, thường tổ chức kỳ thi Điện (thi Đình) ở?", a: { A: "Đình làng", B: "Cung vua", C: "Cung điện", D: "Trong miếu" }, true: "B" },
+        { q: "105. Người Trung Quốc luôn tự hào về hai con sông lớn, có ảnh hưởng đến phát triển nông nghiệp của họ đó là?", a: { A: "Sông Trường Giang", B: "Sông Hoàng Hà", C: "Sông Mêkong", D: "Sông Trường Giang và Hoàng Hà" }, true: "D" },
+        { q: "106. Người Trung Quốc cổ xưa đã chia một ngày đêm thành bao nhiêu giờ?", a: { A: "12 giờ", B: "20 giờ", C: "24 giờ", D: "Cả 3 phương án trên đều sai" }, true: "A" },
+        { q: "107. Chữ Giáp cốt đầu tiên được người Trung Quốc được viết trên?", a: { A: "Đất sét", B: "Mai rùa", C: "Xương thú", D: "Đất sét, mai rùa" }, true: "B" },
+        { q: "108. Hai con sông lớn ở Trung Quốc hàng năm đem lại lượng phù sa bồi đắp cho sự phát triển nông nghiệp, được người dân Trung Quốc tự hào, đều chảy theo hai hướng Đông - Tây, đó là:", a: { A: "Sông Dương Tử", B: "Sông Trường Giang", C: "Sông Hoàng Hà", D: "Sông Dương Tử và Trường Giang" }, true: "D" },
+        { q: "109. Thước đo tri thức của người Trung Quốc trong thời cổ trung đại là?", a: { A: "Văn chương", B: "Thi cử", C: "Hội họa", D: "Văn chương và thi cử" }, true: "B" },
+        { q: "110. Người Trung Quốc đã có phát minh lớn trong nghề làm giấy, phát minh này được truyền sang Việt nam vào thế kỷ nào?", a: { A: "Thế kỷ 3", B: "Thế kỷ 4", C: "Thế kỷ 5 TCN.", D: "Thế kỷ 6" }, true: "A" },
+        { q: "111. Người Trung Quốc đã có phát minh lớn trong nghề in phát minh này được truyền sang Việt nam vào đời nào?", a: { A: "Đời Chu", B: "Đời Đường", C: "Đời Minh", D: "Đời Thanh" }, true: "B" },
+        { q: "112. Thuốc súng là một phát minh ngẫu nhiên của người Trung Quốc, nhưng phát minh này đã được dùng làm vũ khí trong chiến đấu và được sử dụng vào thế kỷ nào?", a: { A: "Thế kỷ VIII", B: "Thế kỷ IX", C: "Thế kỷ X", D: "Thế kỷ XI" }, true: "C" },
+        { q: "113. La Bàn (kim chỉ nam) được các thầy phong thủy Trung Quốc sử dụng đầu tiên để?", a: { A: "Dự báo thời tiết", B: "Liên lạc khi chiến đấu", C: "Chỉ đường khi đi biển", D: "Xem hướng đất" }, true: "D" },
+        { q: "114. Thầy thuốc nào là thầy thuốc đa năng của Trung Quốc, ông đã có phát minh dùng rượu để gây mê cho bệnh nhân trước khi mổ?", a: { A: "Hoa Đà", B: "Trân Biển", C: "Thước Trương", D: "Trọng Cảnh" }, true: "A" },
+        { q: "115. Đền Angkor Wat là ngôi đền thờ vị thần nào?", a: { A: "Brahma", B: "Vishnu", C: "Indra", D: "Shiva" }, true: "B" },
+        { q: "116. Tục thờ Thần - Vua và kiến trúc đền núi xuất hiện ở quốc gia nào?", a: { A: "Thái Lan", B: "Campuchia", C: "Lào", D: "Indonesia" }, true: "B" },
+        { q: "117. Quốc gia cổ đại nào đã phát minh ra hệ đếm lục thập phân (60)?", a: { A: "Ai Cập", B: "Lưỡng Hà", C: "Trung Quốc", D: "Không quốc gia nào" }, true: "B" },
+        { q: "118. Đông Nam Á là khu vực rộng, diện tích khoảng?", a: { A: "4,5 triệu km2", B: "5,5 triệu km2", C: "3,5 triệu km2", D: "25,0 triệu km2" }, true: "A" },
+        { q: "119. Một phần lãnh thổ của quốc gia nào ở Đông Nam Á vẫn có mùa đông lạnh?", a: { A: "Phía bắc Mi-an-ma", B: "Phía nam Việt Nam.", C: "Phía bắc của Lào.", D: "Phía bắc Phi-lip-pin" }, true: "A" },
+        { q: "120. Đảo lớn nhất trong khu vực Đông Nam Á và lớn thứ ba trên thế giới là?", a: { A: "Gia-va", B: "Lu-xôn.", C: "Xu-ma-tra", D: "Ca-li-man-tan." }, true: "D" },
+        { q: "121. Khu vực Đông Nam Á bao gồm có?", a: { A: "12 quốc gia", B: "11 quốc gia", C: "10 quốc gia", D: "21 quốc gia" }, true: "B" },
+        { q: "122. Vị vua nào ở Campuchia đã mở đầu cho thời kỳ Angkor?", a: { A: "Jayavarman I", B: "Jayavarman II", C: "Jayvarman IV", D: "Jayavarman VII" }, true: "D" },
+        { q: "123. Angkor Wat là công trình kiến trúc?", a: { A: "Đền thờ thần", B: "Cung điện", C: "Quân sự", D: "Lăng mộ" }, true: "A" },
+        { q: "124. Đông Nam Á tiếp giáp với các đại dương nào dưới đây?", a: { A: "Thái Bình Dương và Đại Tây Dương.", B: "Thái Bình Dương và Ấn Độ Dương.", C: "Ấn Độ Dương và Đại Tây Dương.", D: "Ấn Độ Dương và Bắc Băng Dương" }, true: "B" },
+        { q: "125. Phần lớn Đông Nam Á lục địa có khí hậu?", a: { A: "Xích đạo.", B: "Cận nhiệt đới.", C: "Ôn đới.", D: "Nhiệt đới gió mùa" }, true: "D" },
+        { q: "126. Phần đất liền của khu vực Đông Nam Á mang tên là?", a: { A: "Bán đảo Đông Dương.", B: "Bán đảo Mã Lai.", C: "Bán đảo Trung - Ấn.", D: "Bán đảo Tiểu" }, true: "C" },
+        { q: "127. Đông Nam Á xuất hiện trên bản đồ chính trị thế giới khi nào?", a: { A: "Sau chiến tranh thế giới thứ nhất", B: "Sau chiến tranh thế giới thứ hai", C: "Đầu thế kỷ 19", D: "Cuối thế kỷ 19" }, true: "B" },
+        { q: "128. Yếu tố nào giúp ĐNA trở nên xanh tốt và trù phú?", a: { A: "Khí hậu Gió mùa và khí hậu biển", B: "Nhiều sông ngòi", C: "Gần biển", D: "Nhiều sông và gần biển" }, true: "A" },
+        { q: "129. Tôn giáo tín ngưỡng của khu vực Đông nam á chịu ảnh hưởng lớn nhất từ tôn giáo nào?", a: { A: "Phật giáo", B: "Ấn độ giáo", C: "Nho giáo", D: "Đạo giáo" }, true: "B" },
+        { q: "130. Con voi là biểu tượng của quốc gia nào?", a: { A: "Mianma", B: "Việt Nam", C: "Camphuchia", D: "Thái lan" }, true: "D" },
+        { q: "131. Quốc gia nào sau đây nằm ở bộ phận Đông Nam Á lục địa?", a: { A: "Ma-lai-xi-a", B: "Singgapo.", C: "Thái Lan.", D: "In-đô-nê-xi" }, true: "C" },
+        { q: "132. Tục thờ mẫu xuất hiện ở quốc gia nào khu vực Đông Nam Á?", a: { A: "Thái Lan", B: "Việt Nam", C: "Lào", D: "Indonesia" }, true: "B" },
+        { q: "133. Đền Angkor Wat là ngôi đền thờ nổi tiếng nhất Đông Nam Á được xây dựng vào thế kỷ nào?", a: { A: "Thế kỷ X", B: "Thế kỷ XI", C: "Thế kỷ XII", D: "Thế kỷ XIII" }, true: "B" },
+        { q: "134. Đền Angkor Wat là biểu tượng của quốc gia nào?", a: { A: "Lào", B: "Việt Nam", C: "Camphuchia", D: "Thái lan" }, true: "C" },
+        { q: "135. Biểu tượng của Singapo là gì?", a: { A: "Đền Angkor Wat", B: "Tượng Merlion", C: "Chim thần", D: "Garuda Pak Belang" }, true: "B" },
+        { q: "136. Chùa vàng Swedalgon là của quốc gia nào?", a: { A: "Indonoxia", B: "Myanmar", C: "Camphuchia", D: "Malaysia" }, true: "B" },
+        { q: "137. Con hổ là biểu tượng của quốc gia nào?", a: { A: "Inđônêxia", B: "Singapore", C: "Camphuchia", D: "Malaysia" }, true: "D" },
+        { q: "138. Tín ngưỡng, lễ hội của khu vực Đông Nam Á chịu ảnh hưởng từ yếu tố nào?", a: { A: "Điều kiện khí hậu", B: "Chu kỳ nông nghiệp", C: "Khí hậu biển", D: "Truyền giáo" }, true: "B" },
+        { q: "139. Các nước Đông Nam Á có nhiều loại khoáng sản vì?", a: { A: "Nằm trong vùng khí hậu nhiệt đới gió mùa", B: "Có nhiều kiểu, dạng địa hình.", C: "Nằm trong vành đai sinh khoáng.", D: "Nằm kề sát vành đai núi lửa Thái Bình Dương." }, true: "C" },
+        { q: "140. Một trong những lợi thế của hầu hết các nước Đông Nam Á là?", a: { A: "Phát triển thủy điện.", B: "Phát triển lâm nghiệp.", C: "Phát triển kinh tế biển.", D: "Phát triển chăn nuôi." }, true: "C" },
+        { q: "141. Đông Nam Á có vị trí địa - chính trị rất quan trọng vì?", a: { A: "Khu vực này tập trung rất nhiều loại khoáng sản.", B: "Là nơi đông dân nhất thế giới", C: "Nền kinh tế phát triển mạnh", D: "Là nơi tiếp giáp giữa hai đại dương, vị trí cầu nối hai lục địa" }, true: "D" },
+        { q: "142. Đông Nam Á là cầu nối lục địa?", a: { A: "Á - Âu với lục địa Ô-xtrây-li-a", B: "Phi với lục địa Ô-xtrây-li-a", C: "Nam Mĩ với lục địa Ô-xtrây-li-a", D: "Phi với lục địa Á - Âu." }, true: "A" },
+        { q: "143. Đông Nam Á có những loại khoáng sản chủ yếu nào dưới đây?", a: { A: "Than, dầu mỏ, khí đốt, thiếc, vàng.", B: "Dầu mỏ, khí tự nhiên, sắt, đồng, vàng.", C: "Than, khí tự nhiên, dầu mỏ, sắt, đồng.", D: "Dầu mỏ, khí đốt, than, kim cương, vàng." }, true: "C" },
+        { q: "144. Nhận định nào dưới đây không phải là đặc điểm tự nhiên của Đông Nam Á lục địa?", a: { A: "Địa hình bị chia cắt mạnh", B: "Phần lớn có khí hậu xích đạo.", C: "Sông ngòi nhiều nước", D: "Ven biển có các đồng bằng phù sa màu mỡ." }, true: "D" },
+        { q: "145. Khí hậu đặc trưng của khu vực Đông Nam Á?", a: { A: "Nhiệt đới gió mùa", B: "Ôn đới", C: "Khí hậu biển", D: "Nóng ẩm" }, true: "A" },
+        { q: "146. Tại sao Đông Nam Á được gọi là ống thông gió hay ngã tư đường?", a: { A: "Do vị trí nằm trên con đường hàng hải nối Ấn độ dương và Thái bình dương, cầu nối giữa TQ - Nhật bản với Ấn độ, Tây Á, Địa Trung Hải", B: "Cầu nối giữa TQ - Nhật bản với châu Úc", C: "Cầu nối giữa TQ - Nhật bản với Tây Á", D: "Cầu nối giữa TQ - Nhật bản với châu Âu" }, true: "A" },
+        { q: "147. Tại sao Đông Nam Á được gọi là \"một vùng thần bí nơi sản xuất hương liệu, gia vị, và những sản phẩm kì lạ khác\"?", a: { A: "Do vị trí địa lý", B: "Khí hậu nhiệt đới gió mùa tạo điều kiện cho các loại thảo mộc phát triển tốt", C: "Việc buôn bán phát triển", D: "Khu vực rộng lớn" }, true: "B" },
+        { q: "148. Tại sao nói Đông Nam Á phù hợp với phát triển của nông nghiệp?", a: { A: "Việc đi lại thuận tiện", B: "Vị trí địa lý", C: "Có hai mùa rõ rệt", D: "Gió mùa kèm mưa nhiệt đới cung cấp đủ nước" }, true: "D" },
+        { q: "149. Tại sao Đông Nam Á được coi là vùng văn minh có đủ sắc thái đồng bằng, biển, núi?", a: { A: "Vị trí địa lý", B: "Do điều kiện của vùng nhiệt đới cư dân ĐNA đã trồng lúa khô, với lúa nước, xuất hiện các nghề thủ công, đặc biệt là nghề sông biển.", C: "Khí hậu thuận lợi", D: "Lượng mưa nhiều" }, true: "B" },
+        { q: "150. Sản phẩm đặc trưng của ngành nông nghiệp trong khu vực Đông Nam Á là?", a: { A: "Hương liệu", B: "Hương liệu đặc trưng (hồ tiêu, sa nhân, hồi, quế, trầm hương) và cây lương thực đặc trưng là lúa nước", C: "Lúa nước, ca cao", D: "Cà phê, hồ tiêu" }, true: "B" },
+        { q: "151. Cư dân Đông Nam Á lấy sản xuất nông nghiệp nào làm phương thức hoạt động kinh tế chính?", a: { A: "Lúa nước", B: "Cà phê", C: "Hồ tiêu", D: "Trầm hương" }, true: "A" },
+        { q: "152. Vì sao nói Đông Nam Á được coi là \"cái nôi\" của cây lúa nước?", a: { A: "Buôn bán phát triển", B: "Vị trí địa lý", C: "Khí hậu tốt", D: "Gió mùa kèm mưa nhiệt đới cung cấp đủ nước cho đời sống và sản xuất" }, true: "D" },
+        { q: "153. Tại sao nói nền văn hóa Việt Nam phong phú đa dạng trong khu vực?", a: { A: "Vì Việt Nam là quốc gia có nền văn hóa đa sắc tộc, giao thoa giữa văn hóa truyền thống với các nước trong khu vực", B: "Vì Văn hóa Việt Nam là một phức thể", C: "Vì có nhiều di sản", D: "Vì có nhiều công trình kiến trúc" }, true: "A" },
+        { q: "154. Tại sao sự giao thoa giữa văn hóa truyền thống của Việt Nam với các nước trong khu vực tương đồng?", a: { A: "Vì Việt Nam là quốc gia có lịch sử lâu đời ở khu vực", B: "Vì có văn hóa đa sắc tộc", C: "Vì diện tích rộng", D: "Vì nhiều lễ hội" }, true: "A" },
+        { q: "155. Những đóng góp của Việt Nam đối với nền Văn minh Đông Nam Á?", a: { A: "Đóng góp trong lĩnh vực văn hóa vật chất: Các di sản đền chùa, di sản văn hóa, tháp chàm, di tích lịch sử.", B: "Văn hóa tinh thần", C: "Điểm du lịch", D: "Văn hóa vật chất" }, true: "A" },
+        { q: "156. Ở giai đoạn đầu tiên khi nhà nước chưa ra đời nền văn minh Đông Nam Á chưa có hệ thống tôn giáo, Đông nam á đã có hình thức tín ngưỡng nào?", a: { A: "Không có", B: "Đã dùng thuyết vạn vật hữu linh", C: "Thuyết siêu hình", D: "Thuyết đa thần" }, true: "B" },
+        { q: "157. Tục thờ Thần - Vua và kiến trúc đền núi xuất hiện ở quốc gia nào?", a: { A: "Thái Lan", B: "Campuchia", C: "Lào", D: "Indonesia" }, true: "B" },
+        { q: "158. Thế kỷ vàng trong lịch sử Hy Lạp cổ đại là?", a: { A: "Thế kỷ 7 TCN.", B: "Thế kỷ 6 TCN.", C: "Thế kỷ 5 TCN.", D: "Thế kỷ 4 TCN." }, true: "C" },
+        { q: "159. Đế chế Đông La Mã tồn tại trong khoảng thời gian nào sau đây?", a: { A: "395-1453", B: "330-1453", C: "476-1492", D: "476-1495" }, true: "A" },
+        { q: "160. Trong lịch sử văn minh La Mã, chữ Latin xuất hiện vào khoảng?", a: { A: "Thế kỳ 8 TCN.", B: "Thế kỷ 7 TCN.", C: "Thế kỷ 6 TCN.", D: "Thế kỷ 5 TCN." }, true: "C" },
+        { q: "161. Tác giả của tác phẩm Gia phả các thần trong nền văn hóa Hy Lạp cổ đại là nhà thơ?", a: { A: "Pindar", B: "Hesiose", C: "Akilocle", D: "Sappho" }, true: "B" },
+        { q: "162. Đế chế Byzantium còn được gọi là?", a: { A: "Đế quốc Đông La Mã", B: "Đế quốc La Mã thần thánh", C: "Đế chế La Mã phương Tây", D: "Cả 3 phương án trên đều đúng" }, true: "A" },
+        { q: "163. Hy Lạp và La Mã được coi là quê hương khoa học nào?", a: { A: "Toán học", B: "Văn học", C: "Triết học", D: "Thiên văn học" }, true: "C" },
+        { q: "164. Người sáng lập triết học đầu tiên là?", a: { A: "Nhà Toán học Talet", B: "Aristottle", C: "Socrates", D: "Pascal" }, true: "C" },
+        { q: "165. Hy lạp bị La mã chinh phục vào thế kỷ thứ?", a: { A: "Thế kỷ từ I TCN", B: "Thế kỷ từ II TCN", C: "Thế kỷ từ III TCN", D: "Thế kỷ từ IV TCN" }, true: "D" },
+        { q: "166. Tên Hy Lạp được đặt tên ở thế kỷ nào?", a: { A: "Thế kỷ từ VIII-VII TCN", B: "Thế kỷ từ VII-VI TCN", C: "Thế kỷ từ VI-V TCN", D: "Thế kỷ từ V-IV TCN" }, true: "B" },
+        { q: "167. Nhà nước La Mã ra đời vào thế kỷ nào?", a: { A: "Thế kỷ từ V TCN", B: "Thế kỷ tử VI TCN", C: "Thế kỷ từ VII TCN", D: "Thế kỷ tử VIII TCN" }, true: "B" },
+        { q: "168. Đền Panthéon là kiệt tác kiến trúc của nền văn minh nào?", a: { A: "La Mã", B: "Hy Lạp.", C: "Bizantine.", D: "Tây Ban Nha" }, true: "A" },
+        { q: "169. Đế chế Byzantium còn được gọi là?", a: { A: "Đế quốc Đông La Mã", B: "Đế quốc La Mã thần thánh", C: "Đế chế La Mã phương Tây", D: "Cả 3 phương án trên đều đúng" }, true: "A" },
+        { q: "170. Tại sao chính quyền La Mã lại soạn bộ luật “Mười hai bảng”?", a: { A: "Vì các nhà quân sự yêu cầu", B: "Vì giới công thương yêu cầu", C: "Vì giới quý tộc yêu cầu", D: "Vì giới bình dân yêu cầu" }, true: "D" },
+        { q: "171. Khải hoàn môn được cư dân nền văn minh nào dựng nên?", a: { A: "La Mã", B: "Hy Lạp", C: "Ai Cập", D: "Lưỡng Hà" }, true: "A" },
+        { q: "172. Đền Panthéon là kiệt tác kiến trúc của nền văn minh?", a: { A: "La Mã", B: "Hy Lạp.", C: "Bizantine.", D: "Tây Ban Nha" }, true: "A" },
+        { q: "173. Kito giáo xuất hiện ở Việt Nam vào thế kỷ nào?", a: { A: "Thế kỷ 16", B: "Thế kỷ 17", C: "Thế kỷ 18", D: "Thế kỷ 19" }, true: "A" },
+        { q: "174. La mã là một bán đảo dài có hình dáng của?", a: { A: "Thanh kiếm", B: "Quả ớt", C: "Chiếc ủng", D: "Quả lê" }, true: "C" },
+        { q: "175. Về khoa học tự nhiên, Hy lạp cổ đại có những cống hiến quan trọng, những thành tựu ấy gắn liền với tên tuổi của các nhà khoa học?", a: { A: "Talet, Pitago, Oclit, Acsimet", B: "Anhxtanh, Pitago, Oclit, Acsimet", C: "Talet, Pitago, Oclit, Darwin Anhxtanh,", D: "Darwin, Newton, Pitago" }, true: "A" },
+        { q: "176. Trường phái triết học duy tâm của Hy Lạp có nhiều đại biểu nổi tiếng, là những học giả?", a: { A: "Heghen, Protagorat, Giocgiat, Xôcrat", B: "Protagorat, Giócgiat, Xôcrat, Palatong, Arixtot", C: "Xôcrat, Palatong, Arixtot, Karl Marx", D: "Palatong, Arixtot, Karl Marx, Anghen" }, true: "B" },
+        { q: "177. Giuda (Judas) đã bán chúa cho chính quyền La mã để lấy cái gì?", a: { A: "Lấy 12 đồng tiền vàng", B: "Lấy 12 đồng tiền bạc trắng", C: "Lấy 12 mảnh đất", D: "Lấy 12 ngôi nhà" }, true: "B" },
+        { q: "178. Tòa án La Mã xử tử chúa Giêxu bằng cách nào?", a: { A: "Treo cổ", B: "Đóng đinh lên thập giá", C: "Chôn sống", D: "Ném đá đến chết" }, true: "B" },
+        { q: "179. Theo thần thoại Hy Lạp thần Promete dùng cái gì để làm thành người?", a: { A: "Đất sét", B: "Gỗ", C: "Đá", D: "Sắt" }, true: "A" },
+        { q: "180. Thần Promete được vị thần nào giải thoát khỏi bị xiềng ở núi Cocado và bị một con diều hâu mổ lá gan?", a: { A: "Hephaixtot", B: "Dớt (Zeus)", C: "Promete", D: "Hêraclet" }, true: "D" },
+        { q: "181. Giáo lý của đạo Kito kế thừa từ đạo nào?", a: { A: "Do thái", B: "Phật giáo", C: "Hồi giáo", D: "Hindu" }, true: "A" },
+        { q: "182. Nơi phát nguyên quốc gia La Mã cổ đại là?", a: { A: "Anh", B: "Ý", C: "Pháp", D: "Đức" }, true: "B" },
+        { q: "183. Thần Dớt ( Zeus) đã lật đổ ai để trở thành chúa tể của các thần?", a: { A: "Chú mình", B: "Cha mình", C: "Bác mình", D: "Anh trai" }, true: "C" },
+        { q: "184. Kito chính thức được thừa nhận là quốc giáo của đế quốc La Mã vào thế kỷ nào ?", a: { A: "Thế kỷ III", B: "Thế kỷ IV", C: "Thế kỷ V", D: "Thế kỷ VI" }, true: "B" },
+        { q: "185. La Mã thôn tính Palextin vào năm nào?", a: { A: "62 TCN", B: "63 TCN", C: "64 TCN", D: "65 TCN" }, true: "B" },
+        { q: "186. Nữ thần Hera là vợ của vị thần nào?", a: { A: "Hephaixtot", B: "Dớt(Zeus)", C: "Promete", D: "Héraclet" }, true: "B" },
+        { q: "187. Chúa Giêsu Crit (Jesus Christ) được ra đời ở đâu?", a: { A: "Rôma", B: "Palextin", C: "Athens", D: "Cairo" }, true: "B" },
+        { q: "188. Nhà khoa học nào đã đo được chiều cao của Kim tự tháp bằng cách đo bóng của nó?", a: { A: "Pitago", B: "Talet", C: "Platong", D: "Oclit (Euclid)" }, true: "B" },
+        { q: "189. Theo thần thoại Hy Lạp ai được coi là người sáng tạo nền văn minh nhân loại?", a: { A: "Hephaixtot", B: "Promete", C: "Heraclet", D: "Dớt (Zeus)" }, true: "B" },
+        { q: "190. Đạo Kito có mấy nghi lễ (bí tích) quan trọng?", a: { A: "5 nghi lễ", B: "6 nghi lễ", C: "7 nghi lễ", D: "8 nghi lễ" }, true: "C" },
+        { q: "191. Do có công trong việc mở rộng lãnh thổ, nên ngày lễ Noen năm 800, tại nhà thờ Xanh Pie ở La Mã, Giáo Hoàng cử hành lễ tấn phong Hoàng đế La Mã cho:", a: { A: "Sáclomanhơ", B: "Lôte", C: "Luy mộ đạo", D: "Sáclơ Hói" }, true: "A" },
+        { q: "192. Luật “Mười hai bảng” của La Mã nhằm bảo vệ quyền lợi ai?", a: { A: "Bình dân", B: "Chủ nô, giới quý tộc", C: "Nông dân", D: "Nô lệ" }, true: "B" },
+        { q: "193. Khi người Giecman tiêu diệt đế chế La Mã, nhiều công trình kiến trúc bị xâm hại nhưng đền Pantheon vẫn được bảo quản tốt. Tại sao?", a: { A: "Vì nó là phế tích không ai phát hiện ra", B: "Vì các chiến binh Giecman chiếm làm nơi đóng quân", C: "Vì các thủ lĩnh Giecman chiếm làm nơi đặt sở chỉ huy", D: "Vì nó được chuyển thành nhà thờ Công giáo" }, true: "D" },
+        { q: "194. Nghệ thuật kiến trúc Gôtích khác nghệ thuật Rôman ở chỗ?", a: { A: "Là lối kiến trúc mái vòm bán nguyệt", B: "Là lối kiến trúc nhỏ gọn", C: "Được coi là nghệ thuật kiến trúc đồng quê", D: "Là lối kiến trúc các gân cung giao nhau" }, true: "D" },
+        { q: "195. Điều kiện hình thành nền văn minh Hy Lạp - La Mã?", a: { A: "Bán đảo Italia có nhiều đồng bằng", B: "Nhiều khoáng sản", C: "Địa hình không bị chia cắt", D: "Tất cả các phương án trên" }, true: "D" },
+        { q: "196. Điều nào sau đây là điểm nổi bật của văn minh La Mã hơn cả văn minh Hy Lạp?", a: { A: "Sản sinh ra nhiều nhà khoa học", B: "Có nhiều trường phái triết học", C: "Có nhiều công trình nhà tắm công cộng", D: "Có nhiều thành tựu văn học" }, true: "C" },
+        { q: "197. Nhà tắm Caracalla ở Roma là công trình công cộng nổi tiếng bởi?", a: { A: "Chất liệu làm nên công trình", B: "Nghệ thuật kiến trúc của công trình", C: "Công năng sử dụng của công trình", D: "Các tác phẩm nghệ thuật có trong công trình" }, true: "C" },
+        { q: "198. Công trình tiêu biểu kiến trúc của văn minh Hy-La cổ đại là?", a: { A: "Vườn hoa, sân vận động, cung điện", B: "Đền, miếu, sân vận động, cung điện, rạp hát", C: "Đền, miếu, sân vận động, đấu trường, nhà tù", D: "Đền, miếu, nhà tù, cung điện, rạp hát" }, true: "B" },
+        { q: "199. Nghệ thuật trong thời đại Văn minh Hy-La cổ đại gồm những lĩnh vực nào?", a: { A: "Kiến trúc, nghệ thuật điêu khắc", B: "Kiến trúc, nghệ thuật điêu khắc, hội họa", C: "Nghệ thuật điêu khắc, hội họa, văn học", D: "Kiến trúc, nghệ thuật điêu khắc, hội họa, Kịch" }, true: "B" },
+        { q: "200. Tại sao nói người Hi Lạp bị La Mã chinh phục, những người bị chinh phục ấy lại chinh phục lại kẻ đi chinh phục mình?", a: { A: "Hy Lạp đã giành lại được quốc gia", B: "La Mã tiếp thu thành tựu và bị chi phối", C: "La Mã suy yếu quân sự", D: "La Mã tiếp thu nhiều thành tựu của văn minh Hy Lạp, ảnh hưởng của Hy Lạp đối với La Mã càng mạnh mẽ" }, true: "D" },
+        { q: "201. Tại sao thần Promete bị xiềng ở núi Cocado và bị một con diều hâu mổ lá gan?", a: { A: "Vì lấy trộm thực phẩm", B: "Vì lấy trộm lửa ở lò rèn của thần thợ rèn Hephaixtot đem đến cho loài người", C: "Vì lấy trộm lửa ở lò rèn của thần Dớt", D: "Vì lấy trộm thực phẩm của thần Hera" }, true: "B" },
+        { q: "202. Nguyên nhân sự ra đời của đạo Kito?", a: { A: "Vì giáo lý của đạo Do thái và đời sống cực khổ của người dân bị áp bức", B: "Vì tư tưởng của phái triết học khắc kỷ", C: "Vì người Do thái tin rằng họ là dân chọn lọc", D: "Vì sự truyền đạo của người La Mã" }, true: "A" },
+        { q: "203. Đền thờ Hy Lạp cổ đại có đặc điểm khác biệt so với các công trình tôn giáo khác ở chỗ?", a: { A: "Chỉ là nơi lui tới của giới chủ nô", B: "Chỉ là nơi đặt tượng, không phải nơi hành lễ của các tín đồ", C: "Kiến trúc đồ sộ", D: "Câu a, b là đúng" }, true: "B" },
+        { q: "204. Lúc mới thành lập tín đồ của đạo Kito gồm những thành phần nào?", a: { A: "Nô lệ, nô lệ được giải phóng, dân nghèo thành thị", B: "Người già, phụ nữ và trẻ em", C: "Tầng lớp quan lại, quý tộc", D: "Gồm tất cả các tầng lớp dân cư" }, true: "A" },
+        { q: "205. Ở nền văn minh Hi lạp câu nói nổi tiếng: \"Hãy cho tôi một điểm tựa chắc chắn tôi có thể cất lên cả quả đất\" là của nhà khoa học nào?", a: { A: "Pitago", B: "Acsimet", C: "Platong", D: "Oclit (Euclid)" }, true: "B" },
+        { q: "206. Tông đồ nào đã phản bội bán Chúa Giêxu cho chính quyền La Mã?", a: { A: "Simon", B: "Giacôbê", C: "Phêrô", D: "Giuda (Judas)" }, true: "D" },
+        { q: "207. Trong nửa đầu thế ki V, các bộ lạc người Giécmanh đã thành lập trên đất đai của Tây La Mã các vương quốc nào?", a: { A: "Đông Gốt, Lông Ba và Phrăng", B: "Đông Gốt, Văngđan và Buốcgôngđơ", C: "Tây Gốt, Văng đan và Buốcgôngđơ", D: "Sáclơmanhơ, Lông Ba và Phrăng" }, true: "C" },
+        { q: "208. Sau khi đế quốc Tây La Mã diệt vong năm 476, người Giécmanh tiếp tục thành lập ba vương quốc mới nào?", a: { A: "Đông Gốt, Lông Ba và Phrăng", B: "Đông Gốt, Văngđan và Buốcgôngđơ", C: "Tây Gốt, Văngđan và Buốcgôngđơ", D: "Sáclơmanhơ, Lông Ba và Phrăng" }, true: "A" },
+        { q: "209. Thời kỳ hình thành chế độ phong kiến Tây Âu?", a: { A: "Từ thế kỉ V đến thế kỉ VIII", B: "Từ thế kỉ V đến thế kỉ X", C: "Từ thế kỉ VIII đến thế kỉ XII", D: "Từ thế kỉ XII đến thế kỉ XIII" }, true: "B" },
+        { q: "210. Nông nghiệp ở Tây Âu bắt đầu phát triển ở thế kỉ nào?", a: { A: "Thế kỉ IX", B: "Thế kỉ X", C: "Thế kỉ XI", D: "Thế kỉ XII" }, true: "B" },
+        { q: "211. Thời kì Thành thị công thương nghiệp ra đời, kinh tế hàng hóa phát triển, xã hội xuất hiện tầng lớp thị dân ở thời gian nào?", a: { A: "Thế kỉ IX", B: "Thế kỉ X", C: "Thế kỉ XI", D: "Thế kỉ XII" }, true: "C" },
+        { q: "212. Các trường đại học ở Tây Âu đến cuối thế kỉ XIV có khoảng bao nhiêu?", a: { A: "30 trường đại học", B: "40 trường đại học", C: "50 trường đại học", D: "60 trường đại học" }, true: "B" },
+        { q: "213. Ngôn ngữ sử dụng trong các trường đại học ở Tây Âu là:", a: { A: "Tiếng Ý", B: "Tiếng Tây Ban Nha", C: "Tiếng Pháp", D: "Tiếng Latin" }, true: "D" },
+        { q: "214. Thành Roma - cái nôi đầu tiên của Văn minh La Mã được hình thành ở đâu?", a: { A: "Bên bờ sông Tibre", B: "Trên bờ sông Po", C: "Trên đồng bằng Campanium", D: "Trên đồng bằng Britium" }, true: "A" },
+        { q: "215. Nội dung giảng dạy ở các trường học tôn giáo này chủ yếu là môn học nào?", a: { A: "Văn chương", B: "Âm nhạc", C: "Thần học", D: "Hình học" }, true: "C" },
+        { q: "216. Dưới thời trị vì của Sáclơmanhơ, ngoài nội dung thần học thì Bảy môn nghệ thuật tự do nào được giảng dạy và học tập?", a: { A: "Ngữ pháp, hội họa, logic học, số học, hình học, thiên văn học và âm nhạc", B: "Ngữ pháp, tu từ học, logic học, số học, hình học, thiên văn học và âm nhạc", C: "Ngữ pháp, tu từ học, thần học, số học, hình học, thiên văn học và âm nhạc", D: "Ngữ pháp, tu từ học, logic học, văn học, hình học, thiên văn học và âm nhạc" }, true: "B" },
+        { q: "217. Do bất đồng trong sự giải thích thuyết Tam vị nhất thể... đến năm 1054, giáo hội Kitô ở La Mã đã bị chia thành hai giáo hội nào?", a: { A: "Giáo hội Thiên chúa và Giáo hội La Mã", B: "Giáo hội Chính thống và Giáo hội Hy Lạp", C: "Giáo hội phương Đông và Giáo hội Hy Lạp", D: "Giáo hội Thiên chúa và Giáo hội Chính thống" }, true: "D" },
+        { q: "218. Giáo hội nào có thế lực lớn về cả kinh tế, chính trị, văn hoá, tư tưởng ở Tây Âu thời kì trung đại?", a: { A: "Giáo hội Thiên chúa", B: "Giáo hội Chính thống", C: "Giáo hội phương Đông", D: "Giáo hội Hy Lạp" }, true: "A" },
+        { q: "219. Nền kinh tế Tây Âu thời Trung đại sơ kì mang nặng tính chất nào?", a: { A: "Tự cung tự cấp", B: "Kinh tế hàng hóa phát triển", C: "Tự cung tự cấp và kinh tế hàng hóa phát triển", D: "Tự cung tự cấp, kinh tế hàng hóa không tồn tại" }, true: "D" },
+        { q: "220. Phương pháp giảng dạy ở các trường đại học Tây Âu là giảng thuật, nghĩa là gì?", a: { A: "Sinh viên lên lớp nghe giảng, ghi chép và thảo luận", B: "Sinh viên lên lớp nghe giảng và ghi chép và làm việc nhóm", C: "Sinh viên soạn bài theo chủ đề giáo viên giao và thảo luận", D: "Sinh viên lên lớp nghe giảng, làm việc nhóm và thuyết trình" }, true: "A" },
+        { q: "221. Đến cuối thế kỉ XII, xuất hiện dòng văn học nào mang tính hài hước, đả kích chế độ phong kiến, giáo sĩ và ca ngợi những người bình dân?", a: { A: "Văn học dân gian", B: "Văn học Latin của nhà thờ", C: "Văn học kị sĩ", D: "Văn học thành thị" }, true: "D" },
+        { q: "222. Đến cuối thế kỉ XIV, xuất hiện dòng văn học nào mà nhân vật trung tâm thường có những tính cách được ca ngợi như thượng võ, trọng danh dự, kính chúa...?", a: { A: "Văn học dân gian", B: "Văn học Latin của nhà thờ", C: "Văn học kị sĩ", D: "Văn học thành thị" }, true: "C" },
+        { q: "223. Năm 840 Louis “mộ đạo” chết... hòa ước kí ở Vecdoong năm 843 và đế quốc Sáclơman bị chia ra làm ba nước nào?", a: { A: "Nước Pháp, Đức, Tây Ban Nha ngày nay", B: "Nước Pháp, Đức, Ý ngày nay", C: "Nước Pháp, Ý, Bồ Đào Nha ngày nay", D: "Nước Pháp, Đức, Anh ngày nay" }, true: "B" },
+        { q: "224. Đến nửa sau thế kỉ XII, ở miền Bắc nước Pháp xuất hiện một kiểu kiến trúc mới... vòm cửa nhọn, nóc nhà nhọn, cột cao... gọi là gì?", a: { A: "Kiến trúc Gôtích", B: "Kiến trúc Gôtích phá cách", C: "Kiến trúc Roman", D: "Kiến trúc Roman mới" }, true: "A" },
+        { q: "225. Công trình mang phong cách Gôtích nửa sau thế kỉ XII... thể hiện đặc điểm?", a: { A: "Tăng thêm vẻ uy nghiêm của tôn giáo", B: "Tầm cỡ bề thế, tinh xảo của toàn bộ công trình", C: "Những tháp chuông cao vút", D: "Bước tiến của kĩ thuật" }, true: "A" },
+        { q: "226. Nhà danh hoạ khổng lồ thời Phục hưng người Ý với bức hoạ nổi tiếng Bữa tiệc cuối cùng là ai?", a: { A: "Michelangelo", B: "Pablo Picasso", C: "Vincent van Gogh", D: "Leonardo da Vinci" }, true: "D" },
+        { q: "227. Từ TK XIV, phong trào Văn hóa Phục hưng diễn ra đầu tiên tại:", a: { A: "Nước Ý", B: "Nước Anh", C: "Nước Pháp", D: "Nước Tây Ban Nha" }, true: "A" },
+        { q: "228. Nhà thờ Đức Bà Pari được xây dựng ở miền Bắc nước Pháp vào thế kỉ:", a: { A: "Thế kỉ XI", B: "Thế kỉ XII", C: "Thế kỉ XIII", D: "Thế kỉ XIV" }, true: "B" },
+        { q: "229. Ông là tác giả của bức hoạ Sáng tạo thế giới vẽ trên trần nhà thờ Xixtin gồm có 343 nhân vật:", a: { A: "Raphaen", B: "Mikenlăngiơ (Michelangelo)", C: "Giôtô", D: "Bôtixeli" }, true: "B" },
+        { q: "230. Việc cải tiến nguồn nước đóng một vai trò rất quan trọng trong đời sống con người. Đó là thời kì:", a: { A: "Sơ kì trung đại", B: "Thời trung đại", C: "Thời cận đại", D: "Thời hiện đại" }, true: "B" },
+        { q: "231. Súng bộ binh lúc đầu muốn bắn thì phải có dây dẫn lửa. Đến thế kỉ XVI đã được cải tiến?", a: { A: "Nòng súng Tull", B: "Súng bắn phát một", C: "Đạn cối 82 mm", D: "Qui lát" }, true: "D" },
+        { q: "232. Ở các nước đều có giáo hội Quốc gia... trong hàng giáo phẩm có hệ thống cấp bậc nào?", a: { A: "Giáo hoàng, Hồng y giáo chủ, Tổng giám mục, Linh mục, Giám mục", B: "Giáo hoàng, Hồng y giáo chủ, Tổng giám mục, Giám mục, Linh mục", C: "Giáo hoàng, Tổng giám mục, Hồng y giáo chủ, Giám mục, Linh mục", D: "Hồng y giáo chủ, Giáo hoàng, Tổng giám mục, Giám mục, Linh mục" }, true: "B" },
+        { q: "233. Chức vụ nào được bầu cử trong giáo hội Thiên chúa?", a: { A: "Hồng y giáo chủ", B: "Tổng giám mục", C: "Giáo hoàng", D: "Giám mục" }, true: "C" },
+        { q: "234. Bên cạnh địa tô, nông dân còn phải nộp thuế cho giáo hội như thế nào?", a: { A: "7%", B: "8%", C: "9%", D: "10%" }, true: "D" },
+        { q: "235. Đến đầu thế kỉ XVI, phong trào cải cách tôn giáo chính thức diễn ra ở 3 nước nào?", a: { A: "Đức, Thụy Sĩ và Anh", B: "Đức, Ba Lan và Anh", C: "Đức, Pháp và Anh", D: "Đức, Hunggari, và Anh" }, true: "A" },
+        { q: "236. Người đề xướng cải cách tôn giáo ở Đức là ai?", a: { A: "Giăng Canvanh", B: "Unrích Dvingli", C: "Máctin Luthơ (Martin Luther)", D: "Henri VIII" }, true: "C" },
+        { q: "237. Người đề xướng cải cách tôn giáo ở Thụy Sĩ ai?", a: { A: "Giăng Canvanh", B: "Unrich Dvingli (Ulrich Zwingli)", C: "Máctin Luthơ", D: "Henri VIII" }, true: "B" },
+        { q: "238. Người đề xướng cải cách tôn giáo ở Anh ai?", a: { A: "Giăng Canvanh", B: "Unrích Dvingli", C: "Máctin Luthơ", D: "Henri VIII" }, true: "D" },
+        { q: "239. Giáo lý... của Anh giáo vẫn giống như đạo Thiên chúa, nhưng các giáo phẩm do vua Anh bổ nhiệm... nội dung cải cách tôn giáo này là của ai?", a: { A: "Giăng Canvanh", B: "Unrích Dvingli", C: "Máctin Luthơ", D: "Henri VIII" }, true: "D" },
+        { q: "240. Tây Âu xuất hiện nhiều loại tôn giáo cải cách vào thời gian nào?", a: { A: "Nửa đầu thế kỉ thứ XIV", B: "Nửa đầu thế kỉ thứ XV", C: "Nửa đầu thế kỉ thứ XVI", D: "Nửa đầu thế kỉ thứ XVII" }, true: "C" },
+        { q: "241. Những người lính và nô lệ có công trong chiến tranh cũng được Vua Phrăng chia một ít ruộng và họ trở thành:", a: { A: "Những người binh lính tự do", B: "Những người cư dân tự do", C: "Những người nông dân tự do", D: "Những người nông dân thành thị tự do" }, true: "C" },
+        { q: "242. Khi không còn ruộng đất thì đương nhiên họ trở thành:", a: { A: "Nông nô", B: "Nô lệ", C: "Người vô gia cư", D: "Người ăn xin" }, true: "A" },
+        { q: "243. Từ thế kỉ XI, kinh tế nông nghiệp ở Tây Âu phát triển hẳn lên. Nông nghiệp phát triển tạo điều kiện cho:", a: { A: "Thành thị phát triển", B: "Thủ công nghiệp phát triển", C: "Giao thương phát triển", D: "Công xưởng phát triển" }, true: "C" },
+        { q: "244. Sự ra đời của các thành thị thời kì trung đại là biểu hiện cụ thể của:", a: { A: "Nền kinh tế tự cung tự cấp", B: "Nền kinh tế thương nghiệp", C: "Nền kinh tế nông nghiệp phát triển", D: "Nền kinh tế hàng hoá" }, true: "D" },
+        { q: "245. Môn học được coi là \"đầy tớ của thần học\":", a: { A: "Môn tu từ học", B: "Môn thiên văn học", C: "Môn logic học", D: "Môn ngữ pháp" }, true: "C" },
+        { q: "246. Sau gần 1000 năm chìm lắng, đến thời Phục hưng, nền văn hóa Tây Âu có một bước tiến lớn để lại:", a: { A: "Nhiều tác phẩm văn học và nghệ thuật bất hủ, với những thành tựu khoa học lỗi lạc", B: "Nhiều tác phẩm văn học và kiến trúc", C: "Nhiều tác phẩm văn học và giáo dục", D: "Nhiều tác phẩm văn học và hội họa" }, true: "A" },
+        { q: "247. Nguyên nhân Henri VIII tuyên bố cắt đứt quan hệ về tôn giáo với La Mã, thành lập Anh giáo do ông đứng là:", a: { A: "Muốn li hôn với vợ nhưng Giáo hoàng không đồng ý", B: "Muốn tịch thu ruộng đất của giáo hội Thiên chúa", C: "Muốn tịch thu tài sản", D: "Muốn nắm giữ yếu tố thần quyền" }, true: "A" },
+        { q: "248. Cải cách quan trọng nhất của đạo Tin lành là:", a: { A: "Chỉ tin vào kinh thánh, trong đó chủ yếu là kinh Phúc âm.", B: "Tín đồ được tham gia quản lí giáo hội", C: "Đơn giản hóa các nghi lễ", D: "Không lệ thuộc giáo hoàng" }, true: "A" },
+        { q: "249. Thời cổ đại, văn minh nhân loại đã có sự phát triển rực rỡ, nguyên nhân chính là:", a: { A: "Quá trình giao lưu văn hóa giữa hai khu vực", B: "Quá trình giao thương giữa hai khu vực", C: "Sự đổi mới về tư tưởng", D: "Sự tiếp xúc văn minh" }, true: "B" },
+        { q: "250. Từ khoảng thế kỉ XI TCN, tộc người Phênixi đã phát triển hùng mạnh vì:", a: { A: "Đi buôn bán khắp vùng Địa Trung Hải", B: "Xâm chiếm đất đai", C: "Truyền bá tôn giáo", D: "Cả A và C" }, true: "A" },
+        { q: "251. Thế kỉ VI TCN, hai nhà khoa học Hi Lạp cổ đại Talét và Pitago đã có thành tựu vĩ đại về hình học cho nhân loại là do:", a: { A: "Đi du lịch ở Ấn Độ", B: "Đi du lịch ở Lưỡng Hà, Ai Cập", C: "Đi du lịch ở khắp Hi Lạp", D: "Đi du lịch ở Trung Hoa" }, true: "B" },
+        { q: "252. Thế kỉ V TCN, nhà sử học Hi Lạp Hêrôđốt... đã biên soạn được một số tác phẩm về lịch sử mà Hêrôđốt ghi lại được đánh giá vô cùng quý giá là:", a: { A: "Lịch sử của chiến tranh Hi Lạp và Ba Tư", B: "Nền chính trị của Xpác", C: "Tư liệu về xây dựng Kim tự tháp ở Ai Cập cổ đại", D: "Sử thi cuộc chiến tranh Puních" }, true: "C" },
+        { q: "253. Cuối thế kỉ IV TCN, do có nhiều yếu tố thuận lợi, Alếchxăngđro Makêđônia đã chinh phục phương Đông đến tận:", a: { A: "Tây Á", B: "Miền Tây Bắc Ấn Độ", C: "Đông Bắc châu Phi", D: "Phương Đông" }, true: "B" },
+        { q: "254. Khoảng thế kỉ II TCN, đã hình thành một con đường thông thương xuất phát từ Trung Quốc đến bờ Đông Địa Trung Hải, gọi là:", a: { A: "Ngã tư đường", B: "Hành lang Đông - Tây", C: "Con đường tơ lụa", D: "Cầu nối liền giữa Ấn Độ, Trung Quốc và Tây Âu" }, true: "C" },
+        { q: "255. Dưới sự hô hào của Giáo hoàng La Mã... các đoàn kị sĩ một số nước Tây Âu đã tiến hành 8 cuộc viễn chinh sang phương Đông, lịch sử gọi là:", a: { A: "Cuộc thánh chiến", B: "Cuộc viễn chinh sang phương Đông", C: "Phong trào viễn chinh của quân Thập tự", D: "Cuộc viễn chinh sang phương Tây" }, true: "C" },
+        { q: "256. Máccô Pôlô (1254-1324)... Năm 1275, ông đến Trung Quốc và được Hốt Tất Liệt:", a: { A: "Phong làm quan", B: "Chọn làm con rể", C: "Hoàng thương", D: "Bắt giam" }, true: "A" },
+        { q: "257. Trải qua một quá trình tích luỹ kinh nghiệm lâu dài, tới thế kỉ XIV - XVI về mặt kĩ thuật ở Tây Âu đã có những tiến bộ đáng kể, cụ thể trong lĩnh VỰC:", a: { A: "Khai khoáng, luyện kim, cải tiến guồng nước và chế tạo vũ khí", B: "Khai khoáng, khai mỏ, hàng hải và chế tạo vũ khí", C: "Khai khoáng, luyện kim, hàng hải và chế tạo vũ khí", D: "Khai khoáng, luyện kim, ngành dệt và chế tạo vũ khí" }, true: "C" },
+        { q: "258. Trong số các vương quốc do người Giécmanh thành lập, có một vương quốc tồn tại lâu dài nhất và đồng thời là quốc gia có vai trò quan trọng nhất ở Tây Âu trong thời sơ kì trung đại, đó là:", a: { A: "Đông Gốt", B: "Tây Gốt", C: "Lông Ba", D: "Phrăng" }, true: "D" },
+        { q: "259. Giáo sư là những người thế tục chứ không phải là các giáo sĩ... Điều này có nghĩa là các trường đại học muốn:", a: { A: "Hoạt động độc lập", B: "Truyền bá tư tưởng tiến bộ", C: "Tìm cách thoát khỏi sự kiểm soát của giáo hội", D: "Tìm cách thoát khỏi sự kiểm soát của giáo hội và hoạt động độc lập" }, true: "D" },
+        { q: "260. Ý nghĩa của phong trào Văn hóa Phục hưng là:", a: { A: "Dòng tư tưởng mới chống lại nhà thờ", B: "Dòng tư tưởng mới chống lại gia cấp tư sản", C: "Giai cấp nông dân chống lại sự áp bức bóc lột của lãnh chúa", D: "Khôi phục các giá trị nhân văn của nền văn minh Hi - La" }, true: "D" },
+        { q: "261. Nhà bác học mở đầu cho thời kì Phục hưng là:", a: { A: "Đantê", B: "Nicola Coopecnich", C: "Pêtracca", D: "Bôcaxiô" }, true: "B" },
+        { q: "262. Người mở đầu phong trào Văn hoá Phục hưng ở nước Ý là:", a: { A: "Đantê", B: "Nicola Coopecnich", C: "Pêtracca", D: "Bôcaxiô" }, true: "A" },
+        { q: "263. Ông là một nhà thơ trữ tình của nước Ý. Trong tác phẩm của mình, ông ca ngợi tình yêu lí tưởng...:", a: { A: "Đantê", B: "Nicola Coopecnich", C: "Petracca", D: "Bôcaxiô" }, true: "C" },
+        { q: "264. Boccacio là một nhà văn Ý, tác phẩm nổi tiếng của ông là tập truyện:", a: { A: "Giấc mộng đêm hè", B: "Cuộc đời mới", C: "Thần khúc", D: "Mười ngày" }, true: "D" },
+        { q: "265. Nhà viết kịch vĩ đại thời Phục hưng là một người Anh có tên là:", a: { A: "William Shakespeare", B: "Migel de Cervantes", C: "Edmund Spencer", D: "Geoffrey Chaucer" }, true: "A" },
+        { q: "266. Vua Phrăng từ thế kỉ V đã đem nhiều ruộng đất cướp được của các quí tộc La Mã cũ phân chia cho:", a: { A: "Các tướng lĩnh, bà con dòng họ và những người có công", B: "Nhà thờ, bà con dòng họ và những người có công", C: "Các tướng lĩnh, bà con dòng họ và những người có công", D: "Các tướng lĩnh, bà con dòng họ và những chiến binh" }, true: "A" },
+        { q: "267. Vua Phrăng phân chia đất đai và và tước hiệu được phân phong có đặc điểm:", a: { A: "Chỉ truyền một đời", B: "Được truyền hai đời", C: "Được truyền ba đời", D: "Cha truyền con nối" }, true: "D" },
+        { q: "268. Máy tính đầu tiên ra đời vào năm:", a: { A: "1944", B: "1945", C: "1946", D: "1947" }, true: "B" },
+        { q: "269. Đèn điện tử chân không ra đời vào khoảng thời gian:", a: { A: "1950-1955", B: "1950-1958", C: "1950-1959", D: "1950-1960" }, true: "A" },
+        { q: "270. Vi mạch tích hợp được chế tạo vào:", a: { A: "Đầu thập niên 70", B: "Giữa thập niên 70", C: "Cuối thập niên 70", D: "Đầu thập niên 80" }, true: "A" },
+        { q: "271. Thế hệ máy tính thứ 4 ra đời vào:", a: { A: "Đầu thập niên 70", B: "Giữa thập niên 70", C: "Cuối thập niên 70", D: "Đầu thập niên 80" }, true: "D" },
+        { q: "272. Người máy tại Mỹ ra đời vào năm:", a: { A: "1960", B: "1961", C: "1962", D: "1963" }, true: "B" },
+        { q: "273. Năm 1973, một công nhân người Anh tên là Giôn Cây phát minh ra:", a: { A: "Máy kéo sợi", B: "Máy dệt", C: "Thoi chạy", D: "Thoi bay" }, true: "D" },
+        { q: "274. Trong nghề khai khoáng... Các công đoạn được cơ giới hoá là:", a: { A: "Tiến hành khoan nổ mìn cho đá xây dựng", B: "Xay nghiền, phân loại đá", C: "Phân phối đá thành phẩm", D: "Rửa quặng, nghiền quặng" }, true: "D" },
+        { q: "275. Nghề luyện kim cũng bắt đầu được cơ giới hoá nhờ:", a: { A: "Sức nước", B: "Nhiệt lượng", C: "Chất trợ dung", D: "Gia công áp lực" }, true: "A" },
+        { q: "276. Ngành dệt cũng có những cải tiến. Một số xa kéo sợi được cải tiến... Khung cửi nằm ngang cũng bị thay thế bởi:", a: { A: "Guồng xe sợi và quay tơ", B: "Khung dệt vải", C: "Khung cửi đứng trước kia", D: "Khung gỗ kiềng" }, true: "B" },
+        { q: "277. Kỹ thuật quân sự cũng có những bước tiến lớn nhờ kĩ thuật luyện kim... Đạn bằng gang đã thay thế:", a: { A: "Đạn bằng đá", B: "Đạn bằng đồng", C: "Đạn bằng sắt", D: "Đạn xuyên giáp" }, true: "B" },
+        { q: "278. Trong ngành hàng hải, người ta cũng đã đóng được những con tàu đáy nhọn... mỗi tàu đều có trang bị:", a: { A: "La bàn, thước phương vị để xác định vị trí trên biển", B: "La bàn, đồng hồ cơ khí", C: "La bàn, gậy và mặt trời", D: "La bàn, phương pháp Owen Doff" }, true: "A" },
+        { q: "279. Từ cuối thế kỉ XI, giáo hoàng Grêgôriut VII (1073-1085) đã nêu ra nguyên tắc giáo hội La Mã là:", a: { A: "Do chúa trời sáng lập nên tuyệt đối không có sai lầm", B: "Quyền uy của giáo hoàng bao trùm một nước", C: "Vị trí của giáo hoàng chỉ thấp hơn chính quyền", D: "Giáo hoàng có thể bị vua phế truất." }, true: "A" },
+        { q: "280. Giáo hội còn là một thế lực lũng đoạn về tư tưởng... thể hiện ở:", a: { A: "Tất cả tư tưởng tiến bộ được chấp nhận", B: "Tất cả tư tưởng tiến bộ nhưng trái với kinh thánh, đều bị cấm đoán", C: "Tất cả tư tưởng tiến bộ về khoa học, đều được chấp nhận", D: "Tất cả tư tưởng tiến bộ về tôn giáo, đều được chấp nhận" }, true: "B" },
+        { q: "281. Từ thế kỉ XIV, Uyclip (Wyclip) ... đã từng đề xướng cải cách tôn giáo ở hai phương diện:", a: { A: "Phủ nhận vai trò của Hồng y giáo chủ...", B: "Phủ nhận vai trò của Tổng giám mục...", C: "Phủ nhận vai trò của Giáo hoàng, đề nghị chính phủ sở hữu ruộng đất của giáo hội", D: "Phủ nhận vai trò của Giám mục..." }, true: "C" },
+        { q: "282. Đầu thế kỉ XV, Ian Hút (Séc) cũng vận động cải cách giáo hội... Vì vậy, Ông bị Hội nghị tôn giáo ở Cônxtanxơ xử:", a: { A: "Tử hình", B: "Trục xuất khỏi giáo hội", C: "Thiêu chết", D: "Biệt giam" }, true: "C" },
+        { q: "283. Chữ Phúc âm có nghĩa là:", a: { A: "Tin mừng, tin lành", B: "Tin vui, nhiều phúc", C: "Tôn giáo trong sạch", D: "Cả 3 phương án trên đều đúng" }, true: "A" },
+        { q: "284. Nội dung: sự phân công lao động rõ ràng trong xưởng... là của quy tắc:", a: { A: "Đồng bộ hóa", B: "Tập trung hóa", C: "Tiêu chuẩn hóa", D: "Chuyên môn hóa" }, true: "D" },
+        { q: "285. Nội dung: các cá nhân làm việc theo dây chuyền, quy trình... là của quy tắc:", a: { A: "Đồng bộ hóa", B: "Tập trung hóa", C: "Tiêu chuẩn hóa", D: "Chuyên môn hóa" }, true: "A" },
+        { q: "286. Nội dung: sản xuất công nghiệp cần có sự tập trung từ nhà xưởng... là của quy tắc:", a: { A: "Đồng bộ hóa", B: "Tập trung hóa", C: "Tiêu chuẩn hóa", D: "Chuyên môn hóa" }, true: "B" },
+        { q: "287. Phát minh về phương pháp luyện than cốc năm 1735 là một đóng góp quan trọng cho việc:", a: { A: "Luyện gang", B: "Luyện thép", C: "Luyện gang thép", D: "Luyện đồng thép" }, true: "C" },
+        { q: "288. Người chủ trương xóa bỏ chế độ chuyên chế nhưng vẫn giữ thể chế quân chủ với những vị vua sáng suốt... là:", a: { A: "Vônte", B: "Rutxô", C: "Môngtexkiơ (Montesquieu)", D: "Điđơrô" }, true: "C" },
+        { q: "289. Công trình nổi bật của thế kỉ XIX là học thuyết về sinh học của Đacuyn (Charles Darwin). Nội dung cơ bản của học thuyết Đacuyn là:", a: { A: "Quy luật tự nhiên cạnh tranh để sinh tồn", B: "Khả năng sinh tồn của mỗi giống loài kể cả con người.", C: "Tất cả các giống loài đều trải qua quá trình tiến hóa để thích nghi", D: "Cả 3 phương án trên đều đúng" }, true: "D" },
+        { q: "290. Đoạn đường sắt đầu tiên được khánh thành ở Anh nối liền Mantretxto với Livecpun được xây dựng năm:", a: { A: "1822", B: "1823", C: "1824", D: "1825" }, true: "D" },
+        { q: "291. Người được coi là cha đẻ của môn di truyền học là:", a: { A: "Gregor Mendel", B: "Charles Darwin", C: "Denis Diderot", D: "Louis Pasteur" }, true: "A" },
+        { q: "292. Người đã thiết lập Bảng tuần hoàn các nguyên tố hóa học là:", a: { A: "Menđêlêep", B: "Farađây", C: "Beccoren", D: "Anhxtanh" }, true: "A" },
+        { q: "293. Nhà vật lí người Anh nêu lên nguyên lí về cảm ứng điện từ là:", a: { A: "Anhxtanh", B: "Farađây (Michael Faraday)", C: "Beccoren", D: "Menđêlêep" }, true: "B" },
+        { q: "294. Nguyên nhân chính của sự ra đời nền văn minh công nghiệp là:", a: { A: "Phong phú về số lượng và chất lượng", B: "Có sự chuyên môn hóa cao", C: "Chi phối nhiều lĩnh vực tác động đến toàn xã hội", D: "Đáp ứng những đòi hỏi của xã hội công nghiệp" }, true: "D" },
+        { q: "295. Những quy tắc cơ bản của nền văn minh công nghiệp bắt buộc phải tuân theo thứ tự là:", a: { A: "Tiêu chuẩn hóa, tập trung hóa, chuyên môn hóa, đồng bộ hóa", B: "Tiêu chuẩn hóa, chuyên môn hóa, đồng bộ hóa, tập trung hóa", C: "Tiêu chuẩn hóa, đồng bộ hóa, tập trung hóa, chuyên môn hóa", D: "Tiêu chuẩn hóa, chuyên môn hóa, tập trung hóa, đồng bộ hóa" }, true: "B" },
+        { q: "296. Yêu cầu đầu tiên về những quy tắc cơ bản của nền văn minh công nghiệp là:", a: { A: "Đồng bộ hóa", B: "Tập trung hóa", C: "Tiêu chuẩn hóa", D: "Chuyên môn hóa" }, true: "C" },
+        { q: "297. Người được dựng bức tượng tại kỉ niệm tại Oetxmintơ (Westminster)... với dòng chữ: Người đã nhân lên gấp bội sức mạnh của con người là:", a: { A: "Giêm Oát (James Watt)", B: "Giêm Hacgrivo", C: "Risot Accrai tơ", D: "Etmơn Cacraito" }, true: "A" },
+        { q: "298. Năm 1785, có một kỹ sư sáng chế ra máy dệt đưa năng suất lên gấp 39 lần... ông là:", a: { A: "Giêm Oát", B: "Giêm Hacgrivo", C: "Risot Accraj to", D: "Etmơn Cacraito" }, true: "D" },
+        { q: "299. Đến đầu thế kỉ XX, có một nhà khoa học người Pháp phát minh tính phóng xạ của uranium... đặt cơ sở đầu tiên cho lí thuyết về hạt nhân là:", a: { A: "Anhxtanh", B: "Farađây", C: "Beccoren (Antoine Becquerel)", D: "Menđêlêep" }, true: "C" },
+        { q: "300. Giải thưởng Nôben đầu tiên về vật lí được trao tặng năm 1901 cho nhà khoa học:", a: { A: "Rơn-ghen (Roentgen)", B: "Farađây", C: "Becơren và ông bà Quyri", D: "Anhxtanh" }, true: "A" },
+        { q: "301. Ông là nhà khoa học người Đức, với công trình nghiên cứu về Thuyết tương đối... được trao giải Nôben năm 1921:", a: { A: "Menđêlêep", B: "Faradây", C: "Beccoren", D: "Anhxtanh (Albert Einsetein)" }, true: "D" },
+        { q: "302. Ông là nhà khoa học người Mĩ, phát minh ra bóng đèn điện và xây dựng nhà máy điện vào nửa sau thế kỉ XIX:", a: { A: "Edixơn (Thomas Edison)", B: "Faraday", C: "Beccoren", D: "Anhxtanh" }, true: "A" },
+        { q: "303. Tác giả cuốn Luận về tự do người Anh đã nêu lên nguyên tắc: cá nhân có thể làm bất cứ điều gì không hại đến người khác...:", a: { A: "Tốccovin", B: "Giôn Min (John Stuart Mill)", C: "Vichto Huygô", D: "Lep Tônxtôi" }, true: "B" },
+        { q: "304. Ông là nhà thơ và nhà văn, người đại diện cho trào lưu lãng mạn tiến bộ với các tác phẩm Nhà thờ Đức bà Paris, Những người khốn khổ...:", a: { A: "Tốccovin", B: "Giôn Min", C: "Vichto Huygô (Victor Hugo)", D: "Lep Tônxtôi" }, true: "C" },
+        { q: "305. Chiến tranh và hòa bình là một bản anh hùng ca về cuộc kháng chiến của nhân dân Nga chống lại sự xâm lược của Napôlêông... Người sáng tác là:", a: { A: "Tốccơvin", B: "Giôn Min", C: "Vichto Huygô", D: "Lep Tônxtôi (Lev Tolstoy)" }, true: "D" },
+        { q: "306. Ông được mệnh danh là \"Chàng khổng lồ của nghệ thuật âm nhạc phương Tây\":", a: { A: "Moda (Mozart)", B: "Bach (Johann Sebastian Bach)", C: "Bêthôven (Beethoven)", D: "Đêbuyxi (Debussy)" }, true: "B" }
+    ];
+
+    // --- PHẦN XỬ LÝ LOGIC TRẮC NGHIỆM ---
+    let currentPage = 1;
+    const questionsPerPage = 20;
+    const totalPages = Math.ceil(allQuestions.length / questionsPerPage);
+    const userAnswers = {}; 
+
+    function renderQuiz() {
+        const quizArea = document.getElementById('quiz-area');
+        quizArea.innerHTML = "";
+        
+        const start = (currentPage - 1) * questionsPerPage;
+        const end = Math.min(start + questionsPerPage, allQuestions.length);
+
+        for (let i = start; i < end; i++) {
+            const item = allQuestions[i];
+            const qIndex = i;
+            
+            let answersHtml = "";
+            for (let key in item.a) {
+                let isChecked = userAnswers[qIndex] === key ? "checked" : "";
+                let classResult = "";
+                
+                if (userAnswers[qIndex]) {
+                    if (key === item.true) classResult = "correct";
+                    else if (userAnswers[qIndex] === key) classResult = "wrong";
+                }
+
+                answersHtml += `
+                    <label class="answer-label ${classResult} ${userAnswers[qIndex] ? 'disabled' : ''}" id="lbl-${qIndex}-${key}">
+                        <input type="radio" name="q${qIndex}" value="${key}" ${isChecked} 
+                            onclick="handleAnswer(${qIndex}, '${key}')"> 
+                        ${key}. ${item.a[key]}
+                    </label>
+                `;
+            }
+
+            quizArea.innerHTML += `
+                <div class="question-box" id="box-${qIndex}">
+                    <div class="question-title">Câu ${i + 1}: ${item.q.replace(/^\d+\.\s*/, '')}</div>
+                    <div>${answersHtml}</div>
+                </div>
+            `;
+        }
+        
+        updateNavigation();
+    }
+
+    function handleAnswer(qIndex, selectedKey) {
+        userAnswers[qIndex] = selectedKey;
+        const item = allQuestions[qIndex];
+
+        const allLabels = document.querySelectorAll(`#box-${qIndex} .answer-label`);
+        allLabels.forEach(lbl => lbl.classList.add('disabled')); 
+
+        const selectedLabel = document.getElementById(`lbl-${qIndex}-${selectedKey}`);
+        const correctLabel = document.getElementById(`lbl-${qIndex}-${item.true}`);
+
+        if (selectedKey === item.true) {
+            selectedLabel.classList.add('correct');
+        } else {
+            selectedLabel.classList.add('wrong');
+            correctLabel.classList.add('correct');
+        }
+
+        updateStats();
+    }
+
+    function updateStats() {
+        let answered = Object.keys(userAnswers).length;
+        let correct = 0;
+        for (let idx in userAnswers) {
+            if (userAnswers[idx] === allQuestions[idx].true) correct++;
+        }
+        document.getElementById('global-stats').innerText = `Đã làm: ${answered}/${allQuestions.length} | Đúng: ${correct}`;
+    }
+
+    function changePage(delta) {
+        currentPage += delta;
+        renderQuiz();
+        document.documentElement.scrollTop = 0; 
+    }
+
+    function goToPage(page) {
+        currentPage = parseInt(page);
+        renderQuiz();
+        document.documentElement.scrollTop = 0;
+    }
+
+    function updateNavigation() {
+        document.getElementById('page-info').innerText = `Trang ${currentPage} / ${totalPages}`;
+        document.getElementById('prev-btn').disabled = currentPage === 1;
+        document.getElementById('next-btn').disabled = currentPage === totalPages;
+        document.getElementById('page-select').value = currentPage;
+    }
+
+    // --- PHẦN XỬ LÝ HIỆU ỨNG TUYẾT RƠI ---
+    function createSnowflake() {
+        const snowflake = document.createElement('div');
+        snowflake.classList.add('snowflake');
+        
+        // Ngẫu nhiên hóa vị trí, kích thước và tốc độ
+        snowflake.style.left = Math.random() * 100 + 'vw';
+        const size = Math.random() * 10 + 5 + 'px'; // Kích thước từ 5px đến 15px
+        snowflake.style.width = size;
+        snowflake.style.height = size;
+        snowflake.style.opacity = Math.random() * 0.6 + 0.2; // Độ mờ từ 0.2 đến 0.8
+        const duration = Math.random() * 5 + 5 + 's'; // Thời gian rơi từ 5s đến 10s
+        snowflake.style.animationDuration = duration;
+
+        // Tạo độ trôi dạt ngang ngẫu nhiên
+        const drift = (Math.random() - 0.5) * 200 + 'px';
+        snowflake.style.setProperty('--drift-x', drift);
+
+        document.body.appendChild(snowflake);
+
+        
+    }
+
+    // Khởi tạo
+    (function init() {
+        // Tạo options cho dropdown chọn trang
+        const select = document.getElementById('page-select');
+        for (let i = 1; i <= totalPages; i++) {
+            let opt = document.createElement('option');
+            opt.value = i;
+            opt.innerHTML = `Trang ${i}`;
+            select.appendChild(opt);
+        }
+        renderQuiz();
+
+        // Bắt đầu hiệu ứng tuyết rơi (tạo 1 bông mỗi 200ms)
+        setInterval(createSnowflake, 200);
+    })();
+</script>
+
 </body>
 </html>
-
-
-
-
-
