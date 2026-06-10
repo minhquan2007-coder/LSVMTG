@@ -1,181 +1,813 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="stylecss/style.css">
-    <style>
-        .container{
-    max-width:960px;
-    margin:36px auto;
-    padding:20px;
-}
-header h1{
-    margin:0 0 8px;
-    font-size:1.4rem
-}
-header p{
-    margin:0;
-    color:#6b7280;
-}
-.drop1{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:18px;
-    margin-top:18px
-}
-.card{
-    background:#fff;
-    border-radius:12px;
-    padding:14px;
-    box-shadow:0 6px 18px rgba(15,23,42,0.06)
-}
-.meta{
-    font-size:0.85rem;
-    color:#6b7280;
-    margin-top:8px
-}
-.items{
-    display:flex;
-    flex-wrap:wrap;
-    gap:8px
-}
-.item{
-    padding:8px 12px;
-    border-radius:8px;
-    border:1px dashed #d1d5db;
-    background:#fff;
-    cursor:grab;
-    user-select:none
-} 
-.item [aria-grabbed="true"] {
-    outline:2px dashed #2563eb;
-    cursor:grabbing
-}
-.list{
-    display:flex;
-    flex-wrap:wrap;
-    gap:8px
-}
-.btn{
-    padding:6px 12px;
-    border-radius:8px;
-    border:none;
-    background-color: #2563eb;
-    color:white;
-    cursor:pointer;
-}
-.hint{
-    color:#6b7280;
-    font-size:0.9rem;
-    gap:10px;
-}
-.zone-title{
-    font-weight:600;
-    margin-bottom:6px;
-    color:#6b7280;
-}
-.drop2{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:12px
-}
-.dropzone{
-    min-height:160px;
-    border-radius:10px;
-    border:2px dashed #e6edf8;
-    padding:12px;
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-    align-items:flex-start
-}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trắc Nghiệm GDQP </title>
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(to bottom, #d7e1ec, #ffffff);
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+        min-height: 100vh;
+        overflow-x: hidden; 
+        margin: 0;
+    }
+    .overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);
+        display: flex; justify-content: center; align-items: center;
+        z-index: 10000; 
+    }
+    .banner, .result-box, .confirm-box {
+        background: #fff; border-radius: 20px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.4); text-align: center;
+        animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    .banner { width: 500px; padding: 30px; }
+    .result-box, .confirm-box { width: 450px; padding: 40px 30px; }
+    
+    @keyframes popIn {
+        0% { transform: scale(0.5); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    .banner h2 { color: #2c3e50; margin-top: 0; margin-bottom: 20px;}
+    .result-box h2 { color: #f39c12; margin-top: 0; font-size: 26px; font-weight: 800;}
+    .confirm-box h2 { color: #e74c3c; margin-top: 0; font-size: 24px; font-weight: 800;}
+    .setting-row { display: flex; gap: 15px; margin-bottom: 15px; text-align: left; }
+    .setting-group { flex: 1; }
+    .setting-group label { display: block; font-weight: bold; margin-bottom: 8px; color: #34495e; font-size: 14px;}
+    .setting-group select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #bdc3c7; font-size: 15px; outline: none;}
+    .result-score { font-size: 60px; font-weight: 900; color: #27ae60; margin: 15px 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.1);}
+    .result-detail { font-size: 18px; color: #7f8c8d; margin-bottom: 25px; font-weight: 500;}
+    .start-btn {
+        background: #27ae60; color: white; border: none; padding: 14px 30px;
+        font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer;
+        width: 100%; transition: 0.3s; margin-top: 10px;
+    }
+    .start-btn:hover { background: #219150; box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);}
+    .close-btn {
+        background: #7f8c8d; color: white; border: none; padding: 12px 30px;
+        font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer;
+        width: 100%; transition: 0.3s; margin-top: 10px; display: none;
+    }
+    .close-btn:hover { background: #95a5a6; }
+    
+    .result-btn-group { display: flex; justify-content: center; gap: 15px; }
+    .result-btn { 
+        background: #2980b9; color: white; border: none; padding: 12px 20px; 
+        font-size: 15px; font-weight: bold; border-radius: 10px; cursor: pointer; 
+        transition: all 0.3s; flex: 1;
+    }
+    .result-btn:hover { background: #3498db; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);}
+    .result-btn.review { background: #95a5a6; }
+    .result-btn.review:hover { background: #7f8c8d; }
+    .result-btn.danger { background: #e74c3c; }
+    .result-btn.danger:hover { background: #c0392b; box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4); }
 
-    </style>
+    #main-content, #result-modal, #confirm-modal { display: none; }
+    #main-content { width: 900px; max-width: 100%; z-index: 10; position: relative;}
+
+    .quiz-container { background: #fff; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+    h1 { text-align: center; color: #2c3e50; margin-bottom: 10px; }
+    .description { text-align: center; color: #7f8c8d; margin-bottom: 20px; font-style: italic; }
+
+    .tabs { display: flex; justify-content: center; align-items: center; margin-bottom: 20px; gap: 8px; flex-wrap: wrap;}
+    .tab-btn { background-color: #e0e0e0; border: none; padding: 12px 18px; cursor: pointer; font-size: 15px; font-weight: bold; border-radius: 8px; transition: 0.3s; color: #333; }
+    .tab-btn.active { background-color: #2980b9; color: white; box-shadow: 0 4px 6px rgba(41, 128, 185, 0.3); }
+    .tab-btn:hover:not(.active) { background-color: #d5d5d5; }
+    .setting-btn { background-color: #f39c12; color: white; border: none; padding: 12px 18px; cursor: pointer; font-size: 15px; font-weight: bold; border-radius: 8px; transition: 0.3s; margin-left: 10px;}
+    .setting-btn:hover { background-color: #e67e22; box-shadow: 0 4px 6px rgba(230, 126, 34, 0.3); }
+
+    .stats { text-align: right; font-weight: bold; color: #e74c3c; margin-bottom: 15px; font-size: 18px; border-bottom: 2px solid #eee; padding-bottom: 10px;}
+    .question-box { background: #f8f9fa; border-left: 5px solid #3498db; padding: 15px; margin-bottom: 20px; border-radius: 0 8px 8px 0; }
+    .question-title { font-weight: bold; font-size: 16px; margin-bottom: 10px; color: #2c3e50; }
+    .answer-label { display: block; padding: 10px; margin: 5px 0; background: #fff; border: 1px solid #ddd; border-radius: 5px; cursor: pointer; transition: 0.2s; }
+    .answer-label:hover { background: #fafafa; }
+    .answer-label.selected { background: #d6eaf8; border-color: #3498db; } 
+
+    .correct { background-color: #d4edda !important; color: #155724; font-weight: bold; border-color: #c3e6cb;}
+    .correct::after { content: " ✓ Đúng"; float: right; }
+    .wrong { background-color: #f8d7da !important; color: #721c24; text-decoration: line-through; opacity: 0.8; border-color: #f5c6cb;}
+    .wrong::after { content: " ✕ Sai"; float: right; text-decoration: none; }
+    .disabled { pointer-events: none; }
+
+    .pagination { display: flex; justify-content: center; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+    .nav-btn { background: #2c3e50; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; transition: background 0.3s;}
+    .nav-btn:hover { background: #34495e; }
+    .nav-btn:disabled { background: #ccc; cursor: not-allowed; }
+    #submit-test-btn { background: #e74c3c; display: none; } 
+    #submit-test-btn:hover { background: #c0392b; }
+
+    .snowflake { position: fixed; top: -50px; background-image: url('snowflake_2744-fe0f.png'); background-size: contain; background-repeat: no-repeat; pointer-events: none; z-index: 9999; opacity: 0.8; animation: fall linear forwards; }
+    @keyframes fall { to { transform: translate(var(--drift-x), 105vh) rotate(360deg); } }
+    
+</style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>HTML5 Drag & Drop — Mô tả và Thiết kế</h1>
-            <p>Ví dụ thực tế có hỗ trợ bàn phím và fallback cho cảm ứng. Kéo thả các phần tử vào vùng nhận.</p>
-        </header>
-        <section class="drop1">
-          <div class="card">
-            <h2>Các phần tử có thể kéo</h2>
-            <p class="meta">Sử dụng chuột hoặc Tab để chọn.</p>
-            <div class="items" role="list" id="palette">
-              <button class="item" role="listitem" draggable="true" aria-grabbed="false">Táo</button>
-              <button class="item" role="listitem" draggable="true" aria-grabbed="false">Chuối</button>
-              <button class="item" role="listitem" draggable="true"   aria-grabbed="false">Cà rốt</button>
-              <button class="item" role="listitem" draggable="true" aria-grabbed="false">Cải bó xôi</button>
-            </div><br>
-            <div class="controls">
-              <div class="hint">Kéo vào một trong hai vùng bên phải</div>
-              <button id="reset" class="btn" type="button">Đặt lại</button>
+<div class="overlay" id="start-banner">
+    <div class="banner">
+        <h2>⚙️ Thiết Lập Đề Thi</h2>
+        
+        <div class="setting-row">
+            <div class="setting-group">
+                <label>Học phần / Nguồn câu hỏi:</label>
+                <select id="setting-module">
+                    <option value="qp1">Học phần QP1</option>
+                    <option value="qp2">Học phần QP2</option>
+                    <option value="qp34">Học phần QP3 & 4</option>
+                    <option value="all">Trộn TẤT CẢ các HP</option>
+                </select>
             </div>
-          </div>
-        <div>
-        <div class="card" style="margin-bottom:12px">
-          <h2>Khu vực nhận</h2>
-          <div class="drop2">
-            <div class="dropzone" tabindex="0" aria-dropeffect="none"  aria-label="Vùng nhận trái cây">
-              <div class="zone-title">Trái cây</div>
-              <div class="list" role="list" aria-live="polite"></div>
+            <div class="setting-group">
+                <label>Số lượng câu hỏi (Đề thi):</label>
+                <select id="setting-limit">
+                    <option value="10">10 câu</option>
+                    <option value="20">20 câu</option>
+                    <option value="30">30 câu</option>
+                    <option value="50">50 câu</option>
+                    <option value="all">Toàn bộ ngân hàng</option>
+                </select>
             </div>
-            <div class="dropzone" tabindex="0" aria-dropeffect="none" aria-label="Vùng nhận rau">
-              <div class="zone-title">Rau củ</div>
-              <div class="list" role="list" aria-live="polite"></div>
-            </div>
-          </div>
         </div>
-      <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        const items = document.querySelectorAll(".item");
-        const zones = document.querySelectorAll(".dropzone");
-        const resetBtn = document.getElementById("reset");
-        let draggedItem = null;
-      //kéo  
-      items.forEach(item => {
-          item.addEventListener("dragstart", e => {
-          draggedItem = item;
-          e.dataTransfer.effectAllowed = "move";
-          e.dataTransfer.setData("text/plain", item.textContent);
-          item.setAttribute("aria-grabbed", "true");
-        });
-        item.addEventListener("dragend", () => {
-          item.setAttribute("aria-grabbed", "false");
-          draggedItem = null;
-        });
-      });
-      //vùng nhận
-      zones.forEach(zone => {
-          zone.addEventListener("dragover", e => {
-            e.preventDefault(); //thả
-            zone.classList.add("over");
-          });
-          zone.addEventListener("dragleave", () => {
-            zone.classList.remove("over");
-          });
-          zone.addEventListener("drop", e => {
-            e.preventDefault();
-            zone.classList.remove("over");
-            if (draggedItem) {
-              zone.querySelector(".list").appendChild(draggedItem);
-              draggedItem.setAttribute("aria-grabbed", "false");
-              draggedItem = null;
-            }
-          });
-      });
-        //reset
-        resetBtn.addEventListener("click", () => {
-            const palette = document.getElementById("palette");
-              document.querySelectorAll(".dropzone .item").forEach(it => {
-                palette.appendChild(it);
-                });
-        });
-      });
-      </script>
+
+        <div class="setting-row">
+            <div class="setting-group">
+                <label>Trộn thứ tự câu hỏi?</label>
+                <select id="setting-shuffle">
+                    <option value="yes">Có (Ngẫu nhiên)</option>
+                    <option value="no">Không (Theo thứ tự gốc)</option>
+                </select>
+            </div>
+            <div class="setting-group">
+                <label>Chế độ làm bài:</label>
+                <select id="setting-answer">
+                    <option value="no">Thi thử (Làm xong mới chấm)</option>
+                    <option value="yes">Ôn tập (Hiện ngay đáp án)</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="start-btn" id="start-btn-action" onclick="startApp()">TẠO ĐỀ & BẮT ĐẦU LÀM</button>
+        <button class="close-btn" id="close-banner-btn" onclick="closeSettings()">ĐÓNG (Không lưu)</button>
     </div>
+</div>
+
+<!-- BẢNG CẢNH BÁO XÁC NHẬN NỘP BÀI (MỚI THÊM) -->
+<div class="overlay" id="confirm-modal">
+    <div class="confirm-box">
+        <h2>⚠️ XÁC NHẬN NỘP BÀI</h2>
+        <div class="result-detail" style="color: #34495e;">
+            Bạn có chắc chắn muốn nộp bài để chấm điểm không?<br>
+            <span style="font-size: 15px; font-style: italic; color: #e74c3c;">(Sau khi nộp, hệ thống sẽ khóa đề và bạn không thể sửa lại đáp án)</span>
+        </div>
+        <div class="result-btn-group">
+            <button class="result-btn review" onclick="closeConfirmModal()">HỦY BỎ</button>
+            <button class="result-btn danger" onclick="processSubmit()">ĐỒNG Ý NỘP</button>
+        </div>
+    </div>
+</div>
+
+<!-- BẢNG THÔNG BÁO KẾT QUẢ THI SAU KHI NỘP -->
+<div class="overlay" id="result-modal">
+    <div class="result-box">
+        <h2>🎉 HOÀN THÀNH BÀI THI! 🎉</h2>
+        <div class="result-score" id="score-text">10.0</div>
+        <div class="result-detail" id="detail-text">Trả lời đúng: 0 / 0 câu</div>
+        <div class="result-btn-group">
+            <button class="result-btn review" onclick="closeResult()">XEM LẠI ĐÁP ÁN</button>
+            <button class="result-btn" onclick="openSettingsFromResult()">LÀM ĐỀ MỚI</button>
+        </div>
+    </div>
+</div>
+
+<!-- NỘI DUNG CHÍNH LÀM BÀI -->
+<div id="main-content">
+    <div class="quiz-container">
+        <h1>Hệ Thống Luyện Tập Trắc Nghiệm GDQP</h1>
+        <p class="description">Thiết lập cấu hình đề thi theo ý muốn của bạn! 
+            <br>
+            Lưu ý: Các câu hỏi và đáp án chỉ mang tính chất tham khảo, không phải đề thi chính thức. Cảm ơn các bạn!
+        </p>
+        <!-- THANH TAB -->
+        <div class="tabs">
+            <button class="tab-btn" id="btn-qp1" onclick="switchTab('qp1')">Học phần QP1</button>
+            <button class="tab-btn" id="btn-qp2" onclick="switchTab('qp2')">Học phần QP2</button>
+            <button class="tab-btn" id="btn-qp34" onclick="switchTab('qp34')">Học phần QP3&4</button>
+            <button class="tab-btn" id="btn-all" onclick="switchTab('all')">Đề Tổng Hợp</button>
+            <button class="setting-btn" onclick="openSettings()">⚙️ Cài đặt Đề</button>
+        </div>
+
+        <div class="stats" id="global-stats">Đang tải dữ liệu...</div>
+        <div id="quiz-area"></div>
+        
+        <div class="pagination">
+            <button class="nav-btn" id="prev-btn" onclick="changePage(-1)">❮ Trước</button>
+            <span id="page-info" style="align-self: center; font-weight: bold;">Trang 1</span>
+            <button class="nav-btn" id="next-btn" onclick="changePage(1)">Sau ❯</button>
+            <button class="nav-btn" id="submit-test-btn" onclick="openConfirmModal()">NỘP BÀI TỔNG</button>
+        </div>
+        
+        <div style="text-align: center; margin-top: 15px;">
+            Đến nhanh trang: <select id="page-select" onchange="goToPage(this.value)"></select>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    const quizData = {
+       qp1: [
+            // --- BÀI: XÂY DỰNG LỰC LƯỢNG VŨ TRANG NHÂN DÂN ---
+            { q: "Thực trạng của lực lượng vũ trang nhân dân trong giai đoạn hiện nay là một trong những:", a: { A: "Nhiệm vụ xây dựng lực lượng công an nhân dân.", B: "Yêu cầu xây dựng lực lượng vũ trang nhân dân trong điều kiện khu vực Đông Nam Á đã thay đổi nhiều diễn biến phức tạp.", C: "Biện pháp xây dựng lực lượng vũ trang trong điều kiện đất nước đã thay đổi có nhiều diễn biến phức tạp.", D: "Đặc điểm liên quan đến xây dựng lực lượng vũ trang nhân dân Việt Nam." }, true: "D" },
+            { q: "Lực lượng vũ trang nhân dân là các tổ chức vũ trang và bán vũ trang của nhân dân Việt Nam do tổ chức nào lãnh đạo?", a: { A: "Đảng Cộng sản Việt Nam.", B: "Quốc hội nước cộng hòa xã hội chủ nghĩa Việt Nam.", C: "Nhà nước cộng hòa xã hội chủ nghĩa Việt Nam.", D: "Mặt trận Tổ quốc Việt Nam." }, true: "A" },
+            { q: "Đảm bảo cho lực lượng vũ trang nhân dân luôn trong tư thế sẵn sàng chiến đấu và chiến đấu thắng lợi được xác định là một trong những:", a: { A: "Phương hướng lãnh đạo của Đảng đối với lực lượng vũ trang.", B: "Phương châm hành động cách mạng của quân đội.", C: "Giải pháp chiến đấu của công an nhân dân.", D: "Quan điểm, nguyên tắc cơ bản trong xây dựng lực lượng vũ trang nhân dân ta hiện nay." }, true: "D" },
+            { q: "Phương hướng xây dựng lực lượng vũ trang nhân dân hiện nay:", a: { A: "Cách mạng, chính quy, tinh nhuệ, từng bước hiện đại.", B: "Mua sắm vũ khí trang bị hiện đại cho quân đội.", C: "Nhanh chóng hiện đại hóa vũ khí trang bị cho quân đội.", D: "Chú trọng xây dựng đời sống văn hóa tinh thần của quân đội." }, true: "A" },
+            { q: "Đảng lãnh đạo lực lượng vũ trang nhân dân Việt Nam theo nguyên tắc?", a: { A: "Tuyệt đối, toàn diện.", B: "Tuyệt đối và trực tiếp.", C: "Tuyệt đối, trực tiếp về mọi mặt.", D: "Trực tiếp về mọi mặt." }, true: "C" },
+            { q: "Đội quân chiến đấu, đội quân công tác, đội quân sản xuất. Được xác định là:", a: { A: "Biện pháp xây dựng quân đội.", B: "Nhiệm vụ của quân đội.", C: "Chức năng của quân đội.", D: "Nguyên tắc xây dựng của quân đội." }, true: "C" },
+            { q: "Một trong những quan điểm, nguyên tắc của Đảng về xây dựng lực lượng vũ trang nhân dân Việt Nam là:", a: { A: "Lấy chất lượng là chính, lấy xây dựng chính trị làm cơ sở.", B: "Lấy số lượng là chính, lấy xây dựng chính trị làm cơ sở.", C: "Lấy chất lượng là chính, lấy xây dựng quân sự làm cơ sở.", D: "Lấy số lượng là chính, lấy xây dựng quân sự làm cơ sở." }, true: "A" },
+            { q: "Tổ chức các đơn vị lực lượng vũ trang:", a: { A: "Nhanh, mạnh, chính xác.", B: "Tinh gọn, có sức cơ động nhanh.", C: "Bảo đảm số lượng, chất lượng.", D: "Gọn, mạnh, cơ động." }, true: "B" },
+            { q: "Xây dựng đội ngũ cán bộ lực lượng vũ trang nhân dân có:", a: { A: "Trình độ khoa học cao.", B: "Phẩm chất, năng lực tốt.", C: "Trình độ chuyên môn giỏi.", D: "Thể lực tốt." }, true: "B" },
+            { q: "Tổ chức các đơn vị lực lượng vũ trang phù hợp với:", a: { A: "Tình hình thế giới, khu vực và thế trận cả nước.", B: "Tình hình cụ thể khu vực và thế trận cả nước.", C: "Tình hình trong nước, khu vực và thế trận cả nước.", D: "Tình hình cụ thể ở từng địa phương, khu vực và thế trận cả nước." }, true: "D" },
+            { q: "Chiến lược bảo vệ tổ quốc xác định: “Tập trung xây dựng Lực lượng quân đội, công an có bản lĩnh chính trị vững vàng, lòng trung thành tuyệt đối với Tổ quốc và nhân dân..” hội nghị lần thứ mấy, khóa bao nhiêu của BCH TƯ Đảng xác định?", a: { A: "Hội nghị lần thứ 7, khóa VIII.", B: "Hội nghị lần thứ 8, khóa IX.", C: "Hội nghị lần thứ 9, khóa X.", D: "Hội nghị lần thứ 10, khóa XI." }, true: "B" },
+            { q: "Quân đội nhân dân Việt Nam gồm có mấy Quân khu, Quân đoàn?", a: { A: "05 Quân khu, 02 Quân đoàn.", B: "06 Quân khu, 03 Quân đoàn.", C: "07 Quân khu, 04 Quân đoàn.", D: "08 Quân khu, 05 Quân đoàn." }, true: "C" },
+            { q: "Vì sao sự lãnh đạo của Đảng CS đối với lực lượng vũ trang là nguyên tắc quan trọng nhất?", a: { A: "Quyết định đến sự trưởng thành của quân đội nhân dân.", B: "Quyết định đến mục tiêu, phương hướng chiến đấu.", C: "Quyết định sức mạnh, sự tồn tại, phát triển, chiến đấu, chiến thắng của LLVT.", D: "Quyết định đến cơ chế hoạt động của công an nhân dân." }, true: "C" },
+            { q: "Quân đội nhân dân Việt Nam hiện nay có mấy Quân chủng, Binh chủng?", a: { A: "05 Quân chủng, 02 Binh chủng.", B: "02 Quân chủng, 05 Binh chủng.", C: "03 Quân chủng, 06 Binh chủng.", D: "06 Quân chủng, 03 Binh chủng." }, true: "B" },
+            { q: "Giữ vững và tăng cường sự lãnh đạo của Đảng Cộng sản Việt Nam đối với lực lượng vũ trang nhân dân Việt Nam. Được xác định là:", a: { A: "Biện pháp xây dựng lực lượng vũ trang nhân dân.", B: "Nội dung, nhiệm vụ xây dựng lực lượng vũ trang nhân dân.", C: "Quan điểm, nguyên tắc xây dựng lực lượng vũ trang nhân dân.", D: "Phương hướng xây dựng lực lượng vũ trang nhân dân." }, true: "C" },
+            { q: "Đứng trước diễn biến của tình hình, có khả năng phân tích và kết luận chính xác đúng, sai từ đó có thái độ đúng đắn với sự việc đó. Được xác định là:", a: { A: "Tinh nhuệ về kĩ thuật của lực lượng vũ trang nhân dân.", B: "Tinh nhuệ về chính trị của lực lượng vũ trang nhân dân.", C: "Tinh nhuệ về chiến thuật của lực lượng vũ trang nhân dân.", D: "Tất cả các phương án trên đúng." }, true: "B" },
+            { q: "Xây dựng quân đội nhân dân, công an nhân dân chính quy là:", a: { A: "Thực hiện thống nhất về mọi mặt (tổ chức biên chế, trang bị...).", B: "Thực hiện thống nhất về chính trị, quân sự, hậu cần.", C: "Thực hiện thống nhất về nhận thức chính trị, tư tưởng.", D: "Thực hiện thống nhất về nhận thức chính trị, mục tiêu chiến đấu." }, true: "A" },
+            { q: "Một trong những nội dung xây dựng quân đội cách mạng là:", a: { A: "Xây dựng lòng tự hào, tự tôn dân tộc.", B: "Xây dựng truyền thống đánh giặc giữ nước.", C: "Xây dựng truyền thống thống nhất của dân, do dân, vì dân.", D: "Xây dựng bản chất giai cấp công nhân." }, true: "D" },
+            { q: "Một trong những đặc điểm liên quan đến việc xây dựng lực lượng vũ trang nhân dân Việt Nam hiện nay?", a: { A: "Xây dựng LLVTND trong điều kiện quốc tế đã thay đổi có nhiều diễn biến phức tạp.", B: "Xây dựng quân đội trong điều kiện quốc tế đã thay đổi có nhiều diễn biến phức tạp.", C: "Xây dựng công an trong điều kiện quốc tế đã thay đổi có nhiều diễn biến phức tạp.", D: "Xây dựng dân quân tự vệ trong điều kiện quốc tế đã thay đổi có nhiều diễn biến phức tạp." }, true: "A" },
+            { q: "Lực lượng vũ trang nhân dân Việt Nam bao gồm:", a: { A: "Quân đội nhân dân, công an nhân dân, dân quân tự vệ.", B: "Quân đội nhân dân, dân quân tự vệ.", C: "Hải quân, dự bị động viên, dân quân tự vệ.", D: "Không quân, cảnh sát biển, dân quân tự vệ." }, true: "A" },
+            { q: "“Chính trị trọng hơn quân sự” được Chủ tịch Hồ Chí Minh viết trong chỉ thị?", a: { A: "Thành lập lực lượng Việt Minh.", B: "Thành lập lực lượng vũ trang địa phương.", C: "Thành lập Đội Việt Nam tuyên truyền giải phóng quân.", D: "Thành lập lực lượng vũ trang ba thứ quân." }, true: "C" },
+            { q: "Xây dựng quân đội về chính trị trong đó vấn đề nào là cốt lõi?", a: { A: "Bản chất giai cấp công nhân.", B: "Tính nhân dân.", C: "Tính dân tộc.", D: "Phương án b, c đúng." }, true: "A" },
+            { q: "“Dân tộc Việt Nam nhất định phải được giải phóng. Muốn đánh chúng phải có lực lượng quân sự, phải có tổ chức”. Ai khẳng định?", a: { A: "Chủ tịch Hồ Chí Minh.", B: "Đại tướng Võ Nguyên Giáp.", C: "Đại tướng Nguyễn Chí Thanh.", D: "Đại tướng Phạm Văn Trà." }, true: "A" },
+            { q: "Đội Việt Nam tuyên truyền giải phóng quân được thành lập với bao nhiêu chiến sỹ, ai làm đội trưởng?", a: { A: "34 chiến sỹ, Võ nguyên giáp", B: "34 chiến sỹ, Hoàng Sâm", C: "34 chiến sỹ, Xích Thắng", D: "34 chiến sỹ, Hoàng Văn Thái" }, true: "B" },
+            { q: "Theo tư tưởng Hồ Chí Minh: Quân đội ta có sức mạnh vô địch vì:", a: { A: "Có Đảng xây dựng, Đảng lãnh đạo và giáo dục.", B: "Được trang bị vũ khí trang bị hiện đại.", C: "Nhà nước xây dựng quản lý điều hành.", D: "Được kế thừa truyền thống dựng nước và giữ nước của dân tộc." }, true: "A" },
+
+            // --- BÀI: XÂY DỰNG NỀN QUỐC PHÒNG TOÀN DÂN, AN NINH NHÂN DÂN ---
+            { q: "Nền quốc phòng toàn dân, an ninh nhân dân chỉ có mục đích duy nhất là tự vệ chính đáng. Được xác định là:", a: { A: "Vị trí.", B: "Đặc trưng.", C: "Khái niệm.", D: "Mục đích." }, true: "B" },
+            { q: "Thế trận chiến tranh nhân dân bố trí rộng khắp trên cả nước nhưng phải có:", a: { A: "Kế hoạch huấn luyện sẵn sàng chiến đấu.", B: "Kế hoạch tác chiến.", C: "Trọng tâm, trọng điểm.", D: "Phương án a, b, c đúng." }, true: "C" },
+            { q: "Nền quốc phòng, an ninh của dân, do dân và vì dân, do ai tiến hành?", a: { A: "Công an nhân dân tiến hành.", B: "Toàn thể nhân dân tiến hành.", C: "Quân đội nhân dân tiến hành.", D: "Dân quân tự vệ tiến hành." }, true: "B" },
+            { q: "Xây dựng lực lượng quốc phòng, an ninh đáp ứng yêu cầu bảo vệ vững chắc Tổ quốc Việt Nam xã hội chủ nghĩa. Được xác định là:", a: { A: "Nội dung xây dựng nền quốc phòng", B: "Vị trí xây dựng nền quốc phòng", C: "Khái niệm xây dựng nền quốc phòng", D: "Nhiệm vụ xây dựng nền quốc phòng." }, true: "D" },
+            { q: "An ninh nhân dân là sự nghiệp của:", a: { A: "Toàn dân lấy lực lượng bộ đội biên phòng làm nòng cốt.", B: "Toàn dân, do nhân dân tiến hành, lực lượng an ninh nhân dân làm nòng cốt.", C: "Toàn dân lấy lực lượng công an nhân dân làm nòng cốt.", D: "Toàn dân lấy lực lượng dân quân tự vệ làm nòng cốt." }, true: "B" },
+            { q: "Quốc phòng toàn dân, an ninh nhân dân là hoạt động tổng thể của cả nước, trên mọi lĩnh vực lấy:", a: { A: "Lực lượng an ninh làm nòng cốt.", B: "Lực lượng vũ trang làm nòng cốt.", C: "Lực lượng vũ trang địa phương làm nòng cốt.", D: "Phương án a, b, c đúng." }, true: "B" },
+            { q: "Một trong những quan điểm xây dựng nền quốc phòng toàn dân là:", a: { A: "Tự lực, tự cường, tự tôn dân tộc.", B: "Độc lập tự chủ, tự lực, tự cường.", C: "Mở rộng quan hệ đa phương, đa dạng hóa các mối quan hệ quốc tế.", D: "Phát triển kinh tế, gắn với xây dựng nền quốc phòng toàn dân." }, true: "B" },
+            { q: "Nền quốc phòng toàn dân là sức mạnh quốc phòng của đất nước, được xây dựng trên nền tảng:", a: { A: "Chủ nghĩa Mác – Lênin.", B: "Tư tưởng Hồ Chí Minh.", C: "Nhà nước của dân, do dân, vì dân.", D: "Nhân lực, vật lực, tinh thần." }, true: "D" },
+            { q: "Nền quốc phòng toàn dân, an ninh nhân dân được xây dựng toàn diện và:", a: { A: "Phát triển, đào tạo khoa học công nghệ.", B: "Hiện đại hóa nền công nghiệp quốc phòng.", C: "Từng bước hiện đại.", D: "Đẩy mạnh công nghiệp hóa, hiện đại hóa đất nước." }, true: "C" },
+            { q: "“Trong khi đặt trọng tâm vào nhiệm vụ xây dựng CNXH, chúng ta không một chút lơi lỏng nhiệm vụ bảo vệ Tổ quốc, luôn luôn coi trọng quốc phòng an ninh...”. Đảng ta khẳng định trong:", a: { A: "Văn kiện đại hội đại biểu Đảng toàn quốc lần thứ X.", B: "Văn kiện đại hội đại biểu Đảng toàn quốc lần thứ IX.", C: "Văn kiện đại hội đại biểu Đảng toàn quốc lần thứ VIII.", D: "Văn kiện đại hội đại biểu Đảng toàn quốc lần thứ XI." }, true: "C" },
+            { q: "Chọn câu sai. Phương châm xây dựng nền quốc phòng toàn dân?", a: { A: "Độc lập tự chủ.", B: "Liên minh quân sự với các nước khác.", C: "Kết hợp sức mạnh dân tộc với sức mạnh thời đại.", D: "Tranh thủ sự ủng hộ giúp đỡ của bạn bè quốc tế." }, true: "B" },
+            { q: "“Xây dựng thế trận lòng dân làm nền tảng phát huy sức mạnh tổng hợp của toàn dân tộc, trong đó Quân đội nhân dân và Công an nhân dân là nòng cốt”. Đảng ta khẳng định trong:", a: { A: "Văn kiện đại hội Đảng toàn quốc lần thứ X.", B: "Văn kiện đại hội Đảng toàn quốc lần thứ IX.", C: "Văn kiện đại hội Đảng toàn quốc lần thứ VIII.", D: "Văn kiện đại hội Đảng toàn quốc lần thứ XI." }, true: "A" },
+            { q: "Xây dựng nền quốc phòng toàn dân, an ninh nhân dân vững mạnh nhằm:", a: { A: "Bảo vệ Tổ quốc Việt Nam XH xã hội chủ nghĩa.", B: "Tạo ra sức mạnh tổng hợp của đất nước.", C: "Tạo thế chủ động cho sự nghiệp xây dựng, bảo vệ Tổ quốc.", D: "Phương án a, b, c đúng." }, true: "D" },
+            { q: "Tiềm lực nào là cơ sở quyết định sức mạnh vật chất và kĩ thuật của nền quốc phòng toàn dân?", a: { A: "Tiềm lực chính trị tinh thần.", B: "Tiềm lực kinh tế.", C: "Tiềm lực quân sự.", D: "Tiềm lực khoa học công nghệ." }, true: "B" },
+            { q: "Chọn câu sai. Mục đích của việc xây dựng nền quốc phòng toàn dân?", a: { A: "Tạo thế chủ động cho sự nghiệp xây dựng bảo vệ Tổ quốc.", B: "Tạo ra sức mạnh tổng hợp của đất nước.", C: "Tạo điều kiện liên kết quân sự phát triển an ninh.", D: "Bảo vệ vững chắc Tổ quốc Việt Nam xã hội chủ nghĩa." }, true: "C" },
+            { q: "Sự khác nhau giữa nền quốc phòng toàn dân với nền an ninh nhân dân?", a: { A: "Phương thức tổ chức lực lượng, hoạt động cụ thể theo mục tiêu cụ thể được phân công.", B: "Phương thức tổ chức lực lượng, hoạt động cụ thể theo nhiệm vụ.", C: "Phương thức tổ chức lực lượng, hoạt động cụ thể theo mục tiêu.", D: "Phương thức tổ chức quản sự, hoạt động theo mục tiêu cụ thể được phân công." }, true: "A" },
+            { q: "Thực chất của việc xây dựng tiềm lực chính trị tinh thần là:", a: { A: "Xây dựng nhân tố con người mới Việt Nam XHCN.", B: "Xây dựng lực lượng tiến hành công tác tư tưởng.", C: "Xây dựng thế trận lòng dân.", D: "Xây dựng hệ thống chính trị trong thời chiến." }, true: "A" },
+            { q: "Tiềm lực chính trị, tinh thần của nền quốc phòng, an ninh nhân dân. Được xác định là:", a: { A: "Nhân tố cần thiết tạo nên sức mạnh của quốc phòng – an ninh.", B: "Nhân tố quyết định tạo nên sức mạnh của quốc phòng – an ninh.", C: "Nhân tố cơ bản tạo nên sức mạnh của quốc phòng – an ninh.", D: "Nhân tố hàng đầu tạo nên sức mạnh của quốc phòng – an ninh." }, true: "C" },
+            { q: "Thế trận quốc phòng, an ninh là:", a: { A: "Sự tổ chức, bố trí lực lượng, tiềm lực mọi mặt của đất nước và của toàn dân trên toàn lãnh thổ.", B: "Sự bố trí lực lượng, tiềm lực mọi mặt của đất nước và của toàn dân trên toàn lãnh thổ.", C: "Sự tổ chức, bố trí lực lượng của đất nước và của toàn dân trên toàn lãnh thổ.", D: "Sự tổ chức, bố trí tiềm lực mọi mặt của đất nước và của toàn dân trên toàn lãnh thổ." }, true: "A" },
+            { q: "“Xây dựng thế trận quốc phòng toàn dân kết hợp chặt chẽ với thế trận an ninh vững chắc”. Đảng ta khẳng định trong:", a: { A: "Văn kiện đại hội Đảng toàn quốc lần thứ VIII.", B: "Văn kiện đại hội Đảng toàn quốc lần thứ IX.", C: "Văn kiện đại hội Đảng toàn quốc lần thứ X.", D: "Văn kiện đại hội Đảng toàn quốc lần thứ XI." }, true: "D" },
+            { q: "Chọn câu sai. Các chính sách xây dựng thế trận chiến tranh nhân dân của cha ông ta?", a: { A: "Bách tính giai binh.", B: "Tiên phát chế nhân.", C: "Tận dân vi binh.", D: "Cử quốc nghênh địch." }, true: "C" },
+            { q: "Cơ chế lãnh đạo, chỉ huy nền quốc phòng toàn dân?", a: { A: "Đảng lãnh đạo, nhà nước thống nhất quản lý.", B: "Quân đội chỉ huy, quản lý.", C: "Nhân dân tự nguyện tham gia.", D: "Bộ quốc phòng lãnh đạo, chỉ huy." }, true: "A" },
+            { q: "“Phải đặc biệt coi trọng giữ vững ổn định chính trị - xã hội, tăng cường quốc phòng, an ninh, bảo vệ vững chắc Tổ quốc...”. Đảng ta khẳng định trong:", a: { A: "Văn kiện đại hội Đảng toàn quốc lần thứ XI.", B: "Văn kiện đại hội Đảng toàn quốc lần thứ X.", C: "Văn kiện đại hội Đảng toàn quốc lần thứ IX.", D: "Văn kiện đại hội Đảng toàn quốc lần thứ VIII." }, true: "A" },
+            { q: "“Không quân đội nào, không khí giới nào có thể đánh ngã được tinh thần hy sinh của toàn thể một dân tộc”. Ai khẳng định:", a: { A: "C. Mác.", B: "Ph. Ăngghen.", C: "V.I. Lênin.", D: "Hồ Chí Minh." }, true: "D" },
+
+            // --- BÀI: QUAN ĐIỂM CN MÁC LÊNIN - TƯ TƯỞNG HỒ CHÍ MINH VỀ CHIẾN TRANH... ---
+            { q: "Chọn câu sai. Nội dung học thuyết bảo vệ Tổ quốc XHCN của Lênin?", a: { A: "Bảo vệ Tổ quốc XHCN là một tất yếu khách quan", B: "Bảo vệ Tổ quốc XHCN là nghĩa vụ, trách nhiệm của toàn dân", C: "Đảng Cộng sản lãnh đạo mọi mặt sự nghiệp bảo vệ Tổ quốc XHCN.", D: "Là nhiệm vụ riêng của quân đội và lực lượng vũ trang." }, true: "D" },
+            { q: "Theo tư tưởng Hồ Chí Minh, sự ra đời của quân đội là:", a: { A: "Tính quy luật trong đấu tranh giai cấp, đấu tranh dân tộc ở Việt Nam.", B: "Một tất yếu, là tính quy luật trong đấu tranh giai cấp, đấu tranh dân tộc ở Việt Nam.", C: "Đúng quy luật trong đấu tranh giải phóng dân tộc ở Việt Nam.", D: "Yêu cầu tất yếu trong đấu tranh giai cấp ở Việt Nam." }, true: "B" },
+            { q: "Quan điểm của chủ nghĩa Mác - Lênin về chiến tranh:", a: { A: "Chiến tranh có từ khi xuất hiện xã hội loài người.", B: "Chiến tranh là hiện tượng chính trị – xã hội.", C: "Chiến tranh là hiện tượng chính trị – xã hội có tính lịch sử." }, true: "C" },
+            { q: "Theo quan điểm chủ nghĩa Mác - Lênin: Chiến tranh kiểm tra sức sống của:", a: { A: "Đường lối quân sự và nghệ thuật quân sự.", B: "Toàn bộ chế độ chính trị xã hội.", C: "Nền kinh tế xã hội.", D: "Phương án a,c đúng." }, true: "B" },
+            { q: "Chủ tịch Hồ Chí Minh khẳng định Quân đội nhân dân Việt Nam có:", a: { A: "3 nhiệm vụ, 2 chức năng.", B: "3 nhiệm vụ, 3 chức năng.", C: "2 nhiệm vụ, 2 chức năng.", D: "2 nhiệm vụ, 3 chức năng." }, true: "D" },
+            { q: "Tư tưởng Hồ Chí Minh về bảo vệ Tổ quốc Việt Nam XHCN?", a: { A: "Bảo vệ Tổ quốc Việt Nam XHCN là tất yếu khách quan.", B: "Mục tiêu bảo vệ Tổ quốc là độc lập dân tộc và CNXH là nghĩa vụ trách nhiệm của mọi công dân.", C: "Xây dựng đất nước độc lập, dân giàu, nước mạnh, xã hội dân chủ, công bằng, văn minh", D: "Phương án a, b đúng." }, true: "A" },
+            { q: "Một trong những quan điểm chủ nghĩa Mác - Lênin về bảo vệ Tổ quốc XHCN là:", a: { A: "Bảo vệ Tổ quốc xã hội chủ nghĩa là một tất yếu khách quan.", B: "Bảo vệ Tổ quốc là một tất yếu khách quan.", C: "Bảo vệ Tổ quốc xã hội chủ nghĩa là một tất yếu khách quan.", D: "Bảo vệ Tổ quốc là một quy luật khách quan." }, true: "A" },
+            { q: "Theo quan điểm của chủ nghĩa Mác - Lênin: Bảo vệ Tổ quốc xã hội chủ nghĩa, phải thường xuyên tăng cường:", a: { A: "Tiềm lực quốc phòng gắn với phát triển kinh tế - xã hội.", B: "Tiềm lực quân sự gắn với phát triển kinh tế - xã hội.", C: "Sức mạnh quân sự gắn với phát triển kinh tế - xã hội.", D: "Tiềm lực an ninh gắn với phát triển kinh tế - xã hội." }, true: "A" },
+            { q: "Theo tư tưởng Hồ Chí Minh, sử dụng bạo lực cách mạng để:", a: { A: "Giải phóng dân tộc.", B: "Giành chính quyền và bảo vệ chính quyền.", C: "Xây dựng và bảo vệ chính quyền cách mạng.", D: "Phương án a và c đúng." }, true: "B" },
+            { q: "Khi nói về bản chất của chủ nghĩa đế quốc, Hồ Chí Minh đã khái quát bằng hình ảnh:", a: { A: "Con rắn độc.", B: "Con bạch tuộc.", C: "Con rồng tre.", D: "Con đỉa hai vòi." }, true: "D" },
+            { q: "“Giành chính quyền đã khó, nhưng giữ được chính quyền còn khó khăn hơn”. Ai khẳng định?", a: { A: "C. Mác.", B: "V.I. Lênin.", C: "Ph. Ăng ghen.", D: "Chủ tịch Hồ Chí Minh." }, true: "B" },
+            { q: "“...Ai có súng dùng súng, ai có gươm dùng gươm, không có súng gươm thì dùng cuốc thuổng, gậy gộc...”. Được Chủ Tịch Hồ Chí Minh kêu gọi trong thời kì nào?", a: { A: "Chống Mĩ.", B: "Chống Pháp.", C: "Chống phát xít Nhật.", D: "Phương án a, b đúng." }, true: "B" },
+            { q: "Chủ tịch Hồ Chí Minh xác định yếu tố con người có vai trò như thế nào trong xây dựng Quân đội nhân dân?", a: { A: "Con người giữ vai trò quan trọng nhất, chi phối các yếu tố khác.", B: "Con người là quan trọng cùng với yếu tố quân sự là quyết định.", C: "Con người có tri thức giữ vai trò quyết định.", D: "Con người với trình độ chính trị cao giữ vai trò quyết định." }, true: "D" },
+            { q: "Trong thời đại ngày nay còn chủ nghĩa đế quốc thì còn nguy cơ xảy ra chiến tranh, chiến tranh là bạn đường của chủ nghĩa đế quốc. Ai khẳng định?", a: { A: "C. Mác.", B: "Ph. Ăngghen.", C: "V.I. Lênin.", D: "C. Ph. Claudovit." }, true: "C" },
+            { q: "Tìm câu trả lời đúng nhất. Lênin khẳng định: “Trong mọi cuộc chiến tranh rốt cuộc thắng lợi đều tùy thuộc vào:", a: { A: "Tinh thần của quần chúng đang đổ máu trên chiến trường quyết định.", B: "Khả năng cơ động của quần chúng trên chiến trường quyết định.", C: "Con người và vũ khí trên chiến trường quyết định.", D: "Con người với trình độ sẵn sàng chiến đấu cao giữ vai trò quyết định." }, true: "A" },
+            { q: "Theo quan điểm của C.Mác – Ph.Ăngghen: Con người, kinh tế, chính trị, văn hóa, xã hội, vũ khí trang bị, khoa học quân sự. Được xác định là:", a: { A: "Bản chất giai cấp của quân đội.", B: "Sức mạnh chiến đấu của quân đội.", C: "Nguyên tắc xây dựng quân đội.", D: "Nguồn gốc ra đời của quân đội." }, true: "B" },
+            { q: "“Dân tộc Việt Nam nhất định phải được giải phóng. Muốn đánh chúng phải có lực lượng quân sự, phải có tổ chức”. Ai khẳng định?", a: { A: "Chủ Tịch Hồ Chí Minh.", B: "Chủ Tịch Tôn Đức Thắng", C: "Thủ tướng Phạm Văn Đồng.", D: "Đại tướng Võ Nguyên Giáp." }, true: "A" },
+            { q: "Khi bàn về chiến tranh, Claudovit đã quan niệm: Chiến tranh là một hành vi bạo lực. Lênin đánh giá ông đã không lý giải được:", a: { A: "Bản chất của chiến tranh.", B: "Quy luật của chiến tranh.", C: "Tính chất của chiến tranh", D: "Đặc điểm của chiến tranh" }, true: "A" },
+            { q: "Chọn câu sai. Nguyên tắc xây dựng quân đội kiểu mới của V.I.Lênin?", a: { A: "Đoàn kết thống nhất quân đội với nhân dân.", B: "Xây dựng quân đội chính quy.", C: "Trung thành với chủ nghĩa quốc tế vô sản.", D: "Xây dựng quân đội làm công cụ bạo lực sắc bén." }, true: "D" },
+            { q: "Muốn xóa bỏ chiến tranh phải xóa bỏ:", a: { A: "Mâu thuẫn chính trị xã hội.", B: "Lực lượng quân đội.", C: "Nguồn gốc kinh tế, xã hội.", D: "Nguồn gốc kinh tế, chính trị." }, true: "C" },
+            { q: "Xác định tính chất xã hội của chiến tranh, phân tích tính chất chính trị - xã hội của chiến tranh... Được xác định là:", a: { A: "Quan điểm C.Mác - Ph.Ăngghen về chiến tranh.", B: "Tư tưởng Hồ Chí Minh về chiến tranh.", C: "Quan điểm V.I.Lênin về chiến tranh", D: "Quan điểm của C.Mác – V.I.Lênin về chiến tranh" }, true: "B" },
+            { q: "Không ngừng hoàn thiện cơ cấu tổ chức; phát triển hài hòa các quân binh chủng. Được xác định là một trong những:", a: { A: "Nguyên tắc xây dựng quân đội kiểu mới của V.I.Lênin.", B: "Nội dung xây dựng quân đội kiểu mới của V.I.Lênin.", C: "Quan điểm xây dựng quân đội kiểu mới của V.I.Lênin.", D: "Biện pháp xây dựng quân đội kiểu mới của V.I.Lênin." }, true: "A" },
+            { q: "Theo tư tưởng Hồ Chí Minh: Quân đội ta có mấy chức năng?", a: { A: "Có 3, đội quân chiến đấu, công tác và sản xuất.", B: "Có 3, đội quân sẵn sàng chiến đấu, công tác, sản xuất.", C: "Có 3, đội quân phục vụ chiến đấu, công tác và sản xuất.", D: "Có 3, đội quân chiến đấu, cơ động và công tác." }, true: "A" },
+            { q: "Bản chất giai cấp của quân đội phụ thuộc vào:", a: { A: "Tiềm lực kinh tế của đất nước bảo đảm cho quân đội", B: "Bản chất giai cấp của nhà nước đã tổ chức ra nó.", C: "Sự ủng hộ của quần chúng nhân dân đối với quân đội.", D: "Phương án a, c đúng." }, true: "B" },
+            { q: "Theo quan điểm của chủ nghĩa C.Mác – V.I.Lênin nguồn gốc nảy sinh chiến tranh?", a: { A: "Chế độ cộng hữu về tư liệu sản xuất và sự tồn tại của giai cấp và đối kháng giai cấp.", B: "Chế độ tư hữu về tư liệu sản xuất và sự tồn tại của giai cấp và đối kháng giai cấp.", C: "Bản năng sinh vật của con người", D: "Do định mệnh của loài người" }, true: "B" }
+        ],
+       qp2: [
+            // --- BÀI 8: PHÒNG CHỐNG CHIẾN LƯỢC DIỄN BIẾN HÒA BÌNH ---
+            { q: "Chiến lược “Diễn biến hòa bình” được tiến hành bằng:", a: { A: "Biện pháp phi quân sự do chủ nghĩa đế quốc và các thế lực phản động tiến hành.", B: "Biện pháp quân sự do chủ nghĩa đế quốc tiến hành.", C: "Biện pháp kinh tế do chủ nghĩa đế quốc tiến hành.", D: "Biện pháp vũ trang do chủ nghĩa đế quốc tiến hành." }, true: "A" },
+            { q: "Ngày 11 tháng 7 năm 1995, Mỹ tuyên bố nội dung gì với Việt Nam?", a: { A: "Xóa bỏ cấm vận kinh tế với Việt Nam.", B: "Xóa bỏ cấm vận quân sự với Việt Nam.", C: "Bình thường hóa quan hệ ngoại giao với Việt Nam.", D: "Phương án A và C đúng." }, true: "C" },
+            { q: "Năm 1957, Tổng thống Mĩ nào đã tuyên bố: Mĩ sẽ giành thắng lợi bằng hòa bình?", a: { A: "Kennơđi", B: "Aixênhao", C: "Truman", D: "G. Pho" }, true: "B" },
+            { q: "Nguyên nhân nào dẫn đến sự sụp đổ của Liên Xô và các nước XHCN Đông Âu?", a: { A: "Quan niệm và vận dụng không đúng chủ nghĩa Mác – Lênin.", B: "Những sai lầm, khuyết điểm của Đảng Cộng sản.", C: "Chống phá của chủ nghĩa đế quốc sử dụng chiến lược “Diễn biến hòa bình”.", D: "Các phương án A, B và C đúng." }, true: "D" },
+            { q: "Bạo loạn lật đổ là hành động chống phá bằng bạo lực có tổ chức do:", a: { A: "Lực lượng phản động, li khai, đối lập trong nước cấu kết với nước ngoài tiến hành.", B: "Lực lượng phản động chống phá các nước XHCN.", C: "Lực lượng quân sự tiến hành để lật đổ chính quyền.", D: "Lực lượng gián điệp tiến hành." }, true: "A" },
+            { q: "Mục tiêu nhất quán của chủ nghĩa đế quốc sử dụng chiến lược “Diễn biến hòa bình” đối với VN là:", a: { A: "Xóa bỏ vai trò lãnh đạo của Đảng.", B: "Xóa bỏ chế độ XHCN.", C: "Lái nước ta đi theo tư bản và lệ thuộc vào đế quốc.", D: "Phương án A, B, C đúng." }, true: "D" },
+            { q: "Trong thủ đoạn chống phá về kinh tế, chủ nghĩa đế quốc muốn chuyển hóa nền kinh tế VN dần theo:", a: { A: "Kinh tế thị trường tư bản chủ nghĩa, khích lệ kinh tế tư nhân phát triển.", B: "Từng bước làm mất vai trò chủ đạo của kinh tế nhà nước.", C: "Kinh tế thị trường định hướng XHCN.", D: "Phương án A và B đúng." }, true: "A" },
+            { q: "Mục đích chống phá về tư tưởng trong chiến lược “Diễn biến hòa bình” là:", a: { A: "Xóa bỏ vai trò lãnh đạo của Đảng.", B: "Xóa bỏ chủ nghĩa Mác Lênin, tư tưởng Hồ Chí Minh.", C: "Xóa bỏ sự quản lý của nhà nước.", D: "Phương án A và B đúng." }, true: "B" },
+            { q: "Mục đích chống phá trên lĩnh vực đối ngoại trong chiến lược “Diễn biến hòa bình” là:", a: { A: "Chia rẽ tình đoàn kết giữa VN với các nước XHCN.", B: "Chia rẽ tình đoàn kết giữa VN với Lào, Campuchia.", C: "Lợi dụng chính sách để đầu tư vốn tạo sức ép về chính trị.", D: "Phương án A và B đúng." }, true: "D" },
+            { q: "Mục đích chống phá về lĩnh vực dân tộc, tôn giáo, chủ nghĩa đế quốc dùng thủ đoạn gì?", a: { A: "Lợi dụng những khó khăn ở vùng đồng bào dân tộc ít người.", B: "Lợi dụng trình độ dân trí của một bộ phận đồng bào còn thấp.", C: "Lợi dụng những khuyết điểm về chủ trương chính sách dân tộc của Đảng.", D: "Các phương án A, B và C đúng." }, true: "D" },
+            { q: "Bạo loạn lật đổ thường xảy ra ở những nơi nào?", a: { A: "Trung tâm kinh tế, chính trị, văn hóa lớn. Nơi nhạy cảm về chính trị.", B: "Những nơi có khu công nghiệp, khu chế xuất, sân bay.", C: "Những địa điểm, công trình văn hóa quốc phòng an ninh.", D: "Các phương án A, B và C đúng." }, true: "A" },
+            { q: "Nguyên tắc xử lí bạo loạn lật đổ là:", a: { A: "Nhanh gọn, kiên quyết, linh hoạt, đúng đối tượng.", B: "Sử dụng lực lượng và phương thức đấu tranh phù hợp, không để lan rộng.", C: "Sử dụng lực lượng quân sự để trấn áp.", D: "Phương án A và B đúng." }, true: "D" },
+            { q: "Giải pháp phòng chống chiến lược “Diễn biến hòa bình” là:", a: { A: "Xây dựng cơ sở chính trị xã hội vững mạnh về mọi mặt.", B: "Bảo vệ sự nghiệp đổi mới và lợi ích quốc gia dân tộc.", C: "Chủ động khôn khéo xử lý tình huống khi bạo loạn xảy ra.", D: "Tranh thủ sự ủng hộ của nhân dân trong nước." }, true: "A" },
+            { q: "Chọn câu sai. Diễn biến hòa bình là chiến lược cơ bản nhằm:", a: { A: "Lật đổ chế độ chính trị của các nước XHCN từ bên trong.", B: "Lật đổ chế độ kinh tế xã hội của các nước tiến bộ từ bên trong.", C: "Lật đổ chế độ chính trị của các nước tư bản từ bên trong.", D: "Phương án B và C." }, true: "C" },
+            { q: "Ai là người khởi xướng chiến lược “Diễn biến hòa bình” của chủ nghĩa đế quốc?", a: { A: "Kennan.", B: "Mác San.", C: "Truman.", D: "Aixênhao." }, true: "A" },
+            { q: "Trong thủ đoạn chống phá về chính trị, các thế lực thù địch tận dụng những:", a: { A: "Sơ hở trong đường lối của Đảng.", B: "Sơ hở về chính sách của nhà nước ta.", C: "Trình độ dân trí để lật đổ Việt Nam.", D: "Phương án A và B đúng." }, true: "D" },
+            { q: "Chủ trương của Đảng và Nhà nước Việt Nam hiện nay trong quan hệ quốc phòng với các nước là:", a: { A: "Không tham gia liên minh quân sự với nước ngoài.", B: "Không cho nước ngoài đặt căn cứ quân sự ở Việt Nam.", C: "Cho các tổ chức quân sự nước ngoài đặt căn cứ.", D: "Phương án A và B đúng." }, true: "D" },
+
+            // --- BÀI 9: PHÒNG CHỐNG ĐỊCH TIẾN CÔNG VŨ KHÍ CÔNG NGHỆ CAO ---
+            { q: "Vũ khí được nghiên cứu, thiết kế, chế tạo dựa trên thành tựu của cuộc cách mạng khoa học công nghệ hiện đại...Được xác định là:", a: { A: "Vũ khí công nghệ cao.", B: "Khái niệm vũ khí công nghệ cao.", C: "Đặc điểm vũ khí công nghệ cao.", D: "Tính chất của vũ khí công nghệ cao." }, true: "B" },
+            { q: "Đặc điểm của vũ khí công nghệ cao đó là:", a: { A: "Hiệu suất của vũ khí, phương tiện tăng nhiều lần.", B: "Hàm lượng tri thức, kĩ năng tự động hóa cao.", C: "Có tính cạnh tranh cao và được nâng cấp liên tục.", D: "Tất cả các phương án trên đúng." }, true: "D" },
+            { q: "Một trong những đặc điểm của vũ khí công nghệ cao là:", a: { A: "Khả năng tự động hóa cao.", B: "Tầm bắn rất xa.", C: "Hiệu suất của vũ khí, phương tiện tăng nhiều lần.", D: "Uy lực sát thương lớn." }, true: "C" },
+            { q: "Đặc điểm nổi bật nhất vũ khí công nghệ cao đó là:", a: { A: "Khả năng tự động hóa rất cao.", B: "Độ chính xác cao với tầm bắn rất xa.", C: "Uy lực sát thương lớn.", D: "Tất cả các phương án trên đúng." }, true: "D" },
+            { q: "Điểm yếu của vũ khí công nghệ cao là:", a: { A: "Dựa hoàn toàn vào phương tiện kỹ thuật, dễ bị đối phương đánh lừa.", B: "Tốc độ bắn chậm.", C: "Tầm hoạt động bị hạn chế.", D: "Uy lực sát thương không cao." }, true: "A" },
+            { q: "Tổ hợp tên lửa S.300 là vũ khí:", a: { A: "Thông thường.", B: "Vũ khí công nghệ cao.", C: "Vũ khí hủy diệt lớn.", D: "Vũ khí sinh học." }, true: "B" },
+            { q: "Phi công bắn rơi máy bay B.52 đầu tiên trong trận Điện Biên Phủ trên không tháng 12 năm 1972 là:", a: { A: "Phạm Tuân.", B: "Nguyễn Văn Cốc.", C: "Nguyễn Thành Trung.", D: "Vũ Xuân Thiều." }, true: "A" },
+            { q: "Phi công nào đã nói: Bắn B.52 mà không rơi tại chỗ, tôi sẽ lao thẳng vào nó?", a: { A: "Phạm Tuân.", B: "Vũ Xuân Thiều.", C: "Nguyễn Văn Cốc.", D: "Nguyễn Thành Trung." }, true: "B" },
+            { q: "Phi công Việt Nam nào bắn rơi nhiều máy bay của đế quốc Mỹ nhất?", a: { A: "Phạm Tuân.", B: "Vũ Xuân Thiều.", C: "Nguyễn Văn Cốc.", D: "Nguyễn Thành Trung." }, true: "C" },
+            { q: "Trong 12 ngày đêm Điện Biên Phủ trên không tháng 12 năm 1972, quân và dân ta bắn rơi bao nhiêu máy bay các loại?", a: { A: "80 máy bay.", B: "81 máy bay.", C: "34 máy bay.", D: "64 máy bay." }, true: "B" },
+            { q: "Trong 12 ngày đêm Điện Biên Phủ trên không tháng 12 năm 1972, quân và dân ta bắn rơi bao nhiêu máy bay B.52?", a: { A: "80 máy bay.", B: "81 máy bay.", C: "34 máy bay.", D: "64 máy bay." }, true: "C" },
+            { q: "Phòng chống trinh sát của địch, Dụ địch đánh vào mục tiêu có giá trị thấp, tổ chức bố trí phân tán... Được hiểu là:", a: { A: "Biện pháp thụ động của phòng chống vũ khí CNC.", B: "Biện pháp chủ động của phòng chống vũ khí CNC.", C: "Đặc điểm của vũ khí công nghệ cao.", D: "Điểm mạnh của vũ khí công nghệ cao." }, true: "A" },
+            { q: "Một trong những biện pháp chủ động của phòng chống vũ khí công nghệ cao là:", a: { A: "Gây nhiễu các trang bị trinh sát để làm giảm hiệu quả của địch.", B: "Tổ chức bố trí lực lượng phân tán.", C: "Kết hợp xây dựng hạ tầng với hầm ngầm.", D: "Dụ đánh vào mục tiêu có giá trị thấp." }, true: "A" },
+            { q: "Nắm chắc thời cơ, chủ động đánh địch từ xa, phá thế tiến công của địch. Được hiểu là:", a: { A: "Biện pháp chủ động trong phòng chống vũ khí CNC.", B: "Biện pháp thụ động trong phòng chống vũ khí CNC.", C: "Khái niệm phòng chống vũ khí CNC.", D: "Đặc điểm của tác chiến CNC." }, true: "A" },
+            { q: "Trong phòng chống địch tiến công bằng VK CNC, tại sao phải bố trí phân tán?", a: { A: "Để giảm thiểu tổn thất.", B: "Làm giảm hiệu quả tác chiến của địch.", C: "Tăng khó khăn cho địch trong trinh sát phát hiện mục tiêu.", D: "Tất cả các phương án trên đúng." }, true: "D" },
+
+            // --- BÀI 10: XÂY DỰNG LỰC LƯỢNG DQTV, LL DBĐV VÀ ĐV CNQP ---
+            { q: "Lực lượng vũ trang quần chúng không thoát li sản xuất công tác là:", a: { A: "Bộ đội chủ lực.", B: "Dân quân tự vệ.", C: "Bộ đội địa phương.", D: "Dự bị động viên." }, true: "B" },
+            { q: "Lực lượng vũ trang quần chúng tổ chức ở các cơ quan nhà nước, tổ chức chính trị, xã hội là:", a: { A: "Bộ đội địa phương.", B: "Dân quân.", C: "Tự vệ.", D: "Bộ đội chủ lực." }, true: "C" },
+            { q: "Chỉ huy trực tiếp dân quân tự vệ là:", a: { A: "Công an xã, phường.", B: "Cơ quan quân sự địa phương.", C: "Ủy ban nhân dân xã phường.", D: "Bộ đội chủ lực." }, true: "B" },
+            { q: "Lãnh đạo trực tiếp, tuyệt đối về mọi mặt đối với lực lượng dân quân tự vệ là:", a: { A: "Đảng Cộng sản Việt Nam.", B: "Nhà nước cộng hòa xã hội chủ nghĩa Việt Nam", C: "Lực lượng vũ trang nhân dân Việt Nam.", D: "Bộ Quốc Phòng." }, true: "A" },
+            { q: "Lực lượng dân quân tự vệ nòng cốt gồm:", a: { A: "Dân quân tự vệ bộ binh, binh chủng và DQTV biển.", B: "Dân quân tự vệ bộ binh, DQTV tại chỗ và cảnh sát biển.", C: "Dân quân tự vệ binh chủng, DQTV biển, Cảnh sát biển.", D: "Dân quân tự vệ bộ binh, DQTV cơ động và dân quân tự vệ biển." }, true: "A" },
+            { q: "Một trong những nhiệm vụ của dân quân tự vệ là:", a: { A: "Sẵn sàng chiến đấu, chiến đấu, phục vụ chiến đấu.", B: "Chiến đấu, huấn luyện, phục vụ chiến đấu.", C: "Sẵn sàng chiến đấu, tham gia lao động sản xuất.", D: "Chiến đấu, huấn luyện, tham gia lao động sản xuất." }, true: "A" },
+            { q: "Lực lượng dự bị động viên bao gồm:", a: { A: "Sĩ quan, quân nhân chuyên nghiệp và công an nhân dân dự bị.", B: "Quân nhân dự bị và phương tiện kỹ thuật đã xếp trong kế hoạch.", C: "Quân nhân dự bị đã xếp trong kế hoạch.", D: "Vật chất, khí tài trang bị đã xếp trong kế hoạch." }, true: "B" },
+            { q: "Quân nhân dự bị gồm:", a: { A: "Sĩ quan dự bị, quân nhân chuyên nghiệp dự bị và hạ sĩ quan, binh sĩ dự bị.", B: "Sĩ quan dự bị và hạ sĩ quan, binh sĩ dự bị.", C: "Sĩ quan dự bị, quân nhân chuyên nghiệp, binh sĩ dự bị.", D: "Quân nhân chuyên nghiệp dự bị và hạ sĩ quan dự bị." }, true: "A" },
+            { q: "Phương châm xây dựng dân quân tự vệ theo hướng:", a: { A: "Vững mạnh, rộng khắp, coi trọng chất lượng là chính.", B: "Vững mạnh, toàn diện, coi trọng chất lượng là chính.", C: "Vững mạnh, rộng khắp, có trọng tâm, trọng điểm.", D: "Vững mạnh, toàn diện, có trọng tâm, trọng điểm." }, true: "A" },
+            { q: "Dân quân tự vệ được tổ chức thành những lực lượng nào?", a: { A: "Lực lượng chiến đấu và lực lượng cơ động.", B: "Lực lượng quân sự và lực lượng chính trị.", C: "Lực lượng cơ động và lực lượng dự bị.", D: "Lực lượng nòng cốt và lực lượng rộng rãi." }, true: "D" },
+            { q: "Độ tuổi lực lượng dân quân tự vệ nòng cốt qui định như thế nào?", a: { A: "Nam từ 18 tuổi đến hết 40; Nữ từ 18 tuổi đến hết 35 tuổi.", B: "Nam từ 18 tuổi đến hết 35; Nữ từ 18 tuổi đến hết 25 tuổi.", C: "Nam từ 18 tuổi đến hết 45; Nữ từ 18 tuổi đến hết 40 tuổi.", D: "Nam từ 18 tuổi đến hết 25; Nữ từ 18 tuổi đến hết 30 tuổi." }, true: "C" },
+            { q: "Lực lượng dự bị động viên được xây dựng để bổ sung cho:", a: { A: "Lực lượng thường trực của quân đội.", B: "Lực lượng công an nhân dân.", C: "Lực lượng dân quân tự vệ.", D: "Lực lượng vũ trang ở địa phương." }, true: "A" },
+            { q: "Phương châm huấn luyện lực lượng dự bị động viên là:", a: { A: "Cơ bản, thiết thực, hiệu quả, tập trung có trọng tâm, trọng điểm.", B: "Chất lượng, thiết thực, hiệu quả, tập trung có trọng tâm, trọng điểm.", C: "Cơ bản, chất lượng, thiết thực, hiệu quả, có trọng tâm.", D: "Chất lượng, hiệu quả có trọng tâm, trọng điểm." }, true: "B" },
+            { q: "Động viên công nghiệp quốc phòng được chuẩn bị từ:", a: { A: "Trong chiến tranh.", B: "Thời bình.", C: "Khi đất nước có chiến tranh.", D: "Thời kỳ đầu có chiến tranh." }, true: "B" },
+             // --- BÀI 11: BIÊN GIỚI QUỐC GIA ---
+            { q: "Các yếu tố nào cấu thành nên Quốc gia?", a: { A: "Lãnh thổ, dân cư và hệ thống pháp lý.", B: "Lãnh thổ, dân cư và hệ thống chính trị.", C: "Lãnh thổ, dân cư và chế độ chính trị.", D: "Lãnh thổ, dân cư và quyền lực công cộng." }, true: "D" },
+            { q: "Lãnh thổ quốc gia là phạm vi không gian được giới hạn ở đâu?", a: { A: "Chủ quyền quốc gia.", B: "Lãnh thổ và lãnh hải quốc gia.", C: "Biên giới quốc gia.", D: "Chủ quyền lãnh thổ quốc gia." }, true: "C" },
+            { q: "Lãnh thổ quốc gia Việt Nam bao gồm:", a: { A: "Vùng đất, vùng trời, vùng biển đặc biệt.", B: "Vùng đất, vùng trời và thềm lục địa.", C: "Vùng đất, vùng biển, vùng trời ngoài ra còn có lãnh thổ quốc gia đặc biệt.", D: "Vùng đất, vùng biển, ngoài ra còn có lãnh thổ quốc gia đặc biệt." }, true: "C" },
+            { q: "Biển Việt Nam có mấy vùng?", a: { A: "Có 3 vùng.", B: "Có 4 vùng.", C: "Có 5 vùng.", D: "Có 6 vùng." }, true: "C" },
+            { q: "Nội thủy là gì?", a: { A: "Vùng biển nằm ở phía trong đường cơ sở.", B: "Vùng biển nằm ở phía ngoài đường cơ sở.", C: "Vùng biển nằm ở phía ngoài vùng đặc quyền kinh tế.", D: "Vùng biển nằm phía ngoài vùng lãnh hải." }, true: "A" },
+            { q: "Tôn trọng chủ quyền lãnh thổ quốc gia, được xác định là:", a: { A: "Nguyên tắc trong quan hệ quốc tế.", B: "Nguyên tắc trong xây dựng và bảo vệ Tổ quốc.", C: "Nguyên tắc đấu tranh bảo vệ Tổ quốc.", D: "Nguyên tắc cơ bản trong quan hệ và luật pháp quốc tế." }, true: "A" },
+            { q: "Biên giới quốc gia Việt Nam gồm:", a: { A: "Biên giới trên đất liền, trên biển, trên không và trong lòng đất.", B: "Biên giới trên đất liền, trên không, lãnh thổ quốc gia đặc biệt.", C: "Biên giới trên đất liền, trên biển, trên không, thềm lục địa.", D: "Biên giới trên đất liền, trên biển, trên không, dưới lòng đất." }, true: "A" },
+            { q: "Lãnh hải là vùng biển có chiều rộng bao nhiêu hải lí?", a: { A: "12 hải lí.", B: "24 hải lí.", C: "188 hải lí.", D: "200 hải lí." }, true: "A" },
+            { q: "Biên giới quốc gia trên biển cách đường cơ sở bao nhiêu hải lí?", a: { A: "12 hải lí.", B: "24 hải lí.", C: "188 hải lí.", D: "200 hải lí." }, true: "A" },
+            { q: "Vùng tiếp giáp lãnh hải rộng bao nhiêu hải lí?", a: { A: "24 hải lí.", B: "12 hải lí.", C: "200 hải lí.", D: "350 hải lí." }, true: "B" },
+            { q: "Biên giới quốc gia trên biển được hoạch định và đánh dấu bằng:", a: { A: "Hệ thống mốc quốc giới.", B: "Tọa độ trên bản đồ.", C: "Tọa độ trên hải đồ.", D: "Bản đồ kĩ thuật số." }, true: "C" },
+            { q: "Biên giới quốc gia trên đất liền được hoạch định và đánh dấu bằng:", a: { A: "Hệ thống bản đồ kĩ thuật số.", B: "Hệ thống mốc quốc giới.", C: "Hệ thống tọa độ trên hải đồ.", D: "Hệ thống tọa độ trên bản đồ." }, true: "B" },
+            { q: "Biên giới Việt Nam - Trung quốc trên đất liền bao nhiêu kilômét?", a: { A: "Dài 1.346 km.", B: "Dài 2.046 km.", C: "Dài 2.067 km.", D: "Dài 1.350 km." }, true: "D" },
+
+            // --- BÀI 12: DÂN TỘC TÔN GIÁO ---
+            { q: "Cộng đồng người ổn định, hình thành trong lịch sử tạo lập một quốc gia, kinh tế, ngôn ngữ, truyền thống văn hóa... Được xác định là:", a: { A: "Khái niệm dân tộc.", B: "Đặc điểm dân tộc.", C: "Nguồn gốc dân tộc.", D: "Tính chất dân tộc." }, true: "A" },
+            { q: "“Các dân tộc hoàn toàn bình đẳng, các dân tộc được quyền tự quyết...”. Là quan điểm của ai?", a: { A: "V.I.Lênin.", B: "Mác – Lênin.", C: "Ph. Ăngghen.", D: "Hồ Chí Minh." }, true: "A" },
+            { q: "Đặc điểm các dân tộc thiểu số ở Việt Nam là:", a: { A: "Cư trú tập trung ở nông thôn.", B: "Cư trú phân tán và xen kẽ trên địa bàn rộng lớn.", C: "Cư trú tập trung trên địa bàn hẹp.", D: "Cư trú chủ yếu ở đồng bằng và trung du." }, true: "B" },
+            { q: "Một hình thái ý thức xã hội, phản ánh hiện thực khách quan, theo quan niệm hoang đường, ảo tưởng... Được xác định là:", a: { A: "Khái niệm tôn giáo.", B: "Nguồn gốc tôn giáo.", C: "Tính chất tôn giáo.", D: "Đặc điểm tôn giáo." }, true: "A" },
+            { q: "Quan điểm, chính sách của Đảng và Nhà nước ta hiện nay về tôn giáo:", a: { A: "Tôn giáo còn tồn tại lâu dài, còn là nhu cầu tinh thần của một bộ phận nhân dân.", B: "Tôn giáo có giá trị văn hóa đạo đức tích cực phù hợp xã hội mới.", C: "Đồng bào có đạo bộ phận quan trọng khối đại đoàn kết toàn dân tộc.", D: "Tất cả phương án đúng." }, true: "D" },
+
+            // --- BÀI 13: AN NINH QUỐC GIA ---
+            { q: "Nội dung bảo vệ an ninh quốc gia gồm:", a: { A: "Bảo vệ an ninh chính trị nội bộ; an ninh kinh tế.", B: "Bảo vệ an ninh tư tưởng, văn hóa; an ninh tôn giáo.", C: "Bảo vệ an ninh biên giới; an ninh thông tin.", D: "Tất cả các phương án trên." }, true: "D" },
+            { q: "Nội dung giữ gìn trật tự, an toàn xã hội:", a: { A: "Đấu tranh phòng, chống tội phạm; bài trừ các tệ nạn xã hội; giữ gìn trật tự nơi công cộng.", B: "Đảm bảo trật tự, an toàn giao thông.", C: "Phòng ngừa tai nạn lao động, chống thiên tai, phòng ngừa dịch bệnh; bảo vệ môi trường.", D: "Tất cả các phương án trên." }, true: "D" },
+            { q: "Đối tượng xâm phạm an ninh quốc gia là:", a: { A: "Các tổ chức phản động ở nước ngoài.", B: "Gián điệp và phản động.", C: "Tội phạm ma túy.", D: "Các tổ chức tội phạm quốc tế." }, true: "B" },
+            { q: "Thuận lợi trong bảo vệ an ninh quốc gia, giữ gìn trật tự, an toàn xã hội ở nước ta là:", a: { A: "Đảng Cộng sản Việt Nam có bản lĩnh chính trị vững vàng, dày dạn kinh nghiệm.", B: "Lực lượng vũ trang cách mạng tuyệt đối trung thành với Đảng, với Tổ quốc.", C: "Nhân dân Việt Nam có truyền thống yêu nước, đoàn kết, tin tưởng vào Đảng và chế độ.", D: "Tất cả các phương án trên." }, true: "D" },
+            { q: "Bảo vệ an ninh quốc gia, giữ gìn trật tự, an toàn xã hội là sự nghiệp của:", a: { A: "Công an nhân dân.", B: "Quân đội nhân dân.", C: "Lực lượng vũ trang.", D: "Toàn dân." }, true: "D" },
+            
+            // --- BÀI 14: PHONG TRÀO TOÀN DÂN BẢO VỆ ANTQ ---
+            { q: "“Dễ trăm lần không dân cũng chịu, khó vạn lần dân liệu cũng xong”. Là quan điểm của ai?", a: { A: "Chủ tịch Hồ Chí Minh.", B: "Đại tướng Võ Nguyên Giáp.", C: "Tổng bí thư Lê Duẩn.", D: "Nguyễn Trãi." }, true: "A" },
+            { q: "Vai trò của quần chúng nhân dân trong phong trào toàn dân bảo vệ an ninh Tổ quốc:", a: { A: "Nghiên cứu, xác định nguyên nhân, điều kiện của tội phạm.", B: "Phát hiện, quản lý, giáo dục, cải tạo các loại tội phạm.", C: "Tham mưu cho Nhà nước ban hành các chủ trương.", D: "Phát hiện những nguyên nhân của tội phạm." }, true: "B" },
+            { q: "Phong trào toàn dân bảo vệ an ninh Tổ quốc giữ vị trí như thế nào?", a: { A: "Vị trí then chốt.", B: "Vị trí chiến lược.", C: "Vị trí quan trọng.", D: "Vị trí quyết định." }, true: "B" },
+            { q: "Ngày hội \"Toàn dân bảo vệ an ninh Tổ quốc\" là ngày nào?", a: { A: "Ngày 19 tháng 8.", B: "Ngày 2 tháng 9.", C: "Ngày 22 tháng 12.", D: "Ngày 19 tháng 5." }, true: "A" },
+
+            // --- BÀI 15: PHÒNG CHỐNG TỘI PHẠM - TỆ NẠN XÃ HỘI ---
+            { q: "Phòng ngừa tội phạm là việc làm của các cơ quan Nhà nước, các tổ chức xã hội và của công dân, bằng nhiều biện pháp để:", a: { A: "Khắc phục những nguyên nhân, điều kiện của tình trạng phạm tội.", B: "Thủ tiêu những nguyên nhân, điều kiện của tình trạng phạm tội.", C: "Hạn chế những điều kiện của tình trạng phạm tội.", D: "Tất cả các phương án trên." }, true: "D" },
+            { q: "Mục đích của công tác phòng ngừa tội phạm là:", a: { A: "Khắc phục, thủ tiêu những nguyên nhân của tình trạng phạm tội.", B: "Khắc phục những nguyên nhân, điều kiện của tình trạng phạm tội.", C: "Khắc phục, thủ tiêu những nguyên nhân, điều kiện của tình trạng phạm tội.", D: "Hạn chế điều kiện của tình trạng phạm tội." }, true: "C" },
+            { q: "Tư tưởng chỉ đạo trong công tác đấu tranh phòng chống tội phạm là:", a: { A: "Phòng ngừa chung kết hợp với phòng chống riêng.", B: "Phòng ngừa là phương hướng chính.", C: "Phòng ngừa kết hợp với tuyên truyền và giáo dục.", D: "Nghiên cứu, xác định rõ các nguyên nhân, điều kiện." }, true: "B" },
+            { q: "Một hiện tượng xã hội tiêu cực có tính phổ biến bằng những hành vi sai lệch chuẩn mực xã hội, vi phạm đạo đức gây hậu quả nghiêm trọng trong đời sống cộng đồng. Được hiểu là:", a: { A: "Khái niệm tệ nạn xã hội.", B: "Mục đích tệ nạn xã hội.", C: "Đặc điểm tệ nạn xã hội.", D: "Nội dung tệ nạn xã hội." }, true: "A" },
+            { q: "Đánh bạc là hành vi:", a: { A: "Dùng tiền thông qua các trò chơi để trục lợi.", B: "Dùng vật chất thông qua các trò chơi để trục lợi.", C: "Dùng vật chất để trục lợi cho mình qua những người đánh bạc.", D: "Phương án a và b đúng." }, true: "D" },
+            { q: "Hành vi dùng nhà ở của mình hoặc địa điểm khác để chứa các đám bạc từ đó trục lợi cho mình qua những người đánh bạc. Được xác định là:", a: { A: "Đánh bạc.", B: "Tổ chức đánh bạc.", C: "Gá bạc.", D: "Tất cả phương án trên." }, true: "C" },
+            { q: "“Tội phạm là hành vi nguy hiểm cho xã hội do người có năng lực trách nhiệm hình sự thực hiện một cách cố ý hay vô ý”. Được quy định trong:", a: { A: "Luật Quốc phòng.", B: "Luật Hình sự.", C: "Luật tố tụng hình sự.", D: "Luật An ninh quốc gia." }, true: "B" },
+            { q: "Phân loại tội phạm có:", a: { A: "Tội phạm ít nghiêm trọng; nghiêm trọng; rất nghiêm trọng và đặc biệt nghiêm trọng.", B: "Tội phạm ít nghiêm trọng; rất nghiêm trọng và đặc biệt nghiêm trọng.", C: "Tội phạm ít nghiêm trọng; nghiêm trọng và rất nghiêm trọng.", D: "Tội phạm ít nghiêm trọng; nghiêm trọng; rất nghiêm trọng và đặc biệt nghiêm trọng." }, true: "A" },
+            // --- BÀI: KẾT HỢP PHÁT TRIỂN KINH TẾ VỚI QUỐC PHÒNG AN NINH ---
+
+            { q: "Kinh tế là yếu tố suy đến cùng quyết định đến quốc phòng, an ninh. Được xác định là:", a: { A: "Cơ sở lí luận của sự kết hợp kinh tế với quốc phòng.", B: "Cơ sở thực tiễn của sự kết hợp kinh tế với quốc phòng.", C: "Nội dung của sự kết hợp kinh tế với quốc phòng.", D: "Giải pháp của sự kết hợp kinh tế với quốc phòng." }, true: "A" },
+            { q: "Kết hợp phát triển kinh tế - xã hội với tăng cường củng cố quốc phòng - an ninh được xác định là qui luật của:", a: { A: "Chế độ xã hội chủ nghĩa.", B: "Mọi quốc gia có chủ quyền.", C: "Mọi quốc gia dân tộc có độc lập chủ quyền.", D: "Chế độ tư bản chủ nghĩa." }, true: "B" },
+            { q: "“Kết hợp phát triển kinh tế - xã hội với quốc phòng - an ninh trong các vùng lãnh thổ”. Được xác định là:", a: { A: "Cơ sở lí luận của kết hợp kinh tế với quốc phòng.", B: "Giải pháp kết hợp kinh tế với quốc phòng.", C: "Nội dung kết hợp kinh tế với quốc phòng.", D: "Thực tiễn của kết hợp kinh tế với quốc phòng." }, true: "C" },
+            { q: "Đảng ta xác định: Để thực hiện thắng lợi hai nhiệm vụ chiến lược của cách mạng Việt Nam, chúng ta phải kết hợp phát triển kinh tế - xã hội với tăng cường củng cố quốc phòng – an ninh trong một:", a: { A: "Chủ trương thống nhất.", B: "Qui hoạch thống nhất.", C: "Kế hoạch thống nhất.", D: "Chỉnh thể thống nhất." }, true: "D" },
+            { q: "Trong kháng chiến chống thực dân Pháp, để thực hiện tốt sự kết hợp phát triển kinh tế - xã hội với tăng cường củng cố quốc phòng - an ninh. Đảng ta đã đề ra chủ trương gì?", a: { A: "Vừa kháng chiến, vừa kiến quốc.", B: "Vừa đánh, vừa đàm.", C: "Thóc không thiếu một cân, quân không thiếu một người.", D: "Tất cả cho tiền tuyến." }, true: "A" },
+            { q: "Xây dựng chiến lược tổng thể kết hợp phát triển kinh tế - xã hội với tăng cường củng cố quốc phòng - an ninh trong thời kì mới. Được xác định là:", a: { A: "Cơ sở lí luận.", B: "Nội dung.", C: "Giải pháp.", D: "Cơ sở thực tiễn." }, true: "C" },
+            { q: "Mặt tiêu cực của hoạt động quốc phòng - an ninh có thể dẫn đến:", a: { A: "Hủy hoại môi trường sinh thái và để lại hậu quả nặng nề cho nền kinh tế.", B: "Ảnh hưởng đến đường lối phát triển kinh tế, cơ cấu kinh tế.", C: "Tạo môi trường hòa bình ổn định lâu dài.", D: "Phương án a, b đúng." }, true: "A" },
+            { q: "Trong mục tiêu chiến lược phát triển kinh tế - xã hội Đảng ta đã xác định bao quát mấy vấn đề lớn của đời sống xã hội:", a: { A: "03.", B: "04.", C: "05.", D: "06." }, true: "C" },
+            { q: "Bản chất của nền kinh tế - xã hội quyết định đến:", a: { A: "Bản chất của quốc phòng - an ninh.", B: "Sức mạnh quốc phòng - an ninh.", C: "Sự phát triển của lực lượng vũ trang.", D: "Phương án b, c đúng." }, true: "A" },
+            { q: "Nội dung kết hợp phát triển kinh tế xã hội với quốc phòng – an ninh trong các ngành, các lĩnh vực kinh tế chủ yếu?", a: { A: "Kết hợp trong công nghiệp", B: "Kết hợp trong nông, lâm, ngư nghiệp.", C: "Kết hợp trong giao thông vận tải, bưu điện, y tế, khoa học, giáo dục...", D: "Tất cả phương án trên đúng." }, true: "D" },
+            { q: "Một trong những giải pháp chủ yếu thực hiện kết hợp phát triển kinh tế xã hội với quốc phòng – an ninh là:", a: { A: "Kết hợp trong chiến lược bảo vệ Tổ quốc.", B: "Kết hợp trong các ngành vực kinh tế chủ yếu.", C: "Kết hợp trong giao thông vận tải, bưu điện, y tế, khoa học, giáo dục...", D: "Xây dựng chiến lược tổng thể kết hợp phát triển KT-XH với quốc phòng – an ninh." }, true: "D" },
+            { q: "Trong xây dựng các công trình quốc phòng, quân sự, phòng thủ dân sự, thiết bị chiến trường phải bảo đảm tính:", a: { A: "“Vững chắc”.", B: "“Kiên cố”.", C: "“Lưỡng dụng”.", D: "“Khoa học”." }, true: "C" },
+            { q: "Một trong những giải pháp kết hợp phát triển kinh tế - xã hội với tăng cường củng cố quốc phòng - an ninh?", a: { A: "Tăng cường sự lãnh đạo của Đảng và hiệu lực quản lý nhà nước của chính quyền các cấp.", B: "Tăng cường sự lãnh đạo của Đảng và hiệu lực quản lý của công an.", C: "Kết hợp trong nhiệm vụ chiến lược bảo vệ Tổ quốc.", D: "Kết hợp trong chiến lược phát triển kinh tế - xã hội." }, true: "A" },
+            { q: "“Thắng lợi hay thất bại của chiến tranh đều phụ thuộc vào điều kiện kinh tế ”. Ai khẳng định?", a: { A: "V.I.Lênin.", B: "Ph. Ăngghen.", C: "C. Mác.", D: "Hồ Chí Minh." }, true: "B" },
+            { q: "Nơi có mật độ dân cư và tính chất đô thị hóa cao; tập trung các đầu mối giao thông quan trọng, các sân bay, bến cảng, kho tàng là:", a: { A: "Đặc điểm về khoa học công nghệ các vùng kinh tế trọng điểm.", B: "Đặc điểm về an ninh các vùng kinh tế trọng điểm.", C: "Đặc điểm về quốc phòng các vùng kinh tế trọng điểm.", D: "Đặc điểm về kinh tế các vùng kinh tế trọng điểm." }, true: "D" },
+            { q: "Là địa bàn sinh sống chủ yếu của đồng bào dân tộc ít người, mật độ dân số thấp, kinh tế chậm phát triển, trình độ dân trí thấp, đời sống dân cư còn nhiều khó khăn là:", a: { A: "Đặc điểm của đồng bằng sông Cửu Long.", B: "Đặc điểm của các vùng biển.", C: "Đặc điểm của các vùng núi biên giới.", D: "Đặc điểm của vùng núi biên giới." }, true: "C" },
+            { q: "Chọn câu sai. Các chính sách kết hợp phát triển kinh tế - xã hội với tăng cường củng cố quốc phòng - an ninh của ông cha ta?", a: { A: "Khoan thư sức dân.", B: "Tiên phát chế nhân.", C: "Động vi binh, tĩnh vi dân.", D: "Ngụ binh ư nông." }, true: "B" },
+            { q: "Trong quy hoạch, kế hoạch xây dựng các thành phố, các khu công nghiệp cần lựa chọn quy mô trung bình, bố trí phân tán, trải dài... để làm gì?", a: { A: "Hạn chế thiệt hại khi chiến tranh xảy ra.", B: "Thu hút các nhà đầu tư nước ngoài.", C: "Khai thác tiềm năng của từng địa phương.", D: "Điều chỉnh mật độ dân cư." }, true: "A" },
+            { q: "“Việt Nam là bạn, là đối tác tin cậy...”. Đảng ta khẳng định trong:", a: { A: "Văn kiện đại hội Đảng toàn quốc lần thứ XI.", B: "Văn kiện đại hội Đảng toàn quốc lần thứ X.", C: "Văn kiện đại hội Đảng toàn quốc lần thứ IX.", D: "Văn kiện đại hội Đảng toàn quốc lần thứ VIII." }, true: "A" },
+            { q: "Thực chất kết hợp phát triển kinh tế - xã hội với tăng cường quốc phòng - an ninh nhằm:", a: { A: "Tạo tiềm lực sức mạnh cho nền kinh tế đất nước phát triển.", B: "Tạo điều kiện thuận lợi cho xây dựng khu vực phòng thủ.", C: "Triển khai xây dựng vùng kinh tế chiến lược của đất nước.", D: "Thực hiện thắng lợi hai nhiệm vụ chiến lược xây dựng và bảo vệ Tổ quốc." }, true: "D" },
+
+            // --- BÀI: NGHỆ THUẬT QUÂN SỰ VIỆT NAM ---
+            { q: "Lịch sử dân tộc ta từ khi lập nước đến nay đã trải qua 14 cuộc chiến tranh lớn, nhỏ để:", a: { A: "Đánh bại mọi kẻ thù.", B: "Giải phóng dân tộc.", C: "Bảo vệ Tổ quốc.", D: "Bảo vệ Tổ quốc và giải phóng dân tộc." }, true: "D" },
+            { q: "Trong lịch sử đấu tranh dựng nước và giữ nước của dân tộc. Người Việt muốn tồn tại, bảo vệ cuộc sống và nền văn hóa của mình chỉ có con đường duy nhất là:", a: { A: "Đứng lên đánh giặc giữ nước.", B: "Đoàn kết đứng lên đánh giặc giữ nước.", C: "Có giai cấp lãnh đạo đánh giặc giữ nước.", D: "Có lực lượng vũ trang làm nòng cốt đánh giặc." }, true: "B" },
+            { q: "Cuộc khởi nghĩa Lam Sơn năm 1418 – 1427 do ai lãnh đạo?", a: { A: "Lê Lợi – Nguyễn Trãi.", B: "Nguyễn Trãi - Trần Nguyên Hãn.", C: "Quang Trung - Ngô Thì Nhậm.", D: "Trần Quốc Tuấn – Trần Quang Khải." }, true: "A" },
+            { q: "Thời nhà Trần chống quân Nguyên - Mông lần thứ 2 diễn ra vào thời gian nào?", a: { A: "Năm 1258.", B: "Năm 1285.", C: "Năm 1287.", D: "Năm 1288." }, true: "B" },
+            { q: "Mặt trận nào giữ vai trò quyết định đến thắng lợi trong chiến tranh?", a: { A: "Ngoại giao.", B: "Kinh tế.", C: "Quân sự.", D: "Chính trị." }, true: "C" },
+            { q: "Trong lịch sử chống giặc ngoại xâm. Ai là người lãnh đạo quân dân ta đã giành thắng lợi đánh quân Nam Hán ở đâu, thời gian nào?", a: { A: "Lý Thường Kiệt trên sông Như Nguyệt, năm 1077.", B: "Ngô Quyền trên sông Bạch Đằng, năm 938.", C: "Lê Lợi – Nguyễn Trãi cuộc khởi nghĩa Lam Sơn, năm 1418", D: "Quang Trung với cuộc hành quân thần tốc vào mùa xuân Kỉ Dậu 1789." }, true: "B" },
+            { q: "Kể từ khi Đảng Cộng sản Việt Nam ra đời và lãnh đạo, nghệ thuật quân sự Việt Nam đã có bước phát triển về chất so với nghệ thuật truyền thống, cơ sở nào quyết định:", a: { A: "Chủ nghĩa C.Mác – V.I.Lênin, tư tưởng Hồ Chí Minh.", B: "Truyền thống và nghệ thuật đánh giặc của dân tộc.", C: "Truyền thống yêu nước và tinh thần đoàn kết chiến đấu của dân tộc.", D: "Sức mạnh dân tộc kết hợp sức mạnh thời đại." }, true: "A" },
+            { q: "Tổng thể phương châm, chính sách và mưu lược được hoạch định để ngăn ngừa và sẵn sàng tiến hành chiến tranh thắng lợi. Được xác định là:", a: { A: "Nghệ thuật chiến dịch.", B: "Chiến lược quân sự.", C: "Nghệ thuật chiến thuật.", D: "Phương án a, c đúng." }, true: "B" },
+            { q: "Chiến lược quân sự, nghệ thuật chiến dịch và nghệ thuật chiến thuật. Được xác định là:", a: { A: "Nghệ thuật chiến dịch.", B: "Chiến lược quân sự.", C: "Nghệ thuật quân sự Việt Nam.", D: "Nghệ thuật chiến thuật." }, true: "C" },
+            { q: "Ba lần tiến công xâm lược nước ta, đế quốc Nguyên - Mông thực hiện vào những năm nào?", a: { A: "Năm 1258, 1285 và 1287 – 1288.", B: "Năm 1285, 1286 và 1287 – 1288.", C: "Năm 1258, 1285 và 1288 – 1289.", D: "Năm 1258, 1285 và 1289 – 1290." }, true: "A" },
+            { q: "Cuộc chiến tranh nào dưới đây được coi là chiến tranh giải phóng dân tộc?", a: { A: "Kháng chiến chống Pháp năm 1945 – 1954.", B: "Kháng chiến chống Mĩ năm 1954 – 1975.", C: "Phương án a và b đúng.", D: "Chiến tranh hai đầu biên giới năm 1979 - 1989." }, true: "C" },
+            { q: "Trong lịch sử đấu tranh dựng nước và giữ nước... “Khoan thư sức dân, để làm kế sâu rễ bền gốc”, là kế sách của ai?", a: { A: "Quang Trung.", B: "Lê Lợi.", C: "Trần Quốc Tuấn.", D: "Nguyễn Trãi." }, true: "C" },
+            { q: "Trong nghệ thuật quân sự Việt Nam. Bộ phận nào dưới đây giữ vai trò chủ đạo?", a: { A: "Chiến lược quân sự.", B: "Nghệ thuật chiến dịch.", C: "Nghệ thuật chiến thuật.", D: "Phương án a, b, c đúng." }, true: "A" },
+            { q: "Người phất cờ khởi nghĩa tại núi Nưa – Triệu Sơn – Thanh Hóa, vào năm nào?", a: { A: "Triệu Thị Trinh, năm 248.", B: "Trưng Nữ Vương, năm 248.", C: "Công chúa Ngọc Hân, năm 1770 - 1799.", D: "Bùi Thị Xuân, năm 1802." }, true: "A" },
+            { q: "Trước đối tượng tác chiến là quân Nguyên Mông có sức mạnh hơn ta nhiều lần... ta đã:", a: { A: "Rút lui chiến lược để bảo toàn lực lượng.", B: "Rút lui chiến lược để tổ chức phòng ngự.", C: "Rút lui chiến lược, tạm nhường Thăng Long cho giặc trong thời gian nhất định.", D: "Rút lui chiến lược để tạo lập thế trận." }, true: "C" },
+            { q: "Chiến dịch Điện Biên Phủ năm 1954, được xác định là loại hình chiến dịch gì?", a: { A: "Tiến công.", B: "Phòng ngự.", C: "Phản công.", D: "Tập kích." }, true: "A" },
+            { q: "“Sức dùng một nửa mà công được gấp đôi”. Được xác định là:", a: { A: "Nghệ thuật tạo sức mạnh thế thời, mưu kế.", B: "Nghệ thuật tạo sức mạnh bằng mưu kế, lực lượng.", C: "Nghệ thuật tạo sức mạnh tổng hợp bằng lực, thế, thời và mưu kế.", D: "Nghệ thuật tạo sức mạnh bằng lực lượng, mưu kế." }, true: "C" },
+            { q: "Để đánh thắng 29 vạn quân xâm lược Mãn Thanh... Quang Trung đã dùng lối đánh:", a: { A: "Đánh chắc, tiến chắc, bất ngờ.", B: "Thần tốc, táo bạo.", C: "Táo bạo, thần tốc, bất ngờ.", D: "Thần tốc, quyết chiến, quyết thắng." }, true: "C" },
+            { q: "“Đánh cho để dài tóc, đánh cho để đen răng...”. Câu nói trên của ai?", a: { A: "Quang Trung.", B: "Lê Lợi.", C: "Trần Quốc Tuấn.", D: "Lý Thường Kiệt." }, true: "A" },
+            { q: "Nghĩa quân Tây Sơn tiêu diệt 5 vạn quân Xiêm tại đâu? Vào năm nào?", a: { A: "Rạch Gầm Xoài Mút, năm 1783.", B: "Rạch Gầm Xoài Mút, năm 1784.", C: "Rạch Gầm Xoài Mút, năm 1785.", D: "Rạch Gầm Xoài Mút, năm 1786." }, true: "C" },
+
+            // --- BÀI: CHIẾN TRANH NHÂN DÂN ---
+            { q: "Một trong những biện pháp khi tiến hành chiến tranh nhân dân, toàn dân đánh giặc theo quan điểm của Đảng là:", a: { A: "Tăng cường giáo dục quốc phòng, an ninh cho lực lượng vũ trang nhân dân.", B: "Tăng cường giáo dục quốc phòng, an ninh cho mọi tầng lớp nhân dân.", C: "Tăng cường giáo dục quốc phòng, an ninh cho học sinh, sinh viên.", D: "Tăng cường giáo dục quốc phòng an ninh cho thế hệ trẻ." }, true: "B" },
+            { q: "Điền vào chỗ trống: Tiến hành chiến tranh nhân dân bảo vệ Tổ quốc, lấy đấu tranh quân sự là chủ yếu, .... là yếu tố quyết định.", a: { A: "Thắng lợi trên chiến trường.", B: "Thắng lợi trên mặt trận chính trị.", C: "Thắng lợi trên mặt trận kinh tế.", D: "Phương án a, b, c đúng." }, true: "A" },
+            { q: "Khi tiến hành chiến tranh nhân dân cần kết hợp tác chiến của:", a: { A: "Quân đội nhân dân với công an nhân dân.", B: "Bộ đội chủ lực với bộ đội địa phương.", C: "Lực lượng vũ trang địa phương với các binh đoàn chủ lực.", D: "Bộ đội chủ lực với bộ đội biên phòng." }, true: "C" },
+            { q: "Mục đích của chiến tranh nhân dân là:", a: { A: "Làm thất bại chiến lược “Diễn biến hòa bình” của các thế lực thù địch", B: "Sử dụng tiềm lực của đất nước, nhất là tiềm lực quốc phòng, an ninh nhằm đánh bại ý đồ xâm lược của kẻ thù.", C: "Làm thất bại âm mưu, thủ đoạn bạo loạn lật đổ của các thế lực thù địch.", D: "Phương án a, b, c đúng" }, true: "D" },
+            { q: "Chiến tranh nhân dân bảo vệ Tổ quốc Việt Nam xã hội chủ nghĩa là cuộc chiến tranh toàn dân, toàn diện. Trong đó lực lượng nào làm nòng cốt?", a: { A: "Lực lượng quân đội và công an.", B: "Lực lượng quân đội.", C: "Lực lượng vũ trang ba thứ quân.", D: "Lực lượng vũ trang địa phương." }, true: "C" },
+            { q: "Chiến tranh nhân dân bảo vệ Tổ quốc Việt Nam XHCN là cuộc chiến tranh hiện đại về vũ khí, trang bị, tri thức và nghệ thuật quân sự. Được hiểu là:", a: { A: "Điểm mạnh của chiến tranh.", B: "Đặc điểm của chiến tranh.", C: "Tính chất của chiến tranh.", D: "Quan điểm của chiến tranh." }, true: "C" },
+            { q: "“Trong chiến tranh mạng được yếu thua, sĩ quan quân đội Mỹ được đào tạo đầy đủ bài bản hơn sĩ quan quân đội Việt Nam... mà trong thế trận ai xử trí nhanh hơn người đó sẽ giành chiến thắng”. Câu nói trên là của ai?", a: { A: "Đại tướng Phạm Văn Trà.", B: "Đại tướng Võ Nguyên Giáp.", C: "Thượng tướng Hoàng Minh Thảo.", D: "Đại tướng Nguyễn Chí Thanh." }, true: "C" },
+            { q: "Chọn câu trả lời sai. Tính chất xã hội của các cuộc chiến tranh?", a: { A: "Chính nghĩa và phi nghĩa.", B: "Thế giới và cục bộ.", C: "Cách mạng và phản cách mạng.", D: "Tiến bộ và phản động." }, true: "B" },
+            { q: "“Mỹ đánh Việt Nam mà không hiểu Việt Nam, không hiểu lịch sử, địa lý, văn hóa, phong tục, con người dân tộc nói chung... Chúng tôi có một học thuyết quân sự độc đáo, mưu trí sáng tạo”. Ai khẳng định?", a: { A: "Đại tướng Võ Nguyên Giáp.", B: "Chủ tịch Hồ Chí Minh.", C: "Đại tướng Văn Tiến Dũng.", D: "Đại tướng Nguyễn Chí Thanh." }, true: "A" },
+            { q: "Bản chất của chiến tranh?", a: { A: "Là sự kế tục của chính trị bằng thủ đoạn bạo lực.", B: "Là thủ đoạn của kinh tế, chính trị xã hội.", C: "Là qui luật của xã hội loài người.", D: "Là bản chất của xã hội loài người." }, true: "A" },
+            { q: "Lực lượng nòng cốt của chiến tranh nhân dân?", a: { A: "Lực lượng vũ trang nhân dân.", B: "Bộ đội chủ lực.", C: "Hải quân, cảnh sát biển.", D: "Bộ đội địa phương." }, true: "A" },
+            { q: "Tiêu chí để phân biệt tính chất chiến tranh chính nghĩa và phi nghĩa?", a: { A: "Mục đích của cuộc chiến tranh.", B: "Chủng loại vũ khí dùng trong chiến tranh.", C: "Hoàn cảnh tiến hành chiến tranh.", D: "Phương án a, b đúng." }, true: "A" }
+        ],
+
+        qp34: [
+            // --- BÀI: VŨ KHÍ HỦY DIỆT LỚN ---
+            { q: "Vũ khí hủy diệt lớn dựa trên cơ sở sử dụng năng lượng rất lớn được giải phóng ra từ phản ứng phân hạch dây truyền và phản ứng tổng hợp hạt nhân để tiêu diệt các mục tiêu. Được xác định là:", a: { A: "Khái niệm vũ khí hạt nhân.", B: "Khái niệm vũ khí hóa học.", C: "Khái niệm vũ khí sinh học.", D: "Khái niệm vũ khí lửa." }, true: "A" },
+            { q: "Có bao nhiêu nhân tố sát thương, phá hoại của vũ khí hạt nhân:", a: { A: "4 nhân tố.", B: "5 nhân tố.", C: "6 nhân tố.", D: "7 nhân tố." }, true: "B" },
+            { q: "Bức xạ quang của vũ khí hạt nhân chiếm bao nhiêu phần trăm năng lượng của vụ nổ:", a: { A: "50 %", B: "35 %", C: "10 %", D: "5 %" }, true: "B" },
+            { q: "Nhân tố sát thương, phá hoại đặc trưng của vũ khí hạt nhân là:", a: { A: "Bức xạ quang.", B: "Chất phóng xạ.", C: "Hiệu ứng điện từ.", D: "Bức xạ xuyên (phóng xạ xuyên)." }, true: "D" },
+            { q: "Là vũ khí hủy diệt lớn mà tác dụng sát thương trên cơ sở sử dụng độc tính của các chất độc quân sự để gây độc đối với người, sinh vật và phá hủy môi trường sinh thái:", a: { A: "Khái niệm vũ khí hạt nhân.", B: "Khái niệm vũ khí hóa học.", C: "Khái niệm vũ khí sinh học.", D: "Khái niệm vũ khí lửa." }, true: "B" },
+            { q: "Phạm vi gây tác hại rộng của vũ khí hóa học phụ thuộc vào yếu tố:", a: { A: "Phương pháp sử dụng, loại chất độc.", B: "Phụ thuộc vào địa hình và thời tiết.", C: "Phụ thuộc đối tượng sử dụng.", D: "Cả A và B đều đúng." }, true: "D" },
+            { q: "Căn cứ cách phân loại chất độc hóa học theo bệnh lý được chia thành:", a: { A: "4 nhóm.", B: "5 nhóm.", C: "6 nhóm.", D: "7 nhóm." }, true: "C" },
+            { q: "Dịch sử dụng phương pháp truyền bệnh dịch hạch là:", a: { A: "Người mắc bệnh dịch hạch truyền sang người lành.", B: "Chuột bị nhiễm bệnh và truyền sang người (do chuột cắn).", C: "Do côn trùng đốt (Bọ chét).", D: "Do muỗi đốt." }, true: "C" },
+            { q: "Việt Nam ký hiệp ước cấm phổ biến vũ khí hạt nhân (NPT) thời gian nào:", a: { A: "Tháng 6/1968.", B: "Tháng 6/1982.", C: "Tháng 6/1994.", D: "Tháng 3/2006." }, true: "B" },
+
+            // --- BÀI: TỪNG NGƯỜI TRONG CHIẾN ĐẤU TIẾN CÔNG & PHÒNG NGỰ ---
+            { q: "Trong chiến đấu tiến công, trước khi vận động đến gần địch người chiến sỹ phải:", a: { A: "Quan sát địch, địa hình, thời tiết, ánh sáng.", B: "Xác định đường, hướng vận động, vị trí tạm dừng.", C: "Xác định cách nghi binh, lừa địch trên đường vận động.", D: "Phương án A, B, C đúng." }, true: "D" },
+            { q: "Chiến sĩ thường nhận nhiệm vụ chiến đấu từ:", a: { A: "Tiểu đoàn trưởng giao.", B: "Đại đội trưởng giao.", C: "Trung đội trưởng giao.", D: "Tổ trưởng hoặc tiểu đội trưởng giao." }, true: "D" },
+            { q: "Từng người trong chiến đấu tiến công, cấp trên thường giao nhiệm vụ cho chiến sĩ ở:", a: { A: "Trên bản đồ địa hình.", B: "Trên sa bàn.", C: "Ngay tại thực địa.", D: "Trên cả sa bàn và bản đồ địa hình." }, true: "C" },
+            { q: "Hiệp đồng trong chiến đấu nhằm mục đích:", a: { A: "Giữ vững trận địa, tạo nên yếu tố bí mật bất ngờ.", B: "Tạo nên sức mạnh tổng hợp, chi viện, hỗ trợ cho nhau.", C: "Nhằm phát huy cao độ hiệu quả các loại vũ khí.", D: "Giữ vững trận địa, tiêu diệt địch nhanh làm chủ trận địa." }, true: "B" },
+            { q: "Bí mật bất ngờ tính khôn mưu mẹo. Được xác định là:", a: { A: "Một trong những yêu cầu chiến thuật.", B: "Một trong những nhiệm vụ.", C: "Một trong những cách đánh.", D: "Một trong những nguyên tắc." }, true: "A" },
+            { q: "Một trong những nhiệm vụ của từng người trong chiến đấu phòng ngự:", a: { A: "Tiêu diệt và đánh bại địch tiến công phía trước, hai bên sườn, và trên không trận địa phòng ngự của ta.", B: "Xây dựng công sự chiến đấu vững chắc, ngụy trang bí mật.", C: "Vận chuyển vũ khí, đạn và làm nhiệm vụ.", D: "Tham gia làm nhiệm vụ đánh địch vòng ngoài." }, true: "A" },
+            { q: "Một trong những yêu cầu chiến thuật của từng người trong chiến đấu phòng ngự:", a: { A: "Có quyết tâm chiến đấu cao, chuẩn bị mọi mặt chu đáo, bảo đảm đánh địch dài ngày.", B: "Đánh nhanh, sục sạo kỹ, vừa đánh vừa địch vận.", C: "Độc lập chiến đấu, chủ động hiệp đồng, liên tục chiến đấu.", D: "Bí mật bất ngờ tính khôn mưu mẹo." }, true: "A" },
+            { q: "Hành động của từng người sau mỗi lần đánh lùi các đợt tiến công của địch:", a: { A: "Chủ động cứu chữa thương binh, củng cố công sự trận địa, bổ sung vật chất.", B: "Nhận nhiệm vụ mới do cấp trên giao, làm công tác chuẩn bị...", C: "Nhanh chóng rời khỏi trận địa và sẵn sàng nhận nhiệm vụ tiếp theo.", D: "Làm lực lượng dự bị hỗ trợ đồng đội đánh địch tiến công trận địa." }, true: "A" },
+
+            // --- BÀI: THUỐC NỔ VÀ ĐỒ DÙNG GÂY NỔ ---
+            { q: "Một hợp chất hoặc một hỗn hợp hóa học, khi bị tác động như nhiệt, thi có phản ứng nổ sinh nhiệt cao. Lượng khí lớn tạo thành áp lực mạnh phá hủy các vật thể xung quanh. Được xác định là:", a: { A: "Khái niệm thuốc nổ.", B: "Tác dụng thuốc nổ.", C: "Yêu cầu thuốc nổ.", D: "Đặc điểm thuốc nổ." }, true: "A" },
+            { q: "Dùng để tiêu diệt sinh lực địch, phá huỷ phương tiện chiến tranh, công sự, vật cản của địch, tăng tốc độ phá đất đá, làm công sự, khai thác gỗ... là:", a: { A: "Khái niệm.", B: "Tác dụng.", C: "Yêu cầu.", D: "Đặc điểm." }, true: "B" },
+            { q: "Tốc độ cháy trung bình trong không khí của dây cháy chậm là:", a: { A: "1 cm/giây.", B: "2 cm/giây.", C: "3 cm/giây.", D: "4 cm/giây." }, true: "A" },
+            { q: "Tốc độ truyền nổ của dây nổ là:", a: { A: "6.500 mét/giây.", B: "5.500 mét/giây.", C: "4.500 mét/giây.", D: "3.500 mét/giây." }, true: "A" },
+            { q: "Đồ dùng gây nổ bao gồm:", a: { A: "Thuốc nổ, dây cháy chậm, nụ xòe.", B: "Kíp nổ, dây cháy chậm, nụ xòe.", C: "Kíp, nụ xòe, dây cháy chậm, dây nổ.", D: "Kíp nổ thường, thuốc nổ, nụ xoè." }, true: "C" },
+            { q: "Phân loại cấu tạo vật liệu vỏ kíp có:", a: { A: "2 loại: Kíp đồng và kíp nhôm.", B: "5 loại: Kíp đồng, kíp nhôm, kíp nhựa, kíp giấy và kíp sắt.", C: "3 loại: Kíp đồng, kíp nhôm và kíp giấy.", D: "4 loại: Kíp đồng, kíp nhôm, kíp nhựa và kíp giấy." }, true: "C" },
+            { q: "Cấu tạo của kíp thường có bao nhiêu bộ phận:", a: { A: "4 bộ phận.", B: "3 bộ phận.", C: "5 bộ phận.", D: "6 bộ phận." }, true: "A" },
+            { q: "Lượng nổ dài thường dùng để đánh, phá các loại mục tiêu nào?", a: { A: "Đánh ụ súng lô cốt.", B: "Đánh xe tăng xe bọc thép.", C: "Đánh địch ở ngã ba hào.", D: "Hàng rào dây thép gai, tường, bãi mìn." }, true: "D" },
+            { q: "Tốc độ nổ của thuốc nổ TNT là:", a: { A: "5.500 - 8.800 m/s.", B: "4.700 - 7.000 m/s.", C: "4.000 - 5.800 m/s.", D: "3.300 - 4.000 m/s." }, true: "B" },
+            { q: "Tốc độ nổ của thuốc nổ C4 là:", a: { A: "4.700 m/s.", B: "8.400 m/s.", C: "7.380 m/s.", D: "6.800 m/s." }, true: "C" },
+            { q: "Đặc điểm nhận dạng của thuốc nổ C4:", a: { A: "Màu xanh nhạt, dẻo, mùi hắc vị nhạt.", B: "Màu trắng đục, dẻo, mùi hắc vị nhạt.", C: "Màu nâu úa, dẻo, mùi hắc vị nhạt.", D: "Màu đen hạt dẻ, dẻo, mùi hắc vị nhạt." }, true: "B" },
+            // --- BÀI: KỸ THUẬT BẮN SÚNG TIỂU LIÊN AK ---
+            { q: "Khi bắn súng tiểu liên AK, nếu có gió ngang so với hướng bắn thì:", a: { A: "Làm cho đầu đạn bay thấp và gần hơn.", B: "Làm cho đầu đạn bay cao và gần hơn.", C: "Làm cho đầu đạn lệch theo chiều hướng gió.", D: "Làm cho đầu đạn bay theo chiều ngược hướng gió." }, true: "C" },
+            { q: "Nếu đầu ngắm thấp hơn mép trên khe ngắm và lệch phải, thì điểm chạm:", a: { A: "Cao hơn so với điểm bắn trúng.", B: "Thấp hơn và lệch sang phải so với điểm bắn trúng.", C: "Không cao, không thấp so với điểm bắn trúng.", D: "Cao hơn và lệch sang phải so với điểm định bắn trúng." }, true: "B" },
+            { q: "Góc tạo bởi trục nòng súng khi đã lấy xong đường ngắm và trục nòng súng ở thời điểm đạn ra khỏi nòng:", a: { A: "Khái niệm góc nảy.", B: "Khái niệm góc bắn.", C: "Đặc điểm của đường đạn.", D: "Đặc điểm của ngắm bắn." }, true: "A" },
+            { q: "Tính từ khi bóp cò cho đến khi kết thúc chuyển động về phía trước của kim hỏa. Được xác định là:", a: { A: "Giới hạn thời kỳ giật thứ nhất.", B: "Giới hạn thời kỳ giật thứ hai.", C: "Giới hạn thời kỳ giật thứ ba.", D: "Tất cả phương án trên đúng." }, true: "A" },
+            { q: "Khi bắn súng trung liên RPĐ, trong điều kiện lý tưởng, tầm bay xa nhất của đầu đạn:", a: { A: "800 mét.", B: "1500 mét.", C: "3000 mét.", D: "3600 mét." }, true: "C" },
+
+            // --- BÀI: SỬ DỤNG BẢN ĐỒ ---
+            { q: "Phân loại bản đồ trong quân sự gồm:", a: { A: "3 loại. Bản đồ cấp chiến thuật; chiến dịch và chiến lược.", B: "3 loại. Bản đồ cấp chiến thuật; chiến dịch; chiến lược và địa lý đại cương.", C: "3 loại. Bản đồ cấp chiến thuật; chiến dịch; chiến lược và bản đồ địa hình.", D: "3 loại. Bản đồ cấp chiến thuật; cấp phân đội và cấp chiến lược." }, true: "A" },
+            { q: "Tỉ lệ bản đồ viết dưới dạng phân số, dùng để:", a: { A: "Chỉ tỉ số giữa độ chênh cao trên bản đồ với độ chênh cao tương ứng ngoài thực địa.", B: "Chỉ tỉ số độ dài trên bản đồ với độ cao, diện tích tương ứng ngoài thực địa.", C: "Chỉ tỉ số giữa diện tích trên bản đồ với diện tích tương ứng ngoài thực địa.", D: "Chỉ tỉ số giữa độ dài trên bản đồ với độ dài tương ứng ngoài thực địa." }, true: "D" },
+            { q: "Có mấy phương pháp định hướng bản đồ và kể tên các phương pháp đó:", a: { A: "3 phương pháp: Định hướng bằng địa bàn; Địa vật dài thẳng; Ống nhòm.", B: "3 phương pháp: Định hướng bằng địa bàn; Địa vật dài thẳng; Đường phương hướng giữa hai địa vật.", C: "4 phương pháp: Định hướng bằng địa bàn; Địa vật dài thẳng; Đường hướng giữa hai địa vật, và bằng sa bàn.", D: "4 phương pháp: Định hướng bằng địa bàn; Địa vật dài thẳng; Đường hướng giữa hai địa vật và bằng ống nhòm." }, true: "B" },
+            { q: "Tỉ lệ bản đồ là:", a: { A: "Tỉ số giữa độ dài trên bản đồ với độ dài thật ngoài thực địa.", B: "Tỉ số giữa diện tích trên bản đồ với diện tích thật ngoài thực địa.", C: "Tỉ số giữa độ dài trên bản đồ với diện tích thật ngoài thực địa.", D: "Tỉ số giữa diện tích trên bản đồ với độ dài thật ngoài thực địa." }, true: "A" },
+
+            // --- BÀI: KỸ THUẬT BĂNG BÓ CHUYỂN THƯƠNG ---
+            { q: "Đưa cuộn băng đi nhiều vòng từ dưới lên trên theo hình vòng xoắn lò xo như hình con rắn quấn quanh thân cây. Được xác định là:", a: { A: "Băng vòng xoắn.", B: "Băng vòng.", C: "Băng dấu nhân.", D: "Băng số 8." }, true: "A" },
+            { q: "Băng số 8 là:", a: { A: "Đưa cuộn băng đi vòng theo hình số chữ nhân, theo hình vòng xoắn lò xo.", B: "Đưa cuộn băng đi vòng theo hình lò xo.", C: "Đưa cuộn băng đi vòng theo hình số 8, theo hình vòng xoắn lò xo.", D: "Đưa cuộn băng đi vòng theo hình số 8." }, true: "C" },
+            { q: "Các loại băng cơ bản thường dùng gồm:", a: { A: "Băng cá nhân, băng cuộn, băng dính.", B: "Băng cá nhân, băng cuộn, băng dính và băng dính.", C: "Băng cá nhân, băng cuộn, băng tam giác, băng bốn dải và băng dính.", D: "Băng cá nhân, băng tam giác và băng dính." }, true: "C" },
+            { q: "Cấp cứu ban đầu vết thương phần mềm:", a: { A: "Băng vết thương, đưa thương binh về nơi an toàn, chờ tổ chức vận chuyển về sau.", B: "Đưa thương binh về nơi an toàn, rồi băng vết thương, chờ dịp tổ chức vận chuyển về cơ sở điều trị.", C: "Đưa thương binh về nơi điều trị để tuyến sau cứu chữa.", D: "Nhanh chóng hô hấp nhân tạo." }, true: "A" },
+            { q: "Có mấy phương pháp cầm máu cơ bản:", a: { A: "3.", B: "4.", C: "5.", D: "6." }, true: "B" },
+            { q: "Bỏng nặng là chiếm bao nhiêu % diện tích cơ thể trở lên:", a: { A: "7%", B: "8%", C: "9%", D: "10%" }, true: "D" },
+
+            // --- BÀI: ĐIỀU LỆNH ĐỘI NGŨ ---
+            { q: "Đội hình đội ngũ của tiểu đội bộ binh gồm:", a: { A: "Một hàng ngang, hai hàng ngang, ba hàng ngang, bốn hàng ngang.", B: "Một hàng ngang, hai hàng ngang, một hàng dọc, hai hàng dọc.", C: "Hai hàng ngang, hai hàng dọc.", D: "Một hàng dọc, hai hàng dọc, ba hàng dọc, bốn hàng dọc." }, true: "B" },
+            { q: "Đội hình hàng dọc vị trí chỉ huy tiểu đội khi hành tiến:", a: { A: "Đi ở phía sau đội hình của tiểu đội, cách từ 2 - 3 bước.", B: "Đi ở bên trái đội hình của tiểu đội, cách từ 2 - 3 bước.", C: "Đi ở bên phải đội hình của tiểu đội, cách từ 3 - 5 bước.", D: "Đi ở bên trái đội hình của tiểu đội, cách từ 3 - 5 bước." }, true: "B" },
+            { q: "Khi vào vị trí tập hợp giãn cách giữa hai gót chân của hai người đứng cạnh nhau (hàng ngang) là:", a: { A: "50 cm.", B: "60 cm.", C: "70 cm.", D: "80 cm." }, true: "C" },
+            { q: "Thứ tự các bước thực hiện tập hợp đội hình tiểu đội một hàng dọc:", a: { A: "4 bước: 1 tập hợp, 2 điểm số, 3 chỉnh đốn hàng ngũ, 4 giải tán.", B: "3 bước: 1 tập hợp, 2 chỉnh đốn hàng ngũ, 3 giải tán.", C: "4 bước: 1 tập hợp, 2 chỉnh đốn hàng ngũ, 3 điểm số, 4 giải tán.", D: "3 bước: 1 tập hợp, 2 điểm số, 3 giải tán." }, true: "A" }
+        ],
+    };
+
+    // --- BIẾN CẤU HÌNH TOÀN CỤC ---
+    let isShuffle = true; 
+    let instantFeedback = false; 
+    let isTestSubmitted = false; 
+    let currentQuestions = [];
+    let userAnswers = {};
+    const questionsPerPage = 10; 
+    let currentPage = 1;
+    let totalPages = 1;
+    let displayModuleName = "";
+
+    function openSettings() {
+        document.getElementById('start-banner').style.display = 'flex';
+        document.getElementById('start-btn-action').innerText = "TẠO ĐỀ MỚI & LÀM LẠI";
+        document.getElementById('close-banner-btn').style.display = 'inline-block';
+    }
+
+    function closeSettings() {
+        document.getElementById('start-banner').style.display = 'none';
+    }
+
+    function startApp() {
+        isShuffle = document.getElementById('setting-shuffle').value === 'yes';
+        instantFeedback = document.getElementById('setting-answer').value === 'yes';
+        let moduleCode = document.getElementById('setting-module').value;
+        let limit = document.getElementById('setting-limit').value;
+        
+        document.getElementById('start-banner').style.display = 'none';
+        document.getElementById('main-content').style.display = 'block';
+
+        if(!instantFeedback) {
+            document.getElementById('submit-test-btn').style.display = 'inline-block';
+        } else {
+            document.getElementById('submit-test-btn').style.display = 'none';
+        }
+
+        generateTest(moduleCode, limit); 
+    }
+
+    function switchTab(moduleCode) {
+        document.getElementById('setting-module').value = moduleCode;
+        let limit = document.getElementById('setting-limit').value;
+        generateTest(moduleCode, limit);
+    }
+
+    function shuffleArray(array) {
+        let shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+    }
+
+    // TẠO ĐỀ THI DỰA TRÊN CẤU HÌNH
+    function generateTest(moduleCode, limit) {
+        userAnswers = {};
+        currentPage = 1;
+        isTestSubmitted = false; 
+
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        if(document.getElementById(`btn-${moduleCode}`)) {
+            document.getElementById(`btn-${moduleCode}`).classList.add('active');
+        }
+
+        if(moduleCode === 'qp1') displayModuleName = "QP1";
+        else if(moduleCode === 'qp2') displayModuleName = "QP2";
+        else if(moduleCode === 'qp34') displayModuleName = "QP3 & 4";
+        else displayModuleName = "TỔNG HỢP";
+
+        let sourceData = [];
+        if(moduleCode === 'all') {
+            sourceData = [...quizData.qp1, ...quizData.qp2, ...quizData.qp34];
+        } else {
+            sourceData = [...quizData[moduleCode]];
+        }
+
+        if(isShuffle) {
+            sourceData = shuffleArray(sourceData);
+        }
+
+        if(limit !== 'all') {
+            currentQuestions = sourceData.slice(0, parseInt(limit));
+        } else {
+            currentQuestions = sourceData;
+        }
+
+        if(currentQuestions.length === 0) {
+            document.getElementById('quiz-area').innerHTML = "<h3 style='text-align:center; color:#7f8c8d;'>Chưa có câu hỏi nào! Bạn hãy thêm dữ liệu vào code nhé.</h3>";
+            document.getElementById('global-stats').innerText = `Học phần: ${displayModuleName} | Đã làm: 0/0`;
+            return;
+        }
+
+        totalPages = Math.ceil(currentQuestions.length / questionsPerPage);
+        const select = document.getElementById('page-select');
+        select.innerHTML = '';
+        for (let i = 1; i <= totalPages; i++) {
+            let opt = document.createElement('option');
+            opt.value = i;
+            opt.innerHTML = `Trang ${i}`;
+            select.appendChild(opt);
+        }
+
+        updateStats();
+        renderQuiz();
+    }
+
+    function renderQuiz() {
+        if(currentQuestions.length === 0) return;
+        const quizArea = document.getElementById('quiz-area');
+        quizArea.innerHTML = "";
+        
+        const start = (currentPage - 1) * questionsPerPage;
+        const end = Math.min(start + questionsPerPage, currentQuestions.length);
+
+        for (let i = start; i < end; i++) {
+            const item = currentQuestions[i];
+            let answersHtml = "";
+            
+            for (let key in item.a) {
+                let isChecked = userAnswers[i] === key ? "checked" : "";
+                let classResult = "";
+                
+                if (userAnswers[i]) {
+                    if (instantFeedback || isTestSubmitted) {
+                        if (key === item.true) classResult = "correct";
+                        else if (userAnswers[i] === key) classResult = "wrong";
+                    } else {
+                        if (userAnswers[i] === key) classResult = "selected";
+                    }
+                }
+                
+                let disableInput = (instantFeedback && userAnswers[i]) || isTestSubmitted ? 'disabled' : '';
+
+                answersHtml += `
+                <label class="answer-label ${classResult} ${disableInput}" id="lbl-${i}-${key}">
+                    <input type="radio" name="q${i}" value="${key}" ${isChecked} 
+                    onclick="handleAnswer(${i}, '${key}')"> 
+                    <b>${key}.</b> ${item.a[key]}
+                </label>`;
+            }
+            
+            quizArea.innerHTML += `
+            <div class="question-box" id="box-${i}">
+                <div class="question-title">Câu ${i + 1}: ${item.q}</div>
+                <div>${answersHtml}</div>
+            </div>`;
+        }
+        updateNavigation();
+    }
+
+    function handleAnswer(qIndex, selectedKey) {
+        userAnswers[qIndex] = selectedKey;
+
+        if(!instantFeedback && !isTestSubmitted) {
+            const allLabels = document.querySelectorAll(`#box-${qIndex} .answer-label`);
+            allLabels.forEach(lbl => lbl.classList.remove('selected'));
+            document.getElementById(`lbl-${qIndex}-${selectedKey}`).classList.add('selected');
+            updateStats();
+            return; 
+        }
+
+        const item = currentQuestions[qIndex];
+        const allLabels = document.querySelectorAll(`#box-${qIndex} .answer-label`);
+        allLabels.forEach(lbl => lbl.classList.add('disabled'));
+        
+        const selectedLabel = document.getElementById(`lbl-${qIndex}-${selectedKey}`);
+        const correctLabel = document.getElementById(`lbl-${qIndex}-${item.true}`);
+
+        if (selectedKey === item.true) {
+            selectedLabel.classList.add('correct');
+        } else {
+            selectedLabel.classList.add('wrong');
+            if(correctLabel) correctLabel.classList.add('correct');
+        }
+        updateStats();
+    }
+
+    // --- CÁC HÀM XỬ LÝ NỘP BÀI MỚI (XÓA BỎ NÚT CONFIRM THÔ KỆCH) ---
+
+    // 1. Mở Bảng Xác Nhận khi ấn "Nộp Bài Tổng"
+    function openConfirmModal() {
+        document.getElementById('confirm-modal').style.display = 'flex';
+    }
+
+    // 2. Đóng Bảng Xác Nhận nếu chọn "Hủy bỏ"
+    function closeConfirmModal() {
+        document.getElementById('confirm-modal').style.display = 'none';
+    }
+
+    // 3. Thực hiện chấm điểm nếu chọn "Đồng ý nộp"
+    function processSubmit() {
+        // Tắt bảng Xác nhận
+        document.getElementById('confirm-modal').style.display = 'none';
+
+        // Chấm điểm
+        isTestSubmitted = true;
+        renderQuiz(); 
+        updateStats();
+        
+        let correct = 0;
+        for (let idx in userAnswers) {
+            if (userAnswers[idx] === currentQuestions[idx].true) correct++;
+        }
+        let point = (correct / currentQuestions.length * 10).toFixed(1);
+        
+        // Hiện dữ liệu lên Bảng Điểm
+        document.getElementById('score-text').innerText = point + " Điểm";
+        document.getElementById('score-text').style.color = point >= 5 ? "#27ae60" : "#e74c3c";
+        document.getElementById('detail-text').innerText = `Trả lời đúng: ${correct} / ${currentQuestions.length} câu`;
+        
+        // Mở bảng Điểm
+        document.getElementById('result-modal').style.display = 'flex';
+        document.documentElement.scrollTop = 0;
+    }
+
+    // Đóng bảng điểm để xem đáp án
+    function closeResult() {
+        document.getElementById('result-modal').style.display = 'none';
+    }
+
+    // Đóng bảng điểm và mở Cài đặt làm lại
+    function openSettingsFromResult() {
+        document.getElementById('result-modal').style.display = 'none';
+        openSettings();
+    }
+
+    function updateStats() {
+        let answered = Object.keys(userAnswers).length;
+        let correct = 0;
+        if (instantFeedback || isTestSubmitted) {
+            for (let idx in userAnswers) {
+                if (userAnswers[idx] === currentQuestions[idx].true) correct++;
+            }
+            document.getElementById('global-stats').innerText = `Học phần: ${displayModuleName} | Đã làm: ${answered}/${currentQuestions.length} | Đúng: ${correct}`;
+        } else {
+            document.getElementById('global-stats').innerText = `Học phần: ${displayModuleName} | Đã làm: ${answered}/${currentQuestions.length} | Đang ẩn đáp án`;
+        }
+    }
+
+    function changePage(delta) { currentPage += delta; renderQuiz(); document.documentElement.scrollTop = 0; }
+    function goToPage(page) { currentPage = parseInt(page); renderQuiz(); document.documentElement.scrollTop = 0; }
+
+    function updateNavigation() {
+        document.getElementById('page-info').innerText = `Trang ${currentPage} / ${totalPages}`;
+        document.getElementById('prev-btn').disabled = currentPage === 1;
+        document.getElementById('next-btn').disabled = currentPage === totalPages;
+        document.getElementById('page-select').value = currentPage;
+    }
+    function createSnowflake() {
+        const snowflake = document.createElement('div');
+        snowflake.classList.add('snowflake');
+        snowflake.style.left = Math.random() * 100 + 'vw';
+        const size = Math.random() * 10 + 5 + 'px'; 
+        snowflake.style.width = size;
+        snowflake.style.height = size;
+        const drift = (Math.random() - 0.5) * 200 + 'px';
+        snowflake.style.setProperty('--drift-x', drift);
+        const duration = Math.random() * 5 + 5 + 's';
+        snowflake.style.animationDuration = duration;
+        document.body.appendChild(snowflake);
+        setTimeout(() => { snowflake.remove(); }, parseFloat(duration) * 1000);
+    }
+    setInterval(createSnowflake, 300);
+
+
+
+    document.addEventListener('contextmenu', event => event.preventDefault());
+
+
+    document.onkeydown = function(e) {
+
+        if (e.keyCode === 123) {
+            return false;
+        }
+
+        if (e.ctrlKey && e.shiftKey && e.keyCode === 73) {
+            return false;
+        }
+
+        if (e.ctrlKey && e.shiftKey && e.keyCode === 74) {
+            return false;
+        }
+
+        if (e.ctrlKey && e.keyCode === 85) {
+            return false;
+        }
+    };
+
+</script>
 </body>
 </html>
