@@ -1,470 +1,688 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trắc Nghiệm Lịch Sử Văn Minh </title>
-    <style>
-        /* --- Cập nhật màu nền một chút cho không khí mùa đông --- */
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background: linear-gradient(to bottom, #d7e1ec, #ffffff); /* Nền chuyển màu nhẹ */
-            padding: 20px; 
-            display: flex; 
-            justify-content: center;
-            min-height: 100vh;
-            overflow-x: hidden; /* Ẩn thanh cuộn ngang do tuyết có thể bay ra ngoài */
-        }
-        
-        .quiz-container { 
-            background: #fff; 
-            width: 900px; 
-            max-width: 100%; 
-            padding: 30px; 
-            border-radius: 15px; /* Bo tròn hơn chút */
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
-            z-index: 10; /* Đảm bảo hộp câu hỏi nằm trên tuyết */
-            position: relative;
-        }
-        
-        h1 { text-align: center; color: #2c3e50; }
-        .stats { text-align: center; margin-bottom: 20px; font-weight: bold; color: #555; }
-        
-        .question-box { margin-bottom: 20px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; background: #fff;}
-        .question-title { background: #f1f8ff; padding: 15px; font-weight: 600; border-bottom: 1px solid #ddd; color: #003e6b; }
-        
-        .answer-label { display: block; padding: 12px 15px; cursor: pointer; border-bottom: 1px solid #eee; transition: 0.2s; }
-        .answer-label:hover { background: #fafafa; }
-        .answer-label:last-child { border-bottom: none; }
-        
-        /* Màu kết quả */
-        .correct { background-color: #d4edda !important; color: #155724; font-weight: bold; }
-        .correct::after { content: " ✓ Đúng"; float: right; }
-        .wrong { background-color: #f8d7da !important; color: #721c24; text-decoration: line-through; opacity: 0.8; }
-        .wrong::after { content: " ✕ Sai"; float: right; text-decoration: none; }
-        .disabled { pointer-events: none; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trắc Nghiệm GDQP - Pro Version</title>
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(to bottom, #d7e1ec, #ffffff);
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+        min-height: 100vh;
+        overflow-x: hidden; 
+        margin: 0;
+    }
+    .overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);
+        display: flex; justify-content: center; align-items: center;
+        z-index: 10000; 
+    }
+    .banner, .result-box, .confirm-box {
+        background: #fff; border-radius: 20px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.4); text-align: center;
+        animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    .banner { width: 500px; padding: 30px; }
+    .result-box, .confirm-box { width: 450px; padding: 40px 30px; }
+    
+    @keyframes popIn {
+        0% { transform: scale(0.5); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    .banner h2 { color: #2c3e50; margin-top: 0; margin-bottom: 20px;}
+    .result-box h2 { color: #f39c12; margin-top: 0; font-size: 26px; font-weight: 800;}
+    .confirm-box h2 { color: #e74c3c; margin-top: 0; font-size: 24px; font-weight: 800;}
+    .setting-row { display: flex; gap: 15px; margin-bottom: 15px; text-align: left; }
+    .setting-group { flex: 1; }
+    .setting-group label { display: block; font-weight: bold; margin-bottom: 8px; color: #34495e; font-size: 14px;}
+    .setting-group select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #bdc3c7; font-size: 15px; outline: none;}
+    .result-score { font-size: 60px; font-weight: 900; color: #27ae60; margin: 15px 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.1);}
+    .result-detail { font-size: 18px; color: #7f8c8d; margin-bottom: 25px; font-weight: 500;}
+    .start-btn {
+        background: #27ae60; color: white; border: none; padding: 14px 30px;
+        font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer;
+        width: 100%; transition: 0.3s; margin-top: 10px;
+    }
+    .start-btn:hover { background: #219150; box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);}
+    .close-btn {
+        background: #7f8c8d; color: white; border: none; padding: 12px 30px;
+        font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer;
+        width: 100%; transition: 0.3s; margin-top: 10px; display: none;
+    }
+    .close-btn:hover { background: #95a5a6; }
+    
+    .result-btn-group { display: flex; justify-content: center; gap: 15px; }
+    .result-btn { 
+        background: #2980b9; color: white; border: none; padding: 12px 20px; 
+        font-size: 15px; font-weight: bold; border-radius: 10px; cursor: pointer; 
+        transition: all 0.3s; flex: 1;
+    }
+    .result-btn:hover { background: #3498db; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);}
+    .result-btn.review { background: #95a5a6; }
+    .result-btn.review:hover { background: #7f8c8d; }
+    .result-btn.danger { background: #e74c3c; }
+    .result-btn.danger:hover { background: #c0392b; box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4); }
 
-        /* Nút phân trang */
-        .pagination { display: flex; justify-content: center; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
-        .page-btn { padding: 8px 15px; border: 1px solid #ddd; background: #fff; cursor: pointer; border-radius: 4px; }
-        .page-btn.active { background: #3498db; color: white; border-color: #3498db; }
-        .page-btn:hover:not(.active) { background: #eee; }
+    #main-content, #result-modal, #confirm-modal { display: none; }
+    #main-content { width: 900px; max-width: 100%; z-index: 10; position: relative;}
 
-        .nav-btn { background: #2c3e50; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; transition: background 0.3s;}
-        .nav-btn:hover { background: #34495e; }
-        .nav-btn:disabled { background: #ccc; cursor: not-allowed; }
+    .quiz-container { background: #fff; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+    h1 { text-align: center; color: #2c3e50; margin-bottom: 10px; }
+    .description { text-align: center; color: #7f8c8d; margin-bottom: 20px; font-style: italic; }
 
-        /* --- CSS CHO HIỆU ỨNG TUYẾT RƠI --- */
-        .snowflake {
-            position: fixed;
-            top: -50px; /* Xuất phát cao hơn vì ảnh lớn hơn */
-            background-image: url(snowflake_2744-fe0f.png); 
-            background-size: contain;
-            background-repeat: no-repeat;
-            pointer-events: none; 
-            z-index: 9999; /* Để tuyết rơi TRÊN CÙNG (phủ lên cả bài thi) cho đẹp, hoặc để 1 nếu muốn nằm dưới */
-            opacity: 0.8;
-            animation: fall linear forwards;
-        }
-        .description {
-            text-align: center;
-            color: #7f8c8d;
-            margin-bottom: 30px;
-            font-style: italic;
-        }
-        @keyframes fall {
-            to {
-                /* Rơi xuống đáy màn hình và trôi dạt ngang ngẫu nhiên */
-                transform: translate(var(--drift-x), 105vh) rotate(360deg);
-            }
-        }
-    </style>
+    .tabs { display: flex; justify-content: center; align-items: center; margin-bottom: 20px; gap: 8px; flex-wrap: wrap;}
+    .tab-btn { background-color: #e0e0e0; border: none; padding: 12px 18px; cursor: pointer; font-size: 15px; font-weight: bold; border-radius: 8px; transition: 0.3s; color: #333; }
+    .tab-btn.active { background-color: #2980b9; color: white; box-shadow: 0 4px 6px rgba(41, 128, 185, 0.3); }
+    .tab-btn:hover:not(.active) { background-color: #d5d5d5; }
+    .setting-btn { background-color: #f39c12; color: white; border: none; padding: 12px 18px; cursor: pointer; font-size: 15px; font-weight: bold; border-radius: 8px; transition: 0.3s; margin-left: 10px;}
+    .setting-btn:hover { background-color: #e67e22; box-shadow: 0 4px 6px rgba(230, 126, 34, 0.3); }
+
+    .stats { text-align: right; font-weight: bold; color: #e74c3c; margin-bottom: 15px; font-size: 18px; border-bottom: 2px solid #eee; padding-bottom: 10px;}
+    .question-box { background: #f8f9fa; border-left: 5px solid #3498db; padding: 15px; margin-bottom: 20px; border-radius: 0 8px 8px 0; }
+    .question-title { font-weight: bold; font-size: 16px; margin-bottom: 10px; color: #2c3e50; }
+    .answer-label { display: block; padding: 10px; margin: 5px 0; background: #fff; border: 1px solid #ddd; border-radius: 5px; cursor: pointer; transition: 0.2s; }
+    .answer-label:hover { background: #fafafa; }
+    .answer-label.selected { background: #d6eaf8; border-color: #3498db; } 
+
+    .correct { background-color: #d4edda !important; color: #155724; font-weight: bold; border-color: #c3e6cb;}
+    .correct::after { content: " ✓ Đúng"; float: right; }
+    .wrong { background-color: #f8d7da !important; color: #721c24; text-decoration: line-through; opacity: 0.8; border-color: #f5c6cb;}
+    .wrong::after { content: " ✕ Sai"; float: right; text-decoration: none; }
+    .disabled { pointer-events: none; }
+
+    .pagination { display: flex; justify-content: center; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+    .nav-btn { background: #2c3e50; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; transition: background 0.3s;}
+    .nav-btn:hover { background: #34495e; }
+    .nav-btn:disabled { background: #ccc; cursor: not-allowed; }
+    #submit-test-btn { background: #e74c3c; display: none; } 
+    #submit-test-btn:hover { background: #c0392b; }
+
+    .snowflake { position: fixed; top: -50px; background-image: url('snowflake_2744-fe0f.png'); background-size: contain; background-repeat: no-repeat; pointer-events: none; z-index: 9999; opacity: 0.8; animation: fall linear forwards; }
+    @keyframes fall { to { transform: translate(var(--drift-x), 105vh) rotate(360deg); } }
+    
+</style>
 </head>
 <body>
+<div class="overlay" id="start-banner">
+    <div class="banner">
+        <h2>⚙️ Thiết Lập Đề Thi</h2>
+        
+        <div class="setting-row">
+            <div class="setting-group">
+                <label>Học phần / Nguồn câu hỏi:</label>
+                <select id="setting-module">
+                    <option value="qp1">Học phần QP1</option>
+                    <option value="qp2">Học phần QP2</option>
+                    <option value="qp34">Học phần QP3 & 4</option>
+                    <option value="all">Trộn TẤT CẢ các HP</option>
+                </select>
+            </div>
+            <div class="setting-group">
+                <label>Số lượng câu hỏi (Đề thi):</label>
+                <select id="setting-limit">
+                    <option value="10">10 câu</option>
+                    <option value="20">20 câu</option>
+                    <option value="30">30 câu</option>
+                    <option value="50">50 câu</option>
+                    <option value="all">Toàn bộ ngân hàng</option>
+                </select>
+            </div>
+        </div>
 
-<div class="quiz-container">
-    <h1>Đề thi LỊCH SỬ VĂN MINH THẾ GIỚI</h1>
-    <p class="description">Lưu ý câu hỏi trong đây phục vụ cho mục đích ôn tập và tham khảo. Ký tên : Minh Quân </p>
-    <div class="stats" id="global-stats">Đã làm: 0/306 | Đúng: 0</div>
-    
-    <div id="quiz-area"></div>
+        <div class="setting-row">
+            <div class="setting-group">
+                <label>Trộn thứ tự câu hỏi?</label>
+                <select id="setting-shuffle">
+                    <option value="yes">Có (Ngẫu nhiên)</option>
+                    <option value="no">Không (Theo thứ tự gốc)</option>
+                </select>
+            </div>
+            <div class="setting-group">
+                <label>Chế độ làm bài:</label>
+                <select id="setting-answer">
+                    <option value="no">Thi thử (Làm xong mới chấm)</option>
+                    <option value="yes">Ôn tập (Hiện ngay đáp án)</option>
+                </select>
+            </div>
+        </div>
 
-    <div class="pagination">
-        <button class="nav-btn" id="prev-btn" onclick="changePage(-1)">❮ Trang Trước</button>
-        <span id="page-info" style="align-self: center; font-weight: bold;">Trang 1</span>
-        <button class="nav-btn" id="next-btn" onclick="changePage(1)">Trang Sau ❯</button>
+        <button class="start-btn" id="start-btn-action" onclick="startApp()">TẠO ĐỀ & BẮT ĐẦU LÀM</button>
+        <button class="close-btn" id="close-banner-btn" onclick="closeSettings()">ĐÓNG (Không lưu)</button>
     </div>
-    
-    <div style="text-align: center; margin-top: 15px;">
-        Chọn trang: <select id="page-select" onchange="goToPage(this.value)"></select>
+</div>
+
+<!-- BẢNG CẢNH BÁO XÁC NHẬN NỘP BÀI (MỚI THÊM) -->
+<div class="overlay" id="confirm-modal">
+    <div class="confirm-box">
+        <h2>⚠️ XÁC NHẬN NỘP BÀI</h2>
+        <div class="result-detail" style="color: #34495e;">
+            Bạn có chắc chắn muốn nộp bài để chấm điểm không?<br>
+            <span style="font-size: 15px; font-style: italic; color: #e74c3c;">(Sau khi nộp, hệ thống sẽ khóa đề và bạn không thể sửa lại đáp án)</span>
+        </div>
+        <div class="result-btn-group">
+            <button class="result-btn review" onclick="closeConfirmModal()">HỦY BỎ</button>
+            <button class="result-btn danger" onclick="processSubmit()">ĐỒNG Ý NỘP</button>
+        </div>
+    </div>
+</div>
+
+<!-- BẢNG THÔNG BÁO KẾT QUẢ THI SAU KHI NỘP -->
+<div class="overlay" id="result-modal">
+    <div class="result-box">
+        <h2>🎉 HOÀN THÀNH BÀI THI! 🎉</h2>
+        <div class="result-score" id="score-text">10.0</div>
+        <div class="result-detail" id="detail-text">Trả lời đúng: 0 / 0 câu</div>
+        <div class="result-btn-group">
+            <button class="result-btn review" onclick="closeResult()">XEM LẠI ĐÁP ÁN</button>
+            <button class="result-btn" onclick="openSettingsFromResult()">LÀM ĐỀ MỚI</button>
+        </div>
+    </div>
+</div>
+
+<!-- NỘI DUNG CHÍNH LÀM BÀI -->
+<div id="main-content">
+    <div class="quiz-container">
+        <h1>Hệ Thống Luyện Thi Trắc Nghiệm GDQP</h1>
+        <p class="description">Thiết lập cấu hình đề thi theo ý muốn của bạn!</p>
+
+        <!-- THANH TAB -->
+        <div class="tabs">
+            <button class="tab-btn" id="btn-qp1" onclick="switchTab('qp1')">Học phần QP1</button>
+            <button class="tab-btn" id="btn-qp2" onclick="switchTab('qp2')">Học phần QP2</button>
+            <button class="tab-btn" id="btn-qp34" onclick="switchTab('qp34')">Học phần QP3&4</button>
+            <button class="tab-btn" id="btn-all" onclick="switchTab('all')">Đề Tổng Hợp</button>
+            <button class="setting-btn" onclick="openSettings()">⚙️ Cài đặt Đề</button>
+        </div>
+
+        <div class="stats" id="global-stats">Đang tải dữ liệu...</div>
+        <div id="quiz-area"></div>
+        
+        <div class="pagination">
+            <button class="nav-btn" id="prev-btn" onclick="changePage(-1)">❮ Trước</button>
+            <span id="page-info" style="align-self: center; font-weight: bold;">Trang 1</span>
+            <button class="nav-btn" id="next-btn" onclick="changePage(1)">Sau ❯</button>
+            <button class="nav-btn" id="submit-test-btn" onclick="openConfirmModal()">NỘP BÀI TỔNG</button>
+        </div>
+        
+        <div style="text-align: center; margin-top: 15px;">
+            Đến nhanh trang: <select id="page-select" onchange="goToPage(this.value)"></select>
+        </div>
     </div>
 </div>
 
 <script>
-    // --- PHẦN DỮ LIỆU CÂU HỎI (Giữ nguyên 306 câu) ---
-    const allQuestions = [
-        { q: "1. Nhận định nào về Văn Minh là đúng?", a: { A: "Văn minh có bề dày lịch sử từ khi con người xuất hiện", B: "Văn minh chỉ xuất hiện ở giai đoạn cao của văn hóa", C: "Văn Minh xuất hiện khi xã hội có sự phân hóa giàu nghèo", D: "Khái niệm Văn Minh và Văn Hóa không có sự khác biệt" }, true: "B" },
-        { q: "2. Hãy lựa chọn đáp án đúng về trung tâm văn minh lớn của phương Đông cổ đại", a: { A: "Ấn Độ, Trung Quốc, Nhật Bản, Đông Nam Á", B: "Trung Quốc, Lưỡng Hà, Nhật Bản, Ai Cập", C: "Trung Quốc, Lưỡng Hà, Ấn Độ, Ai Cập", D: "Nhật Bản, Lưỡng Hà, Đông Nam Á, Ấn Độ" }, true: "C" },
-        { q: "3. Văn minh Lưỡng Hà nằm ở khu vực nào sau đây?", a: { A: "Tây Âu", B: "Trung Đông", C: "Nam Á", D: "Trung Á" }, true: "B" },
-        { q: "4. Văn minh Ả Rập xuất hiện từ thời kỳ:", a: { A: "Cổ đại", B: "Cận đại", C: "Hiện đại", D: "Trung đại" }, true: "D" },
-        { q: "5. Ai Cập là tặng phẩm của dòng sông nào?", a: { A: "Sông Hoàng Hà", B: "Sông Hằng", C: "Sông Nile", D: "Sông Lưỡng Hà" }, true: "C" },
-        { q: "6. Các Pharaong tiến hành xây dựng Kim tự tháp từ khi nào trong cuộc đời của họ?", a: { A: "Khi họ sinh ra", B: "Khi họ lập gia đình", C: "Khi họ lên ngôi", D: "Sau khi họ chết, người con kế vị xây cho" }, true: "C" },
-        { q: "7. Vương triều nào của các Pharaong được mệnh danh là \"thời kỳ Kim tự tháp\"?", a: { A: "Vương triều III, IV", B: "Vương triều II, III", C: "Vương triều IV, V", D: "Vương triều I,II" }, true: "A" },
-        { q: "8. Công trình nào sau đây được Pharaong xây dựng đề tặng vợ?", a: { A: "Đền Loro Gionggrang", B: "Cung A Phòng", C: "Đền Taj Mahan", D: "Vườn treo Babilon" }, true: "A" },
-        { q: "9. Phát minh sớm nhất trong lĩnh vực thiên văn của người Ai Cập là?", a: { A: "La bàn", B: "Lịch", C: "Toán học", D: "Thần học" }, true: "B" },
-        { q: "10. Bộ luật Hammurabi nổi tiếng là của quốc gia cổ đại nào?", a: { A: "Ai cập", B: "Lưỡng Hà", C: "Ả rập", D: "Bắc phi và Tây á" }, true: "B" },
-        { q: "11. Hãy chỉ ra điểm nào sau đây của văn minh khác biệt so với văn hóa?", a: { A: "Văn minh chỉ giả trị kỹ thuật, giá trị tinh thần", B: "Văn minh chỉ thái độ hành xử văn minh lịch sự", C: "Văn minh chi sự thụ hưởng giá trị tinh thần ở trình độ cao", D: "Văn minh chi giá trị vật chất và tỉnh thần ở trình độ cao của các quốc gia" }, true: "D" },
-        { q: "12. Cách hiểu đúng nhất đối với khái niệm văn minh là?", a: { A: "Văn minh là sự tiến bộ về tinh thần của quốc gia", B: "Văn minh là khái niệm thuộc về phương Tây", C: "Dân tộc nào cũng có văn minh", D: "Văn minh là sự tiến bộ về mặt vật chất và tinh thần của các quốc gia" }, true: "D" },
-        { q: "13. Dãy số được người Maya xây dựng theo hệ thống số nào?", a: { A: "20", B: "60", C: "10", D: "12" }, true: "A" },
-        { q: "14. Nội dung của Văn học A rập chủ yếu biểu hiện ở hai mặt?", a: { A: "Truyền thuyết và thơ", B: "Thơ và truyện", C: "Truyện và truyền thuyết", D: "Thơ và tình yêu" }, true: "B" },
-        { q: "15. Tiêu chí hàng đầu để xác định một nền văn minh là khi có sự xuất hiện của?", a: { A: "Chữ viết", B: "Con người", C: "Nhà nước", D: "Chữ viết, nhà nước" }, true: "D" },
-        { q: "16. Bản chất của khái niệm văn minh là chỉ sự?", a: { A: "Tiến bộ", B: "Giá trị", C: "Phát triển", D: "Bền vững" }, true: "A" },
-        { q: "17. Nội dung chính trong văn học của người Lưỡng Hà gồm những bộ phận chủ yếu nào?", a: { A: "Văn học dân gian", B: "Sử thi", C: "Thần thoại", D: "Văn học dân gian, sử thi" }, true: "D" },
-        { q: "18. Bộ luật Hammuarabi của người Lưỡng Hà được chia làm mấy phần?", a: { A: "Một phần", B: "Hai phần", C: "Ba phần", D: "Bốn phần" }, true: "C" },
-        { q: "19. Nghệ thuật tạo hình của người Lưỡng Hà cổ đại bao gồm?", a: { A: "Kiến trúc", B: "Điêu khắc", C: "Hội họa", D: "Kiến trúc, điêu khắc" }, true: "D" },
-        { q: "20. Người Ai Cập phát hiện ra những thành tựu nào trong lĩnh vực khoa học tự nhiên?", a: { A: "Thiên văn", B: "Toán học", C: "Y học", D: "Cả 3 phương án trên đều đúng" }, true: "D" },
-        { q: "21. Người Ai Cập xây dựng kim tự tháp nhiều nhất vào vương triều?", a: { A: "Thứ I và II", B: "Thứ IV và V", C: "Thứ II và III", D: "Thứ III và IV" }, true: "D" },
-        { q: "22. Trị số Pi=3,16 là thành tựu của nền văn minh?", a: { A: "Văn minh Trung Hoa", B: "Văn minh Lưỡng Hà", C: "Văn minh Ai Cập", D: "Văn minh Ấn Độ" }, true: "C" },
-        { q: "23. Người Ai cập cổ đại dùng hình vẽ con nòng nọc để chỉ con số?", a: { A: "10.000", B: "10", C: "100.000", D: "1000" }, true: "C" },
-        { q: "24. Nghệ thuật tạo hình thuở ban đầu của Văn Minh Lưỡng Hà gồm?", a: { A: "Kiến trúc và điêu khắc", B: "Điêu khắc và tháp", C: "Kiến trúc và cung điện", D: "Tượng và kiến trúc" }, true: "A" },
-        { q: "25. Thành tựu kiến trúc nổi bật nhất của Lưỡng Hà là các công trình gồm?", a: { A: "Cung điện, vườn hoa", B: "Thành quách, tháp", C: "Tượng và tháp", D: "Điêu khắc và tượng" }, true: "A" },
-        { q: "26. Về mặt địa hình, Ai Cập là một quốc gia?", a: { A: "Đóng kin", B: "Không đóng kín", C: "Giáp biển", D: "Giáp núi" }, true: "A" },
-        { q: "27. Ai Cập là một quốc gia được chia làm mấy miền?", a: { A: "Một miền thống nhất", B: "Hai miền", C: "Ba miền", D: "Bốn miền" }, true: "B" },
-        { q: "28. Chữ tượng hình được người Ai Cập cổ đại dùng trong bao nhiêu năm?", a: { A: "1000 năm", B: "2000 năm", C: "3000 năm", D: "4000 năm" }, true: "C" },
-        { q: "29. Tượng nhân sư là bức tượng?", a: { A: "Mình sư tử - đầu người", B: "Mình sư tử - đầu dê", C: "Mình sư tử - đầu báo", D: "Mình sư tử, đầu dê, đầu báo" }, true: "A" },
-        { q: "30. Lưỡng Hà là một quốc gia có vị trí địa hình?", a: { A: "Hiểm trở", B: "Để ngỏ ở mọi phía", C: "Đóng kín ở mọi phía", D: "Cả ba phương án trên đều sai" }, true: "B" },
-        { q: "31. Lưỡng Hà là một quốc gia có nguồn tài nguyên quý hiếm đó là?", a: { A: "Đá quý", B: "Kim loại", C: "Đất sét", D: "Than đá" }, true: "C" },
-        { q: "32. Chữ viết ở Lưỡng Hà đầu tiên do người Xume sáng tạo vào?", a: { A: "Cuối thiên niên kỷ IV - TCN", B: "Cuối thiên niên kỷ V- TCN", C: "Cuối thiên niên kỷ VI TCN", D: "Cuối thiên niên kỷ VII TCN" }, true: "A" },
-        { q: "33. Tổng số chữ tiết hình của người Lưỡng Hà trong thời kỳ đầu là?", a: { A: "300 chữ", B: "400 chữ", C: "500 chữ", D: "600 chữ" }, true: "D" },
-        { q: "34. Theo giáo luật Islam (Hồi giáo), vòng đời của tín đồ sẽ được trải nghiệm ở mấy thế giới (côi):", a: { A: "Hai thế giới", B: "Ba thế giới", C: "Bốn thế giới", D: "Năm thế giới" }, true: "A" },
-        { q: "35. Theo giáo luật Islam (Hồi giáo), tín đồ sau khi chết sẽ được:", a: { A: "Thiên táng", B: "Điều táng", C: "Hỏa táng", D: "Địa tang" }, true: "D" },
-        { q: "36. Theo giáo luật Islam (Hồi giáo), tín đồ Islam kiêng ăn:", a: { A: "Thịt lợn", B: "Động vật lưỡng cư", C: "Động vật ăn thịt hoặc có móng vuốt", D: "Cả ba phương án trên đều đúng" }, true: "A" },
-        { q: "37. Người Lưỡng Hà sử dụng bộ chữ tượng hình đầu tiên có bao nhiêu chữ?", a: { A: "2000 chữ", B: "600 chữ", C: "300 chữ", D: "100 chữ" }, true: "A" },
-        { q: "38. Người Ai Cập cổ đại thờ các vị thần nào?", a: { A: "Thần Mặt trời", B: "Thần mặt trăng", C: "Thần Linh", D: "Thần mặt trời và mặt trăng" }, true: "D" },
-        { q: "39. Người Ai Cập cổ đại đặt ra lịch dựa trên kết quả quan sát của?", a: { A: "Các vì sao", B: "Quy luật nước sông Nin", C: "Quy luật mặt trời mọc", D: "Cả 3 phương án trên đều sai" }, true: "B" },
-        { q: "40. Thành tựu toán học đầu tiên của người Lưỡng Hà là?", a: { A: "Đại số", B: "Hình học", C: "Phép đếm", D: "Bộ đếm" }, true: "C" },
-        { q: "41. Người Ai Cập xây dựng kim tự tháp để sử dụng vào mục đích gì trong cuộc sống?", a: { A: "Làm lăng mộ", B: "Làm công trình quân sự", C: "Làm nơi ở cho hoàng tộc", D: "Làm nơi tiến hành các nghi lễ tế thần" }, true: "A" },
-        { q: "42. Người Ai Cập cổ đại sử dụng loại chữ nào buổi ban đầu?", a: { A: "Tượng thanh", B: "Tượng hình", C: "Tượng âm", D: "Chữ cổ latinh" }, true: "B" },
-        { q: "43. Người Ai Cập thờ các vị thần nào trong đời sống tôn giáo của họ?", a: { A: "Các vị thần tự nhiên", B: "Các thần động vật", C: "Thiên thần, địa thần", D: "Tất cả các vị thần trên" }, true: "D" },
-        { q: "44. Người Ai Cập thường sử dụng các thành tựu văn học để ca ngợi?", a: { A: "Các chiến binh", B: "Các Pharaon", C: "Những người xây dựng kim tự tháp", D: "Các vị thần" }, true: "D" },
-        { q: "45. Ai Cập cổ đại là tặng phẩm của sông Nin vì:", a: { A: "Sông Nin bồi đắp phù sa, phát triển nông nghiệp", B: "Sông Nin cung cấp lượng thủy sản dồi dào", C: "Sông Nin thuận tiện cho giao thông đường thủy", D: "Cả 3 phương án trên đều đúng" }, true: "D" },
-        { q: "46. Nguyên nhân chính làm cho đất nước Ai Cập ban đầu hùng mạnh, nhưng sau đó dần suy yếu và bị đế quốc La Mã xâm chiếm vào năm 30 TCN là:", a: { A: "Các Pharaong tập trung mọi nguồn lực để xây dựng kim tự tháp", B: "Cuộc nổi dậy của nông dân và nô lệ", C: "Thiên tai", D: "Sự xâm lược của Đế quốc La Mã" }, true: "B" },
-        { q: "47. Các Pharaong Ai Cập luôn chuẩn bị cho việc ướp xác của mình vì:", a: { A: "Các Pharaong muốn hiến dâng thân xác cho các vị thần", B: "Niềm tin linh hồn là bất biến", C: "Các Pharaong xem cái chết là linh hồn tạm thời về với vị thần bảo hộ", D: "Cả 3 phương án trên đều đúng" }, true: "D" },
-        { q: "48. Vị thần chủ của Quốc gia Ai Cập là:", a: { A: "Amun", B: "Mut", C: "Osiris", D: "Anubis" }, true: "A" },
-        { q: "49. Khi nói đến Vườn hoa trên không và Thành Babilon - một trong bảy kỳ quan của thế giới cổ đại, người ta thường nhắc đến người:", a: { A: "Semites", B: "Libi", C: "Hy Lạp", D: "La Mã" }, true: "A" },
-        { q: "50. Nguyên nhân chính làm cho văn minh Lưỡng Hà lụi tàn vào năm 539 tr.CN là:", a: { A: "Patêsi (Vua) tập trung xây dựng vườn hoa trên không và Thành Babilon", B: "Nước có địa hình để ngỏ mọi phía, không có biên giới bảo vệ", C: "Cuộc nổi dậy của nông dân và nô lệ", D: "Thiên tai" }, true: "D" },
-        { q: "51. Vị thần chủ của Quốc gia Lưỡng Hà là:", a: { A: "Các vị thần tự nhiên", B: "Chim Ưng", C: "Cá sấu", D: "Cả 3 phương án trên đều sai" }, true: "D" },
-        { q: "52. Tín đồ Islam (Hồi giáo) không thờ ảnh tượng, địa vị người họa sĩ rất thấp vì:", a: { A: "Giáo luật cấm các tín đồ hoạt động nghệ thuật", B: "Ala hóa thân hơn 3000 sự vật, không ảnh tượng nào chứa được hóa thân của Ngài", C: "Không cấm các tín đồ hoạt động nghệ thuật", D: "Cả 3 phương án trên đều đúng" }, true: "B" },
-        { q: "53. Nguyên nhân khiến tín đồ Islam (Hồi giáo) không ăn thịt lợn:", a: { A: "Do con lợn ăn tạp", B: "Tôn thờ con lợn", C: "Trong 3 ngày chờ phán xét, con lợn đói quá, đi ăn phân của các loài động vật khác", D: "Cả 3 phương án trên đều sai" }, true: "C" },
-        { q: "54. Ấn Độ là một bán đảo ở?", a: { A: "Nam Á", B: "Tây Á", C: "Bắc Á", D: "Đông Bắc" }, true: "A" },
-        { q: "55. Ấn Độ là một quốc gia được chia làm mấy miền?", a: { A: "Một miền thống nhất", B: "Hai miền", C: "Ba miền", D: "Cả ba phương án trên đều sai" }, true: "B" },
-        { q: "56. Từ rất sớm, người Ấn Độ đã chia một năm thành bao nhiêu tháng?", a: { A: "9 tháng", B: "10 tháng", C: "11 tháng", D: "12 tháng" }, true: "D" },
-        { q: "57. Nghệ thuật tạo hình của người Ấn Độ, phần lớn tập trung vào chủ đề?", a: { A: "Tôn giáo", B: "Văn học", C: "Nghệ thuật", D: "Điêu khắc" }, true: "A" },
-        { q: "58. Bán đảo nào thuộc địa phận của quốc gia Ấn Độ?", a: { A: "Đông Á", B: "Tây Á", C: "Nam Á", D: "Bắc Á" }, true: "C" },
-        { q: "59. Lăng TajMahal là một công trình tiêu biểu nhất của Ấn Độ thời Mogon được xây dựng vào thế kỷ nào?", a: { A: "Thế kỷ XVI", B: "Thế kỷ XVII", C: "Thế kỷ XVIII", D: "Thế kỷ XIX" }, true: "B" },
-        { q: "60. Giữa thiên niên kỷ trước công nguyên, ở Ấn Độ xuất hiện dòng tư tưởng chống lại đạo Bà La Môn, trong đó có đạo?", a: { A: "Đạo Phật", B: "Thiên chúa giáo", C: "Kito giáo", D: "Cao đài" }, true: "A" },
-        { q: "61. Nền văn học của Ấn Độ rất phát triển vào thời cổ đại gồm hai bộ phận quan trọng đó là Veeda và?", a: { A: "Sử thi", B: "Dân gian", C: "Truyền thuyết", D: "Ngụ ngôn" }, true: "A" },
-        { q: "62. Số Pi là 3,1416 được người Ấn Độ đã tính một cách chính xác vào thế kỷ nào?", a: { A: "Thế kỳ III", B: "Thế kỷ IV", C: "Thế kỷ V", D: "Thế kỷ VI" }, true: "D" },
-        { q: "63. Nghệ thuật Ấn Độ thời cổ trung đại nổi bật nhất là các ngành?", a: { A: "Kiến trúc, nghệ thuật", B: "Điêu khắc, kiến trúc", C: "Kiến trúc, hình học", D: "Nghệ thuật, điêu khắc" }, true: "B" },
-        { q: "64. Tôn giáo nào được người Ấn Độ coi trọng về mặt đẳng cấp?", a: { A: "Islam (Hồi giáo)", B: "Thiên chúa giáo", C: "Đạo giáo", D: "Đạo Bà la môn" }, true: "D" },
-        { q: "65. Theo quan niệm của Hindu giáo, Liga là biểu tượng của:", a: { A: "Thần Siva", B: "Không của thần nào", C: "Thần Brahma", D: "Thần Vishnu" }, true: "A" },
-        { q: "66. Ấn Độ là quốc gia sản sinh ra các tôn giáo chính nào?", a: { A: "Thiên chúa giáo", B: "Islam (Hồi giáo)", C: "Nho giáo", D: "Đạo Phật" }, true: "D" },
-        { q: "67. Nội dung chính trong học thuyết của đạo Phật là?:", a: { A: "Tứ diệu đế", B: "Tứ chân đế", C: "Tứ khổ đế", D: "Tứ mệnh đế" }, true: "A" },
-        { q: "68. Trong lĩnh vực Toán học người Ấn độ đã sáng tạo ra?", a: { A: "Sáng tạo hình không gian", B: "Sáng tạo số Pi", C: "Sáng tạo ra 10 chữ số", D: "Sáng tạo ra chữ viết" }, true: "C" },
-        { q: "69. Giữa thiên niên kỷ 1 - TCN, ở Ấn Độ đã xuất hiện một số dòng tư tưởng chống lại đạo Bà la môn là?", a: { A: "Đạo Xích", B: "Đạo hindu", C: "Đạo Thiên chúa giáo", D: "Đạo Phật" }, true: "D" },
-        { q: "70. Hai nội dung chủ yếu trong nền văn học được người Ấn Độ sử dụng là?", a: { A: "Veda và truyền thuyết", B: "Sử thi và truyền thuyết", C: "Truyền thuyết và Veda", D: "Veda và sử thi" }, true: "D" },
-        { q: "71. Người theo Islam (Hồi giáo) thường thờ các ảnh tượng nào trong cuộc sống của họ?", a: { A: "Tượng phật", B: "Ảnh Thánh Ala", C: "Ảnh bà Lamon", D: "Không thờ ảnh tượng." }, true: "D" },
-        { q: "72. Trong chế độ hôn nhân, người Hồi giáo cho phép đàn ông được lấy?", a: { A: "Bốn vợ", B: "Ba vợ.", C: "Hai vợ", D: "Một vợ." }, true: "A" },
-        { q: "73. Đạo Bà La Môn có nội dung rất quan trọng trong giáo lý của mình được ứng dụng trong cuộc sống đó là?", a: { A: "Thờ thần Brama", B: "Không thờ các vị thần khác", C: "Thuyết luân hồi", D: "Thờ các loài động vật" }, true: "A" },
-        { q: "74. Thi nhân nổi tiếng trong thơ Đường của văn học Trung Quốc là?", a: { A: "Khổng Tử", B: "Mạnh Tử.", C: "Lý Bạch.", D: "Ban Cố." }, true: "C" },
-        { q: "75. Thi nhân nổi tiếng trong thơ Đường của văn học Trung Quốc là?", a: { A: "Mạnh Tử", B: "Tuân Tử", C: "Bạch Cư Dị.", D: "Trang Tử" }, true: "C" },
-        { q: "76. Thi nhân nổi tiếng trong thơ Đường của văn học Trung Quốc là?", a: { A: "Tuân Tử", B: "Trang Tử", C: "Đỗ Phủ", D: "Khổng Tử" }, true: "C" },
-        { q: "77. Trung Quốc có bao nhiêu phát minh lớn về kỹ thuật thời Trung đại?", a: { A: "Ba phát minh", B: "Bốn phát minh", C: "Năm phát minh", D: "Sáu phát minh" }, true: "B" },
-        { q: "78. Bát quái gồm mấy quẻ?", a: { A: "Hai quẻ", B: "Bốn quẻ", C: "Sáu quẻ", D: "Tám quẻ" }, true: "D" },
-        { q: "79. Một trong những yếu tố nào sau đây thuộc Ngũ hành trong thuyết âm dương?", a: { A: "Bát quái", B: "Âm dương", C: "Hành mộc", D: "Ngũ Hành" }, true: "C" },
-        { q: "80. Một trong những yếu tố nào sau đây thuộc Ngũ hành trong thuyết âm dương?", a: { A: "Âm dương", B: "Bát quái", C: "Hành Kim", D: "Ngũ Hành" }, true: "C" },
-        { q: "81. Một trong những yếu tố nào sau đây thuộc Ngũ hành trong thuyết âm dương?", a: { A: "Bát quái", B: "Âm dương", C: "Hành thủy", D: "Ngũ Hành" }, true: "C" },
-        { q: "82. Một trong những yếu tố nào sau đây thuộc Ngũ hành trong thuyết âm dương?", a: { A: "Bát quái", B: "Âm dương", C: "Hành thổ", D: "Ngũ Hành" }, true: "C" },
-        { q: "83. Người có công đặt tư tưởng Nho giáo đầu tiên ở Trung Quốc là?", a: { A: "Mạnh Tử", B: "Tuân Tử", C: "Hàn Tử", D: "Khổng Tử" }, true: "D" },
-        { q: "84. Vạn lý trường thành chủ yếu sử dụng nhân công nào để xây dựng?:", a: { A: "Nông dân và thanh niên", B: "Binh lính và tù nhân", C: "Quân chư hầu và thanh niên", D: "Nông dân và binh lính" }, true: "B" },
-        { q: "85. Tư tưởng của Phật giáo trong thời kỳ đầu là:", a: { A: "Đa thần giáo", B: "Vô thần", C: "Duy tâm khách quan", D: "Duy tâm chủ quan" }, true: "B" },
-        { q: "86. Thông tin nào sau đây không chính xác khi nói về tư tưởng của Nho giáo?", a: { A: "Thuyết chính danh định mệnh", B: "Tin trời, ma quỷ là có thật;", C: "Coi trọng giáo dục Tam cương, ngũ thường", D: "Yêu thương con người" }, true: "A" },
-        { q: "87. Tam cương trong Nho giáo gồm những mối quan hệ nào?", a: { A: "Vua tôi", B: "Cha con", C: "Vợ chồng", D: "Cả 3 phương án trên đều đúng" }, true: "D" },
-        { q: "88. Kỹ thuật nào là kỹ thuật được phát minh thời trung đại ở Trung Quốc?", a: { A: "Thuốc đông y", B: "Làm giấy", C: "Luyện kim", D: "Làm gốm" }, true: "B" },
-        { q: "89. Kỹ thuật nào là kỹ thuật được phát minh thời trung đại ở Trung Quốc?", a: { A: "Dệt lụa", B: "In", C: "Y học", D: "Làm gốm" }, true: "B" },
-        { q: "90. Kỹ thuật nào là kỹ thuật được phát minh thời trung đại ở Trung Quốc?", a: { A: "Y học", B: "Gốm", C: "Thuốc súng", D: "Dệt lụa" }, true: "C" },
-        { q: "91. Kỹ thuật nào là kỹ thuật được phát mình thời trung đại ở Trung Quốc?", a: { A: "Dệt lụa", B: "Kim chỉ nam", C: "Y học", D: "Luyện kim" }, true: "B" },
-        { q: "92. Bát quái tượng trưng cho mấy yếu tố vật chất tạo thành thế giới?", a: { A: "Hai yếu tố", B: "Bốn yếu tố", C: "Sáu yếu tố", D: "Tám yếu tố" }, true: "D" },
-        { q: "93. Nội dung quan điểm đạo đức của Khổng Tử bao gồm những mặt quan trọng nào?", a: { A: "Nhân - lễ", B: "Nghĩa - Trí", C: "Tín", D: "Cả 3 phương án trên đều đúng" }, true: "D" },
-        { q: "94. Thi Hương là kỳ thi ở cấp nào trong khoa cử của người Trung Quốc thời Đường?", a: { A: "Cấp làng", B: "Cấp hội", C: "Cấp tỉnh", D: "Cấp xã" }, true: "C" },
-        { q: "95. Trung Quốc là một quốc gia ở phía?", a: { A: "Nam Á", B: "Đông Á", C: "Tây Á", D: "Bắc Á" }, true: "B" },
-        { q: "96. Trung Quốc có mấy con sông lớn?", a: { A: "Không có", B: "Hai sông lớn", C: "Ba sông lớn", D: "Bốn sông lớn" }, true: "B" },
-        { q: "97. Chế độ khoa cử giáo dục của Trung Quốc đến năm bao nhiêu thì bãi bỏ?", a: { A: "1900", B: "1905", C: "1910", D: "1915" }, true: "B" },
-        { q: "98. Nho gia ở Trung Quốc là trường phái coi trọng việc?", a: { A: "Sản xuất", B: "Kinh tế", C: "Học tập", D: "Trị nước" }, true: "D" },
-        { q: "99. Đường lối pháp gia được áp dụng trong cuộc sống của người Trung Quốc là:", a: { A: "Chú trọng SX nông nghiệp, chiến đấu, coi trọng VH, giáo dục", B: "Chú trọng SX nông nghiệp, chiến đấu, không coi trọng VH, giáo dục", C: "Chú trọng SX nông nghiệp, chiến đấu, coi trọng VH, giáo dục", D: "Chú trọng đến giáo dục" }, true: "A" },
-        { q: "100. Tư tưởng của Nho giáo của Khổng Tử được ứng dụng trong cuộc sống gồm bốn mặt nào?", a: { A: "Triết học, trị nước, trị dân, nho giáo", B: "Tư tưởng, giáo dục, trị dân, trị nước", C: "Triết học, đạo đức, chính trị, giáo dục", D: "Chính trị, triết học, trị nước, trị dân" }, true: "C" },
-        { q: "101. Người Trung Quốc đưa ra học thuyết âm dương để giải thích nguồn gốc về?", a: { A: "Vạn vật", B: "Hai sự vật", C: "Một số sự vật", D: "Tất cả sự vật" }, true: "A" },
-        { q: "102. Người Trung Quốc ứng dụng ngũ hành trong thuyết bát quái gồm mấy tác nhân tạo nên sự vật?", a: { A: "Ba tác nhân", B: "Năm tác nhân", C: "Bảy tác nhân", D: "Chín tác nhân" }, true: "B" },
-        { q: "103. Người Trung Quốc thời Đường, thường tổ chức kỳ thi Hội ở?", a: { A: "Đình làng", B: "Kinh đô", C: "Trong chùa", D: "Trong miếu" }, true: "B" },
-        { q: "104. Người Trung Quốc thời Đường, thường tổ chức kỳ thi Điện (thi Đình) ở?", a: { A: "Đình làng", B: "Cung vua", C: "Cung điện", D: "Trong miếu" }, true: "B" },
-        { q: "105. Người Trung Quốc luôn tự hào về hai con sông lớn, có ảnh hưởng đến phát triển nông nghiệp của họ đó là?", a: { A: "Sông Trường Giang", B: "Sông Hoàng Hà", C: "Sông Mêkong", D: "Sông Trường Giang và Hoàng Hà" }, true: "D" },
-        { q: "106. Người Trung Quốc cổ xưa đã chia một ngày đêm thành bao nhiêu giờ?", a: { A: "12 giờ", B: "20 giờ", C: "24 giờ", D: "Cả 3 phương án trên đều sai" }, true: "A" },
-        { q: "107. Chữ Giáp cốt đầu tiên được người Trung Quốc được viết trên?", a: { A: "Đất sét", B: "Mai rùa", C: "Xương thú", D: "Đất sét, mai rùa" }, true: "B" },
-        { q: "108. Hai con sông lớn ở Trung Quốc hàng năm đem lại lượng phù sa bồi đắp cho sự phát triển nông nghiệp, được người dân Trung Quốc tự hào, đều chảy theo hai hướng Đông - Tây, đó là:", a: { A: "Sông Dương Tử", B: "Sông Trường Giang", C: "Sông Hoàng Hà", D: "Sông Dương Tử và Trường Giang" }, true: "D" },
-        { q: "109. Thước đo tri thức của người Trung Quốc trong thời cổ trung đại là?", a: { A: "Văn chương", B: "Thi cử", C: "Hội họa", D: "Văn chương và thi cử" }, true: "B" },
-        { q: "110. Người Trung Quốc đã có phát minh lớn trong nghề làm giấy, phát minh này được truyền sang Việt nam vào thế kỷ nào?", a: { A: "Thế kỷ 3", B: "Thế kỷ 4", C: "Thế kỷ 5 TCN.", D: "Thế kỷ 6" }, true: "A" },
-        { q: "111. Người Trung Quốc đã có phát minh lớn trong nghề in phát minh này được truyền sang Việt nam vào đời nào?", a: { A: "Đời Chu", B: "Đời Đường", C: "Đời Minh", D: "Đời Thanh" }, true: "B" },
-        { q: "112. Thuốc súng là một phát minh ngẫu nhiên của người Trung Quốc, nhưng phát minh này đã được dùng làm vũ khí trong chiến đấu và được sử dụng vào thế kỷ nào?", a: { A: "Thế kỷ VIII", B: "Thế kỷ IX", C: "Thế kỷ X", D: "Thế kỷ XI" }, true: "C" },
-        { q: "113. La Bàn (kim chỉ nam) được các thầy phong thủy Trung Quốc sử dụng đầu tiên để?", a: { A: "Dự báo thời tiết", B: "Liên lạc khi chiến đấu", C: "Chỉ đường khi đi biển", D: "Xem hướng đất" }, true: "D" },
-        { q: "114. Thầy thuốc nào là thầy thuốc đa năng của Trung Quốc, ông đã có phát minh dùng rượu để gây mê cho bệnh nhân trước khi mổ?", a: { A: "Hoa Đà", B: "Trân Biển", C: "Thước Trương", D: "Trọng Cảnh" }, true: "A" },
-        { q: "115. Đền Angkor Wat là ngôi đền thờ vị thần nào?", a: { A: "Brahma", B: "Vishnu", C: "Indra", D: "Shiva" }, true: "B" },
-        { q: "116. Tục thờ Thần - Vua và kiến trúc đền núi xuất hiện ở quốc gia nào?", a: { A: "Thái Lan", B: "Campuchia", C: "Lào", D: "Indonesia" }, true: "B" },
-        { q: "117. Quốc gia cổ đại nào đã phát minh ra hệ đếm lục thập phân (60)?", a: { A: "Ai Cập", B: "Lưỡng Hà", C: "Trung Quốc", D: "Không quốc gia nào" }, true: "B" },
-        { q: "118. Đông Nam Á là khu vực rộng, diện tích khoảng?", a: { A: "4,5 triệu km2", B: "5,5 triệu km2", C: "3,5 triệu km2", D: "25,0 triệu km2" }, true: "A" },
-        { q: "119. Một phần lãnh thổ của quốc gia nào ở Đông Nam Á vẫn có mùa đông lạnh?", a: { A: "Phía bắc Mi-an-ma", B: "Phía nam Việt Nam.", C: "Phía bắc của Lào.", D: "Phía bắc Phi-lip-pin" }, true: "A" },
-        { q: "120. Đảo lớn nhất trong khu vực Đông Nam Á và lớn thứ ba trên thế giới là?", a: { A: "Gia-va", B: "Lu-xôn.", C: "Xu-ma-tra", D: "Ca-li-man-tan." }, true: "D" },
-        { q: "121. Khu vực Đông Nam Á bao gồm có?", a: { A: "12 quốc gia", B: "11 quốc gia", C: "10 quốc gia", D: "21 quốc gia" }, true: "B" },
-        { q: "122. Vị vua nào ở Campuchia đã mở đầu cho thời kỳ Angkor?", a: { A: "Jayavarman I", B: "Jayavarman II", C: "Jayvarman IV", D: "Jayavarman VII" }, true: "D" },
-        { q: "123. Angkor Wat là công trình kiến trúc?", a: { A: "Đền thờ thần", B: "Cung điện", C: "Quân sự", D: "Lăng mộ" }, true: "A" },
-        { q: "124. Đông Nam Á tiếp giáp với các đại dương nào dưới đây?", a: { A: "Thái Bình Dương và Đại Tây Dương.", B: "Thái Bình Dương và Ấn Độ Dương.", C: "Ấn Độ Dương và Đại Tây Dương.", D: "Ấn Độ Dương và Bắc Băng Dương" }, true: "B" },
-        { q: "125. Phần lớn Đông Nam Á lục địa có khí hậu?", a: { A: "Xích đạo.", B: "Cận nhiệt đới.", C: "Ôn đới.", D: "Nhiệt đới gió mùa" }, true: "D" },
-        { q: "126. Phần đất liền của khu vực Đông Nam Á mang tên là?", a: { A: "Bán đảo Đông Dương.", B: "Bán đảo Mã Lai.", C: "Bán đảo Trung - Ấn.", D: "Bán đảo Tiểu" }, true: "C" },
-        { q: "127. Đông Nam Á xuất hiện trên bản đồ chính trị thế giới khi nào?", a: { A: "Sau chiến tranh thế giới thứ nhất", B: "Sau chiến tranh thế giới thứ hai", C: "Đầu thế kỷ 19", D: "Cuối thế kỷ 19" }, true: "B" },
-        { q: "128. Yếu tố nào giúp ĐNA trở nên xanh tốt và trù phú?", a: { A: "Khí hậu Gió mùa và khí hậu biển", B: "Nhiều sông ngòi", C: "Gần biển", D: "Nhiều sông và gần biển" }, true: "A" },
-        { q: "129. Tôn giáo tín ngưỡng của khu vực Đông nam á chịu ảnh hưởng lớn nhất từ tôn giáo nào?", a: { A: "Phật giáo", B: "Ấn độ giáo", C: "Nho giáo", D: "Đạo giáo" }, true: "B" },
-        { q: "130. Con voi là biểu tượng của quốc gia nào?", a: { A: "Mianma", B: "Việt Nam", C: "Camphuchia", D: "Thái lan" }, true: "D" },
-        { q: "131. Quốc gia nào sau đây nằm ở bộ phận Đông Nam Á lục địa?", a: { A: "Ma-lai-xi-a", B: "Singgapo.", C: "Thái Lan.", D: "In-đô-nê-xi" }, true: "C" },
-        { q: "132. Tục thờ mẫu xuất hiện ở quốc gia nào khu vực Đông Nam Á?", a: { A: "Thái Lan", B: "Việt Nam", C: "Lào", D: "Indonesia" }, true: "B" },
-        { q: "133. Đền Angkor Wat là ngôi đền thờ nổi tiếng nhất Đông Nam Á được xây dựng vào thế kỷ nào?", a: { A: "Thế kỷ X", B: "Thế kỷ XI", C: "Thế kỷ XII", D: "Thế kỷ XIII" }, true: "B" },
-        { q: "134. Đền Angkor Wat là biểu tượng của quốc gia nào?", a: { A: "Lào", B: "Việt Nam", C: "Camphuchia", D: "Thái lan" }, true: "C" },
-        { q: "135. Biểu tượng của Singapo là gì?", a: { A: "Đền Angkor Wat", B: "Tượng Merlion", C: "Chim thần", D: "Garuda Pak Belang" }, true: "B" },
-        { q: "136. Chùa vàng Swedalgon là của quốc gia nào?", a: { A: "Indonoxia", B: "Myanmar", C: "Camphuchia", D: "Malaysia" }, true: "B" },
-        { q: "137. Con hổ là biểu tượng của quốc gia nào?", a: { A: "Inđônêxia", B: "Singapore", C: "Camphuchia", D: "Malaysia" }, true: "D" },
-        { q: "138. Tín ngưỡng, lễ hội của khu vực Đông Nam Á chịu ảnh hưởng từ yếu tố nào?", a: { A: "Điều kiện khí hậu", B: "Chu kỳ nông nghiệp", C: "Khí hậu biển", D: "Truyền giáo" }, true: "B" },
-        { q: "139. Các nước Đông Nam Á có nhiều loại khoáng sản vì?", a: { A: "Nằm trong vùng khí hậu nhiệt đới gió mùa", B: "Có nhiều kiểu, dạng địa hình.", C: "Nằm trong vành đai sinh khoáng.", D: "Nằm kề sát vành đai núi lửa Thái Bình Dương." }, true: "C" },
-        { q: "140. Một trong những lợi thế của hầu hết các nước Đông Nam Á là?", a: { A: "Phát triển thủy điện.", B: "Phát triển lâm nghiệp.", C: "Phát triển kinh tế biển.", D: "Phát triển chăn nuôi." }, true: "C" },
-        { q: "141. Đông Nam Á có vị trí địa - chính trị rất quan trọng vì?", a: { A: "Khu vực này tập trung rất nhiều loại khoáng sản.", B: "Là nơi đông dân nhất thế giới", C: "Nền kinh tế phát triển mạnh", D: "Là nơi tiếp giáp giữa hai đại dương, vị trí cầu nối hai lục địa" }, true: "D" },
-        { q: "142. Đông Nam Á là cầu nối lục địa?", a: { A: "Á - Âu với lục địa Ô-xtrây-li-a", B: "Phi với lục địa Ô-xtrây-li-a", C: "Nam Mĩ với lục địa Ô-xtrây-li-a", D: "Phi với lục địa Á - Âu." }, true: "A" },
-        { q: "143. Đông Nam Á có những loại khoáng sản chủ yếu nào dưới đây?", a: { A: "Than, dầu mỏ, khí đốt, thiếc, vàng.", B: "Dầu mỏ, khí tự nhiên, sắt, đồng, vàng.", C: "Than, khí tự nhiên, dầu mỏ, sắt, đồng.", D: "Dầu mỏ, khí đốt, than, kim cương, vàng." }, true: "C" },
-        { q: "144. Nhận định nào dưới đây không phải là đặc điểm tự nhiên của Đông Nam Á lục địa?", a: { A: "Địa hình bị chia cắt mạnh", B: "Phần lớn có khí hậu xích đạo.", C: "Sông ngòi nhiều nước", D: "Ven biển có các đồng bằng phù sa màu mỡ." }, true: "D" },
-        { q: "145. Khí hậu đặc trưng của khu vực Đông Nam Á?", a: { A: "Nhiệt đới gió mùa", B: "Ôn đới", C: "Khí hậu biển", D: "Nóng ẩm" }, true: "A" },
-        { q: "146. Tại sao Đông Nam Á được gọi là ống thông gió hay ngã tư đường?", a: { A: "Do vị trí nằm trên con đường hàng hải nối Ấn độ dương và Thái bình dương, cầu nối giữa TQ - Nhật bản với Ấn độ, Tây Á, Địa Trung Hải", B: "Cầu nối giữa TQ - Nhật bản với châu Úc", C: "Cầu nối giữa TQ - Nhật bản với Tây Á", D: "Cầu nối giữa TQ - Nhật bản với châu Âu" }, true: "A" },
-        { q: "147. Tại sao Đông Nam Á được gọi là \"một vùng thần bí nơi sản xuất hương liệu, gia vị, và những sản phẩm kì lạ khác\"?", a: { A: "Do vị trí địa lý", B: "Khí hậu nhiệt đới gió mùa tạo điều kiện cho các loại thảo mộc phát triển tốt", C: "Việc buôn bán phát triển", D: "Khu vực rộng lớn" }, true: "B" },
-        { q: "148. Tại sao nói Đông Nam Á phù hợp với phát triển của nông nghiệp?", a: { A: "Việc đi lại thuận tiện", B: "Vị trí địa lý", C: "Có hai mùa rõ rệt", D: "Gió mùa kèm mưa nhiệt đới cung cấp đủ nước" }, true: "D" },
-        { q: "149. Tại sao Đông Nam Á được coi là vùng văn minh có đủ sắc thái đồng bằng, biển, núi?", a: { A: "Vị trí địa lý", B: "Do điều kiện của vùng nhiệt đới cư dân ĐNA đã trồng lúa khô, với lúa nước, xuất hiện các nghề thủ công, đặc biệt là nghề sông biển.", C: "Khí hậu thuận lợi", D: "Lượng mưa nhiều" }, true: "B" },
-        { q: "150. Sản phẩm đặc trưng của ngành nông nghiệp trong khu vực Đông Nam Á là?", a: { A: "Hương liệu", B: "Hương liệu đặc trưng (hồ tiêu, sa nhân, hồi, quế, trầm hương) và cây lương thực đặc trưng là lúa nước", C: "Lúa nước, ca cao", D: "Cà phê, hồ tiêu" }, true: "B" },
-        { q: "151. Cư dân Đông Nam Á lấy sản xuất nông nghiệp nào làm phương thức hoạt động kinh tế chính?", a: { A: "Lúa nước", B: "Cà phê", C: "Hồ tiêu", D: "Trầm hương" }, true: "A" },
-        { q: "152. Vì sao nói Đông Nam Á được coi là \"cái nôi\" của cây lúa nước?", a: { A: "Buôn bán phát triển", B: "Vị trí địa lý", C: "Khí hậu tốt", D: "Gió mùa kèm mưa nhiệt đới cung cấp đủ nước cho đời sống và sản xuất" }, true: "D" },
-        { q: "153. Tại sao nói nền văn hóa Việt Nam phong phú đa dạng trong khu vực?", a: { A: "Vì Việt Nam là quốc gia có nền văn hóa đa sắc tộc, giao thoa giữa văn hóa truyền thống với các nước trong khu vực", B: "Vì Văn hóa Việt Nam là một phức thể", C: "Vì có nhiều di sản", D: "Vì có nhiều công trình kiến trúc" }, true: "A" },
-        { q: "154. Tại sao sự giao thoa giữa văn hóa truyền thống của Việt Nam với các nước trong khu vực tương đồng?", a: { A: "Vì Việt Nam là quốc gia có lịch sử lâu đời ở khu vực", B: "Vì có văn hóa đa sắc tộc", C: "Vì diện tích rộng", D: "Vì nhiều lễ hội" }, true: "A" },
-        { q: "155. Những đóng góp của Việt Nam đối với nền Văn minh Đông Nam Á?", a: { A: "Đóng góp trong lĩnh vực văn hóa vật chất: Các di sản đền chùa, di sản văn hóa, tháp chàm, di tích lịch sử.", B: "Văn hóa tinh thần", C: "Điểm du lịch", D: "Văn hóa vật chất" }, true: "A" },
-        { q: "156. Ở giai đoạn đầu tiên khi nhà nước chưa ra đời nền văn minh Đông Nam Á chưa có hệ thống tôn giáo, Đông nam á đã có hình thức tín ngưỡng nào?", a: { A: "Không có", B: "Đã dùng thuyết vạn vật hữu linh", C: "Thuyết siêu hình", D: "Thuyết đa thần" }, true: "B" },
-        { q: "157. Tục thờ Thần - Vua và kiến trúc đền núi xuất hiện ở quốc gia nào?", a: { A: "Thái Lan", B: "Campuchia", C: "Lào", D: "Indonesia" }, true: "B" },
-        { q: "158. Thế kỷ vàng trong lịch sử Hy Lạp cổ đại là?", a: { A: "Thế kỷ 7 TCN.", B: "Thế kỷ 6 TCN.", C: "Thế kỷ 5 TCN.", D: "Thế kỷ 4 TCN." }, true: "C" },
-        { q: "159. Đế chế Đông La Mã tồn tại trong khoảng thời gian nào sau đây?", a: { A: "395-1453", B: "330-1453", C: "476-1492", D: "476-1495" }, true: "A" },
-        { q: "160. Trong lịch sử văn minh La Mã, chữ Latin xuất hiện vào khoảng?", a: { A: "Thế kỳ 8 TCN.", B: "Thế kỷ 7 TCN.", C: "Thế kỷ 6 TCN.", D: "Thế kỷ 5 TCN." }, true: "C" },
-        { q: "161. Tác giả của tác phẩm Gia phả các thần trong nền văn hóa Hy Lạp cổ đại là nhà thơ?", a: { A: "Pindar", B: "Hesiose", C: "Akilocle", D: "Sappho" }, true: "B" },
-        { q: "162. Đế chế Byzantium còn được gọi là?", a: { A: "Đế quốc Đông La Mã", B: "Đế quốc La Mã thần thánh", C: "Đế chế La Mã phương Tây", D: "Cả 3 phương án trên đều đúng" }, true: "A" },
-        { q: "163. Hy Lạp và La Mã được coi là quê hương khoa học nào?", a: { A: "Toán học", B: "Văn học", C: "Triết học", D: "Thiên văn học" }, true: "C" },
-        { q: "164. Người sáng lập triết học đầu tiên là?", a: { A: "Nhà Toán học Talet", B: "Aristottle", C: "Socrates", D: "Pascal" }, true: "C" },
-        { q: "165. Hy lạp bị La mã chinh phục vào thế kỷ thứ?", a: { A: "Thế kỷ từ I TCN", B: "Thế kỷ từ II TCN", C: "Thế kỷ từ III TCN", D: "Thế kỷ từ IV TCN" }, true: "D" },
-        { q: "166. Tên Hy Lạp được đặt tên ở thế kỷ nào?", a: { A: "Thế kỷ từ VIII-VII TCN", B: "Thế kỷ từ VII-VI TCN", C: "Thế kỷ từ VI-V TCN", D: "Thế kỷ từ V-IV TCN" }, true: "B" },
-        { q: "167. Nhà nước La Mã ra đời vào thế kỷ nào?", a: { A: "Thế kỷ từ V TCN", B: "Thế kỷ tử VI TCN", C: "Thế kỷ từ VII TCN", D: "Thế kỷ tử VIII TCN" }, true: "B" },
-        { q: "168. Đền Panthéon là kiệt tác kiến trúc của nền văn minh nào?", a: { A: "La Mã", B: "Hy Lạp.", C: "Bizantine.", D: "Tây Ban Nha" }, true: "A" },
-        { q: "169. Đế chế Byzantium còn được gọi là?", a: { A: "Đế quốc Đông La Mã", B: "Đế quốc La Mã thần thánh", C: "Đế chế La Mã phương Tây", D: "Cả 3 phương án trên đều đúng" }, true: "A" },
-        { q: "170. Tại sao chính quyền La Mã lại soạn bộ luật “Mười hai bảng”?", a: { A: "Vì các nhà quân sự yêu cầu", B: "Vì giới công thương yêu cầu", C: "Vì giới quý tộc yêu cầu", D: "Vì giới bình dân yêu cầu" }, true: "D" },
-        { q: "171. Khải hoàn môn được cư dân nền văn minh nào dựng nên?", a: { A: "La Mã", B: "Hy Lạp", C: "Ai Cập", D: "Lưỡng Hà" }, true: "A" },
-        { q: "172. Đền Panthéon là kiệt tác kiến trúc của nền văn minh?", a: { A: "La Mã", B: "Hy Lạp.", C: "Bizantine.", D: "Tây Ban Nha" }, true: "A" },
-        { q: "173. Kito giáo xuất hiện ở Việt Nam vào thế kỷ nào?", a: { A: "Thế kỷ 16", B: "Thế kỷ 17", C: "Thế kỷ 18", D: "Thế kỷ 19" }, true: "A" },
-        { q: "174. La mã là một bán đảo dài có hình dáng của?", a: { A: "Thanh kiếm", B: "Quả ớt", C: "Chiếc ủng", D: "Quả lê" }, true: "C" },
-        { q: "175. Về khoa học tự nhiên, Hy lạp cổ đại có những cống hiến quan trọng, những thành tựu ấy gắn liền với tên tuổi của các nhà khoa học?", a: { A: "Talet, Pitago, Oclit, Acsimet", B: "Anhxtanh, Pitago, Oclit, Acsimet", C: "Talet, Pitago, Oclit, Darwin Anhxtanh,", D: "Darwin, Newton, Pitago" }, true: "A" },
-        { q: "176. Trường phái triết học duy tâm của Hy Lạp có nhiều đại biểu nổi tiếng, là những học giả?", a: { A: "Heghen, Protagorat, Giocgiat, Xôcrat", B: "Protagorat, Giócgiat, Xôcrat, Palatong, Arixtot", C: "Xôcrat, Palatong, Arixtot, Karl Marx", D: "Palatong, Arixtot, Karl Marx, Anghen" }, true: "B" },
-        { q: "177. Giuda (Judas) đã bán chúa cho chính quyền La mã để lấy cái gì?", a: { A: "Lấy 12 đồng tiền vàng", B: "Lấy 12 đồng tiền bạc trắng", C: "Lấy 12 mảnh đất", D: "Lấy 12 ngôi nhà" }, true: "B" },
-        { q: "178. Tòa án La Mã xử tử chúa Giêxu bằng cách nào?", a: { A: "Treo cổ", B: "Đóng đinh lên thập giá", C: "Chôn sống", D: "Ném đá đến chết" }, true: "B" },
-        { q: "179. Theo thần thoại Hy Lạp thần Promete dùng cái gì để làm thành người?", a: { A: "Đất sét", B: "Gỗ", C: "Đá", D: "Sắt" }, true: "A" },
-        { q: "180. Thần Promete được vị thần nào giải thoát khỏi bị xiềng ở núi Cocado và bị một con diều hâu mổ lá gan?", a: { A: "Hephaixtot", B: "Dớt (Zeus)", C: "Promete", D: "Hêraclet" }, true: "D" },
-        { q: "181. Giáo lý của đạo Kito kế thừa từ đạo nào?", a: { A: "Do thái", B: "Phật giáo", C: "Hồi giáo", D: "Hindu" }, true: "A" },
-        { q: "182. Nơi phát nguyên quốc gia La Mã cổ đại là?", a: { A: "Anh", B: "Ý", C: "Pháp", D: "Đức" }, true: "B" },
-        { q: "183. Thần Dớt ( Zeus) đã lật đổ ai để trở thành chúa tể của các thần?", a: { A: "Chú mình", B: "Cha mình", C: "Bác mình", D: "Anh trai" }, true: "C" },
-        { q: "184. Kito chính thức được thừa nhận là quốc giáo của đế quốc La Mã vào thế kỷ nào ?", a: { A: "Thế kỷ III", B: "Thế kỷ IV", C: "Thế kỷ V", D: "Thế kỷ VI" }, true: "B" },
-        { q: "185. La Mã thôn tính Palextin vào năm nào?", a: { A: "62 TCN", B: "63 TCN", C: "64 TCN", D: "65 TCN" }, true: "B" },
-        { q: "186. Nữ thần Hera là vợ của vị thần nào?", a: { A: "Hephaixtot", B: "Dớt(Zeus)", C: "Promete", D: "Héraclet" }, true: "B" },
-        { q: "187. Chúa Giêsu Crit (Jesus Christ) được ra đời ở đâu?", a: { A: "Rôma", B: "Palextin", C: "Athens", D: "Cairo" }, true: "B" },
-        { q: "188. Nhà khoa học nào đã đo được chiều cao của Kim tự tháp bằng cách đo bóng của nó?", a: { A: "Pitago", B: "Talet", C: "Platong", D: "Oclit (Euclid)" }, true: "B" },
-        { q: "189. Theo thần thoại Hy Lạp ai được coi là người sáng tạo nền văn minh nhân loại?", a: { A: "Hephaixtot", B: "Promete", C: "Heraclet", D: "Dớt (Zeus)" }, true: "B" },
-        { q: "190. Đạo Kito có mấy nghi lễ (bí tích) quan trọng?", a: { A: "5 nghi lễ", B: "6 nghi lễ", C: "7 nghi lễ", D: "8 nghi lễ" }, true: "C" },
-        { q: "191. Do có công trong việc mở rộng lãnh thổ, nên ngày lễ Noen năm 800, tại nhà thờ Xanh Pie ở La Mã, Giáo Hoàng cử hành lễ tấn phong Hoàng đế La Mã cho:", a: { A: "Sáclomanhơ", B: "Lôte", C: "Luy mộ đạo", D: "Sáclơ Hói" }, true: "A" },
-        { q: "192. Luật “Mười hai bảng” của La Mã nhằm bảo vệ quyền lợi ai?", a: { A: "Bình dân", B: "Chủ nô, giới quý tộc", C: "Nông dân", D: "Nô lệ" }, true: "B" },
-        { q: "193. Khi người Giecman tiêu diệt đế chế La Mã, nhiều công trình kiến trúc bị xâm hại nhưng đền Pantheon vẫn được bảo quản tốt. Tại sao?", a: { A: "Vì nó là phế tích không ai phát hiện ra", B: "Vì các chiến binh Giecman chiếm làm nơi đóng quân", C: "Vì các thủ lĩnh Giecman chiếm làm nơi đặt sở chỉ huy", D: "Vì nó được chuyển thành nhà thờ Công giáo" }, true: "D" },
-        { q: "194. Nghệ thuật kiến trúc Gôtích khác nghệ thuật Rôman ở chỗ?", a: { A: "Là lối kiến trúc mái vòm bán nguyệt", B: "Là lối kiến trúc nhỏ gọn", C: "Được coi là nghệ thuật kiến trúc đồng quê", D: "Là lối kiến trúc các gân cung giao nhau" }, true: "D" },
-        { q: "195. Điều kiện hình thành nền văn minh Hy Lạp - La Mã?", a: { A: "Bán đảo Italia có nhiều đồng bằng", B: "Nhiều khoáng sản", C: "Địa hình không bị chia cắt", D: "Tất cả các phương án trên" }, true: "D" },
-        { q: "196. Điều nào sau đây là điểm nổi bật của văn minh La Mã hơn cả văn minh Hy Lạp?", a: { A: "Sản sinh ra nhiều nhà khoa học", B: "Có nhiều trường phái triết học", C: "Có nhiều công trình nhà tắm công cộng", D: "Có nhiều thành tựu văn học" }, true: "C" },
-        { q: "197. Nhà tắm Caracalla ở Roma là công trình công cộng nổi tiếng bởi?", a: { A: "Chất liệu làm nên công trình", B: "Nghệ thuật kiến trúc của công trình", C: "Công năng sử dụng của công trình", D: "Các tác phẩm nghệ thuật có trong công trình" }, true: "C" },
-        { q: "198. Công trình tiêu biểu kiến trúc của văn minh Hy-La cổ đại là?", a: { A: "Vườn hoa, sân vận động, cung điện", B: "Đền, miếu, sân vận động, cung điện, rạp hát", C: "Đền, miếu, sân vận động, đấu trường, nhà tù", D: "Đền, miếu, nhà tù, cung điện, rạp hát" }, true: "B" },
-        { q: "199. Nghệ thuật trong thời đại Văn minh Hy-La cổ đại gồm những lĩnh vực nào?", a: { A: "Kiến trúc, nghệ thuật điêu khắc", B: "Kiến trúc, nghệ thuật điêu khắc, hội họa", C: "Nghệ thuật điêu khắc, hội họa, văn học", D: "Kiến trúc, nghệ thuật điêu khắc, hội họa, Kịch" }, true: "B" },
-        { q: "200. Tại sao nói người Hi Lạp bị La Mã chinh phục, những người bị chinh phục ấy lại chinh phục lại kẻ đi chinh phục mình?", a: { A: "Hy Lạp đã giành lại được quốc gia", B: "La Mã tiếp thu thành tựu và bị chi phối", C: "La Mã suy yếu quân sự", D: "La Mã tiếp thu nhiều thành tựu của văn minh Hy Lạp, ảnh hưởng của Hy Lạp đối với La Mã càng mạnh mẽ" }, true: "D" },
-        { q: "201. Tại sao thần Promete bị xiềng ở núi Cocado và bị một con diều hâu mổ lá gan?", a: { A: "Vì lấy trộm thực phẩm", B: "Vì lấy trộm lửa ở lò rèn của thần thợ rèn Hephaixtot đem đến cho loài người", C: "Vì lấy trộm lửa ở lò rèn của thần Dớt", D: "Vì lấy trộm thực phẩm của thần Hera" }, true: "B" },
-        { q: "202. Nguyên nhân sự ra đời của đạo Kito?", a: { A: "Vì giáo lý của đạo Do thái và đời sống cực khổ của người dân bị áp bức", B: "Vì tư tưởng của phái triết học khắc kỷ", C: "Vì người Do thái tin rằng họ là dân chọn lọc", D: "Vì sự truyền đạo của người La Mã" }, true: "A" },
-        { q: "203. Đền thờ Hy Lạp cổ đại có đặc điểm khác biệt so với các công trình tôn giáo khác ở chỗ?", a: { A: "Chỉ là nơi lui tới của giới chủ nô", B: "Chỉ là nơi đặt tượng, không phải nơi hành lễ của các tín đồ", C: "Kiến trúc đồ sộ", D: "Câu a, b là đúng" }, true: "B" },
-        { q: "204. Lúc mới thành lập tín đồ của đạo Kito gồm những thành phần nào?", a: { A: "Nô lệ, nô lệ được giải phóng, dân nghèo thành thị", B: "Người già, phụ nữ và trẻ em", C: "Tầng lớp quan lại, quý tộc", D: "Gồm tất cả các tầng lớp dân cư" }, true: "A" },
-        { q: "205. Ở nền văn minh Hi lạp câu nói nổi tiếng: \"Hãy cho tôi một điểm tựa chắc chắn tôi có thể cất lên cả quả đất\" là của nhà khoa học nào?", a: { A: "Pitago", B: "Acsimet", C: "Platong", D: "Oclit (Euclid)" }, true: "B" },
-        { q: "206. Tông đồ nào đã phản bội bán Chúa Giêxu cho chính quyền La Mã?", a: { A: "Simon", B: "Giacôbê", C: "Phêrô", D: "Giuda (Judas)" }, true: "D" },
-        { q: "207. Trong nửa đầu thế ki V, các bộ lạc người Giécmanh đã thành lập trên đất đai của Tây La Mã các vương quốc nào?", a: { A: "Đông Gốt, Lông Ba và Phrăng", B: "Đông Gốt, Văngđan và Buốcgôngđơ", C: "Tây Gốt, Văng đan và Buốcgôngđơ", D: "Sáclơmanhơ, Lông Ba và Phrăng" }, true: "C" },
-        { q: "208. Sau khi đế quốc Tây La Mã diệt vong năm 476, người Giécmanh tiếp tục thành lập ba vương quốc mới nào?", a: { A: "Đông Gốt, Lông Ba và Phrăng", B: "Đông Gốt, Văngđan và Buốcgôngđơ", C: "Tây Gốt, Văngđan và Buốcgôngđơ", D: "Sáclơmanhơ, Lông Ba và Phrăng" }, true: "A" },
-        { q: "209. Thời kỳ hình thành chế độ phong kiến Tây Âu?", a: { A: "Từ thế kỉ V đến thế kỉ VIII", B: "Từ thế kỉ V đến thế kỉ X", C: "Từ thế kỉ VIII đến thế kỉ XII", D: "Từ thế kỉ XII đến thế kỉ XIII" }, true: "B" },
-        { q: "210. Nông nghiệp ở Tây Âu bắt đầu phát triển ở thế kỉ nào?", a: { A: "Thế kỉ IX", B: "Thế kỉ X", C: "Thế kỉ XI", D: "Thế kỉ XII" }, true: "B" },
-        { q: "211. Thời kì Thành thị công thương nghiệp ra đời, kinh tế hàng hóa phát triển, xã hội xuất hiện tầng lớp thị dân ở thời gian nào?", a: { A: "Thế kỉ IX", B: "Thế kỉ X", C: "Thế kỉ XI", D: "Thế kỉ XII" }, true: "C" },
-        { q: "212. Các trường đại học ở Tây Âu đến cuối thế kỉ XIV có khoảng bao nhiêu?", a: { A: "30 trường đại học", B: "40 trường đại học", C: "50 trường đại học", D: "60 trường đại học" }, true: "B" },
-        { q: "213. Ngôn ngữ sử dụng trong các trường đại học ở Tây Âu là:", a: { A: "Tiếng Ý", B: "Tiếng Tây Ban Nha", C: "Tiếng Pháp", D: "Tiếng Latin" }, true: "D" },
-        { q: "214. Thành Roma - cái nôi đầu tiên của Văn minh La Mã được hình thành ở đâu?", a: { A: "Bên bờ sông Tibre", B: "Trên bờ sông Po", C: "Trên đồng bằng Campanium", D: "Trên đồng bằng Britium" }, true: "A" },
-        { q: "215. Nội dung giảng dạy ở các trường học tôn giáo này chủ yếu là môn học nào?", a: { A: "Văn chương", B: "Âm nhạc", C: "Thần học", D: "Hình học" }, true: "C" },
-        { q: "216. Dưới thời trị vì của Sáclơmanhơ, ngoài nội dung thần học thì Bảy môn nghệ thuật tự do nào được giảng dạy và học tập?", a: { A: "Ngữ pháp, hội họa, logic học, số học, hình học, thiên văn học và âm nhạc", B: "Ngữ pháp, tu từ học, logic học, số học, hình học, thiên văn học và âm nhạc", C: "Ngữ pháp, tu từ học, thần học, số học, hình học, thiên văn học và âm nhạc", D: "Ngữ pháp, tu từ học, logic học, văn học, hình học, thiên văn học và âm nhạc" }, true: "B" },
-        { q: "217. Do bất đồng trong sự giải thích thuyết Tam vị nhất thể... đến năm 1054, giáo hội Kitô ở La Mã đã bị chia thành hai giáo hội nào?", a: { A: "Giáo hội Thiên chúa và Giáo hội La Mã", B: "Giáo hội Chính thống và Giáo hội Hy Lạp", C: "Giáo hội phương Đông và Giáo hội Hy Lạp", D: "Giáo hội Thiên chúa và Giáo hội Chính thống" }, true: "D" },
-        { q: "218. Giáo hội nào có thế lực lớn về cả kinh tế, chính trị, văn hoá, tư tưởng ở Tây Âu thời kì trung đại?", a: { A: "Giáo hội Thiên chúa", B: "Giáo hội Chính thống", C: "Giáo hội phương Đông", D: "Giáo hội Hy Lạp" }, true: "A" },
-        { q: "219. Nền kinh tế Tây Âu thời Trung đại sơ kì mang nặng tính chất nào?", a: { A: "Tự cung tự cấp", B: "Kinh tế hàng hóa phát triển", C: "Tự cung tự cấp và kinh tế hàng hóa phát triển", D: "Tự cung tự cấp, kinh tế hàng hóa không tồn tại" }, true: "D" },
-        { q: "220. Phương pháp giảng dạy ở các trường đại học Tây Âu là giảng thuật, nghĩa là gì?", a: { A: "Sinh viên lên lớp nghe giảng, ghi chép và thảo luận", B: "Sinh viên lên lớp nghe giảng và ghi chép và làm việc nhóm", C: "Sinh viên soạn bài theo chủ đề giáo viên giao và thảo luận", D: "Sinh viên lên lớp nghe giảng, làm việc nhóm và thuyết trình" }, true: "A" },
-        { q: "221. Đến cuối thế kỉ XII, xuất hiện dòng văn học nào mang tính hài hước, đả kích chế độ phong kiến, giáo sĩ và ca ngợi những người bình dân?", a: { A: "Văn học dân gian", B: "Văn học Latin của nhà thờ", C: "Văn học kị sĩ", D: "Văn học thành thị" }, true: "D" },
-        { q: "222. Đến cuối thế kỉ XIV, xuất hiện dòng văn học nào mà nhân vật trung tâm thường có những tính cách được ca ngợi như thượng võ, trọng danh dự, kính chúa...?", a: { A: "Văn học dân gian", B: "Văn học Latin của nhà thờ", C: "Văn học kị sĩ", D: "Văn học thành thị" }, true: "C" },
-        { q: "223. Năm 840 Louis “mộ đạo” chết... hòa ước kí ở Vecdoong năm 843 và đế quốc Sáclơman bị chia ra làm ba nước nào?", a: { A: "Nước Pháp, Đức, Tây Ban Nha ngày nay", B: "Nước Pháp, Đức, Ý ngày nay", C: "Nước Pháp, Ý, Bồ Đào Nha ngày nay", D: "Nước Pháp, Đức, Anh ngày nay" }, true: "B" },
-        { q: "224. Đến nửa sau thế kỉ XII, ở miền Bắc nước Pháp xuất hiện một kiểu kiến trúc mới... vòm cửa nhọn, nóc nhà nhọn, cột cao... gọi là gì?", a: { A: "Kiến trúc Gôtích", B: "Kiến trúc Gôtích phá cách", C: "Kiến trúc Roman", D: "Kiến trúc Roman mới" }, true: "A" },
-        { q: "225. Công trình mang phong cách Gôtích nửa sau thế kỉ XII... thể hiện đặc điểm?", a: { A: "Tăng thêm vẻ uy nghiêm của tôn giáo", B: "Tầm cỡ bề thế, tinh xảo của toàn bộ công trình", C: "Những tháp chuông cao vút", D: "Bước tiến của kĩ thuật" }, true: "A" },
-        { q: "226. Nhà danh hoạ khổng lồ thời Phục hưng người Ý với bức hoạ nổi tiếng Bữa tiệc cuối cùng là ai?", a: { A: "Michelangelo", B: "Pablo Picasso", C: "Vincent van Gogh", D: "Leonardo da Vinci" }, true: "D" },
-        { q: "227. Từ TK XIV, phong trào Văn hóa Phục hưng diễn ra đầu tiên tại:", a: { A: "Nước Ý", B: "Nước Anh", C: "Nước Pháp", D: "Nước Tây Ban Nha" }, true: "A" },
-        { q: "228. Nhà thờ Đức Bà Pari được xây dựng ở miền Bắc nước Pháp vào thế kỉ:", a: { A: "Thế kỉ XI", B: "Thế kỉ XII", C: "Thế kỉ XIII", D: "Thế kỉ XIV" }, true: "B" },
-        { q: "229. Ông là tác giả của bức hoạ Sáng tạo thế giới vẽ trên trần nhà thờ Xixtin gồm có 343 nhân vật:", a: { A: "Raphaen", B: "Mikenlăngiơ (Michelangelo)", C: "Giôtô", D: "Bôtixeli" }, true: "B" },
-        { q: "230. Việc cải tiến nguồn nước đóng một vai trò rất quan trọng trong đời sống con người. Đó là thời kì:", a: { A: "Sơ kì trung đại", B: "Thời trung đại", C: "Thời cận đại", D: "Thời hiện đại" }, true: "B" },
-        { q: "231. Súng bộ binh lúc đầu muốn bắn thì phải có dây dẫn lửa. Đến thế kỉ XVI đã được cải tiến?", a: { A: "Nòng súng Tull", B: "Súng bắn phát một", C: "Đạn cối 82 mm", D: "Qui lát" }, true: "D" },
-        { q: "232. Ở các nước đều có giáo hội Quốc gia... trong hàng giáo phẩm có hệ thống cấp bậc nào?", a: { A: "Giáo hoàng, Hồng y giáo chủ, Tổng giám mục, Linh mục, Giám mục", B: "Giáo hoàng, Hồng y giáo chủ, Tổng giám mục, Giám mục, Linh mục", C: "Giáo hoàng, Tổng giám mục, Hồng y giáo chủ, Giám mục, Linh mục", D: "Hồng y giáo chủ, Giáo hoàng, Tổng giám mục, Giám mục, Linh mục" }, true: "B" },
-        { q: "233. Chức vụ nào được bầu cử trong giáo hội Thiên chúa?", a: { A: "Hồng y giáo chủ", B: "Tổng giám mục", C: "Giáo hoàng", D: "Giám mục" }, true: "C" },
-        { q: "234. Bên cạnh địa tô, nông dân còn phải nộp thuế cho giáo hội như thế nào?", a: { A: "7%", B: "8%", C: "9%", D: "10%" }, true: "D" },
-        { q: "235. Đến đầu thế kỉ XVI, phong trào cải cách tôn giáo chính thức diễn ra ở 3 nước nào?", a: { A: "Đức, Thụy Sĩ và Anh", B: "Đức, Ba Lan và Anh", C: "Đức, Pháp và Anh", D: "Đức, Hunggari, và Anh" }, true: "A" },
-        { q: "236. Người đề xướng cải cách tôn giáo ở Đức là ai?", a: { A: "Giăng Canvanh", B: "Unrích Dvingli", C: "Máctin Luthơ (Martin Luther)", D: "Henri VIII" }, true: "C" },
-        { q: "237. Người đề xướng cải cách tôn giáo ở Thụy Sĩ ai?", a: { A: "Giăng Canvanh", B: "Unrich Dvingli (Ulrich Zwingli)", C: "Máctin Luthơ", D: "Henri VIII" }, true: "B" },
-        { q: "238. Người đề xướng cải cách tôn giáo ở Anh ai?", a: { A: "Giăng Canvanh", B: "Unrích Dvingli", C: "Máctin Luthơ", D: "Henri VIII" }, true: "D" },
-        { q: "239. Giáo lý... của Anh giáo vẫn giống như đạo Thiên chúa, nhưng các giáo phẩm do vua Anh bổ nhiệm... nội dung cải cách tôn giáo này là của ai?", a: { A: "Giăng Canvanh", B: "Unrích Dvingli", C: "Máctin Luthơ", D: "Henri VIII" }, true: "D" },
-        { q: "240. Tây Âu xuất hiện nhiều loại tôn giáo cải cách vào thời gian nào?", a: { A: "Nửa đầu thế kỉ thứ XIV", B: "Nửa đầu thế kỉ thứ XV", C: "Nửa đầu thế kỉ thứ XVI", D: "Nửa đầu thế kỉ thứ XVII" }, true: "C" },
-        { q: "241. Những người lính và nô lệ có công trong chiến tranh cũng được Vua Phrăng chia một ít ruộng và họ trở thành:", a: { A: "Những người binh lính tự do", B: "Những người cư dân tự do", C: "Những người nông dân tự do", D: "Những người nông dân thành thị tự do" }, true: "C" },
-        { q: "242. Khi không còn ruộng đất thì đương nhiên họ trở thành:", a: { A: "Nông nô", B: "Nô lệ", C: "Người vô gia cư", D: "Người ăn xin" }, true: "A" },
-        { q: "243. Từ thế kỉ XI, kinh tế nông nghiệp ở Tây Âu phát triển hẳn lên. Nông nghiệp phát triển tạo điều kiện cho:", a: { A: "Thành thị phát triển", B: "Thủ công nghiệp phát triển", C: "Giao thương phát triển", D: "Công xưởng phát triển" }, true: "C" },
-        { q: "244. Sự ra đời của các thành thị thời kì trung đại là biểu hiện cụ thể của:", a: { A: "Nền kinh tế tự cung tự cấp", B: "Nền kinh tế thương nghiệp", C: "Nền kinh tế nông nghiệp phát triển", D: "Nền kinh tế hàng hoá" }, true: "D" },
-        { q: "245. Môn học được coi là \"đầy tớ của thần học\":", a: { A: "Môn tu từ học", B: "Môn thiên văn học", C: "Môn logic học", D: "Môn ngữ pháp" }, true: "C" },
-        { q: "246. Sau gần 1000 năm chìm lắng, đến thời Phục hưng, nền văn hóa Tây Âu có một bước tiến lớn để lại:", a: { A: "Nhiều tác phẩm văn học và nghệ thuật bất hủ, với những thành tựu khoa học lỗi lạc", B: "Nhiều tác phẩm văn học và kiến trúc", C: "Nhiều tác phẩm văn học và giáo dục", D: "Nhiều tác phẩm văn học và hội họa" }, true: "A" },
-        { q: "247. Nguyên nhân Henri VIII tuyên bố cắt đứt quan hệ về tôn giáo với La Mã, thành lập Anh giáo do ông đứng là:", a: { A: "Muốn li hôn với vợ nhưng Giáo hoàng không đồng ý", B: "Muốn tịch thu ruộng đất của giáo hội Thiên chúa", C: "Muốn tịch thu tài sản", D: "Muốn nắm giữ yếu tố thần quyền" }, true: "A" },
-        { q: "248. Cải cách quan trọng nhất của đạo Tin lành là:", a: { A: "Chỉ tin vào kinh thánh, trong đó chủ yếu là kinh Phúc âm.", B: "Tín đồ được tham gia quản lí giáo hội", C: "Đơn giản hóa các nghi lễ", D: "Không lệ thuộc giáo hoàng" }, true: "A" },
-        { q: "249. Thời cổ đại, văn minh nhân loại đã có sự phát triển rực rỡ, nguyên nhân chính là:", a: { A: "Quá trình giao lưu văn hóa giữa hai khu vực", B: "Quá trình giao thương giữa hai khu vực", C: "Sự đổi mới về tư tưởng", D: "Sự tiếp xúc văn minh" }, true: "B" },
-        { q: "250. Từ khoảng thế kỉ XI TCN, tộc người Phênixi đã phát triển hùng mạnh vì:", a: { A: "Đi buôn bán khắp vùng Địa Trung Hải", B: "Xâm chiếm đất đai", C: "Truyền bá tôn giáo", D: "Cả A và C" }, true: "A" },
-        { q: "251. Thế kỉ VI TCN, hai nhà khoa học Hi Lạp cổ đại Talét và Pitago đã có thành tựu vĩ đại về hình học cho nhân loại là do:", a: { A: "Đi du lịch ở Ấn Độ", B: "Đi du lịch ở Lưỡng Hà, Ai Cập", C: "Đi du lịch ở khắp Hi Lạp", D: "Đi du lịch ở Trung Hoa" }, true: "B" },
-        { q: "252. Thế kỉ V TCN, nhà sử học Hi Lạp Hêrôđốt... đã biên soạn được một số tác phẩm về lịch sử mà Hêrôđốt ghi lại được đánh giá vô cùng quý giá là:", a: { A: "Lịch sử của chiến tranh Hi Lạp và Ba Tư", B: "Nền chính trị của Xpác", C: "Tư liệu về xây dựng Kim tự tháp ở Ai Cập cổ đại", D: "Sử thi cuộc chiến tranh Puních" }, true: "C" },
-        { q: "253. Cuối thế kỉ IV TCN, do có nhiều yếu tố thuận lợi, Alếchxăngđro Makêđônia đã chinh phục phương Đông đến tận:", a: { A: "Tây Á", B: "Miền Tây Bắc Ấn Độ", C: "Đông Bắc châu Phi", D: "Phương Đông" }, true: "B" },
-        { q: "254. Khoảng thế kỉ II TCN, đã hình thành một con đường thông thương xuất phát từ Trung Quốc đến bờ Đông Địa Trung Hải, gọi là:", a: { A: "Ngã tư đường", B: "Hành lang Đông - Tây", C: "Con đường tơ lụa", D: "Cầu nối liền giữa Ấn Độ, Trung Quốc và Tây Âu" }, true: "C" },
-        { q: "255. Dưới sự hô hào của Giáo hoàng La Mã... các đoàn kị sĩ một số nước Tây Âu đã tiến hành 8 cuộc viễn chinh sang phương Đông, lịch sử gọi là:", a: { A: "Cuộc thánh chiến", B: "Cuộc viễn chinh sang phương Đông", C: "Phong trào viễn chinh của quân Thập tự", D: "Cuộc viễn chinh sang phương Tây" }, true: "C" },
-        { q: "256. Máccô Pôlô (1254-1324)... Năm 1275, ông đến Trung Quốc và được Hốt Tất Liệt:", a: { A: "Phong làm quan", B: "Chọn làm con rể", C: "Hoàng thương", D: "Bắt giam" }, true: "A" },
-        { q: "257. Trải qua một quá trình tích luỹ kinh nghiệm lâu dài, tới thế kỉ XIV - XVI về mặt kĩ thuật ở Tây Âu đã có những tiến bộ đáng kể, cụ thể trong lĩnh VỰC:", a: { A: "Khai khoáng, luyện kim, cải tiến guồng nước và chế tạo vũ khí", B: "Khai khoáng, khai mỏ, hàng hải và chế tạo vũ khí", C: "Khai khoáng, luyện kim, hàng hải và chế tạo vũ khí", D: "Khai khoáng, luyện kim, ngành dệt và chế tạo vũ khí" }, true: "C" },
-        { q: "258. Trong số các vương quốc do người Giécmanh thành lập, có một vương quốc tồn tại lâu dài nhất và đồng thời là quốc gia có vai trò quan trọng nhất ở Tây Âu trong thời sơ kì trung đại, đó là:", a: { A: "Đông Gốt", B: "Tây Gốt", C: "Lông Ba", D: "Phrăng" }, true: "D" },
-        { q: "259. Giáo sư là những người thế tục chứ không phải là các giáo sĩ... Điều này có nghĩa là các trường đại học muốn:", a: { A: "Hoạt động độc lập", B: "Truyền bá tư tưởng tiến bộ", C: "Tìm cách thoát khỏi sự kiểm soát của giáo hội", D: "Tìm cách thoát khỏi sự kiểm soát của giáo hội và hoạt động độc lập" }, true: "D" },
-        { q: "260. Ý nghĩa của phong trào Văn hóa Phục hưng là:", a: { A: "Dòng tư tưởng mới chống lại nhà thờ", B: "Dòng tư tưởng mới chống lại gia cấp tư sản", C: "Giai cấp nông dân chống lại sự áp bức bóc lột của lãnh chúa", D: "Khôi phục các giá trị nhân văn của nền văn minh Hi - La" }, true: "D" },
-        { q: "261. Nhà bác học mở đầu cho thời kì Phục hưng là:", a: { A: "Đantê", B: "Nicola Coopecnich", C: "Pêtracca", D: "Bôcaxiô" }, true: "B" },
-        { q: "262. Người mở đầu phong trào Văn hoá Phục hưng ở nước Ý là:", a: { A: "Đantê", B: "Nicola Coopecnich", C: "Pêtracca", D: "Bôcaxiô" }, true: "A" },
-        { q: "263. Ông là một nhà thơ trữ tình của nước Ý. Trong tác phẩm của mình, ông ca ngợi tình yêu lí tưởng...:", a: { A: "Đantê", B: "Nicola Coopecnich", C: "Petracca", D: "Bôcaxiô" }, true: "C" },
-        { q: "264. Boccacio là một nhà văn Ý, tác phẩm nổi tiếng của ông là tập truyện:", a: { A: "Giấc mộng đêm hè", B: "Cuộc đời mới", C: "Thần khúc", D: "Mười ngày" }, true: "D" },
-        { q: "265. Nhà viết kịch vĩ đại thời Phục hưng là một người Anh có tên là:", a: { A: "William Shakespeare", B: "Migel de Cervantes", C: "Edmund Spencer", D: "Geoffrey Chaucer" }, true: "A" },
-        { q: "266. Vua Phrăng từ thế kỉ V đã đem nhiều ruộng đất cướp được của các quí tộc La Mã cũ phân chia cho:", a: { A: "Các tướng lĩnh, bà con dòng họ và những người có công", B: "Nhà thờ, bà con dòng họ và những người có công", C: "Các tướng lĩnh, bà con dòng họ và những người có công", D: "Các tướng lĩnh, bà con dòng họ và những chiến binh" }, true: "A" },
-        { q: "267. Vua Phrăng phân chia đất đai và và tước hiệu được phân phong có đặc điểm:", a: { A: "Chỉ truyền một đời", B: "Được truyền hai đời", C: "Được truyền ba đời", D: "Cha truyền con nối" }, true: "D" },
-        { q: "268. Máy tính đầu tiên ra đời vào năm:", a: { A: "1944", B: "1945", C: "1946", D: "1947" }, true: "B" },
-        { q: "269. Đèn điện tử chân không ra đời vào khoảng thời gian:", a: { A: "1950-1955", B: "1950-1958", C: "1950-1959", D: "1950-1960" }, true: "A" },
-        { q: "270. Vi mạch tích hợp được chế tạo vào:", a: { A: "Đầu thập niên 70", B: "Giữa thập niên 70", C: "Cuối thập niên 70", D: "Đầu thập niên 80" }, true: "A" },
-        { q: "271. Thế hệ máy tính thứ 4 ra đời vào:", a: { A: "Đầu thập niên 70", B: "Giữa thập niên 70", C: "Cuối thập niên 70", D: "Đầu thập niên 80" }, true: "D" },
-        { q: "272. Người máy tại Mỹ ra đời vào năm:", a: { A: "1960", B: "1961", C: "1962", D: "1963" }, true: "B" },
-        { q: "273. Năm 1973, một công nhân người Anh tên là Giôn Cây phát minh ra:", a: { A: "Máy kéo sợi", B: "Máy dệt", C: "Thoi chạy", D: "Thoi bay" }, true: "D" },
-        { q: "274. Trong nghề khai khoáng... Các công đoạn được cơ giới hoá là:", a: { A: "Tiến hành khoan nổ mìn cho đá xây dựng", B: "Xay nghiền, phân loại đá", C: "Phân phối đá thành phẩm", D: "Rửa quặng, nghiền quặng" }, true: "D" },
-        { q: "275. Nghề luyện kim cũng bắt đầu được cơ giới hoá nhờ:", a: { A: "Sức nước", B: "Nhiệt lượng", C: "Chất trợ dung", D: "Gia công áp lực" }, true: "A" },
-        { q: "276. Ngành dệt cũng có những cải tiến. Một số xa kéo sợi được cải tiến... Khung cửi nằm ngang cũng bị thay thế bởi:", a: { A: "Guồng xe sợi và quay tơ", B: "Khung dệt vải", C: "Khung cửi đứng trước kia", D: "Khung gỗ kiềng" }, true: "B" },
-        { q: "277. Kỹ thuật quân sự cũng có những bước tiến lớn nhờ kĩ thuật luyện kim... Đạn bằng gang đã thay thế:", a: { A: "Đạn bằng đá", B: "Đạn bằng đồng", C: "Đạn bằng sắt", D: "Đạn xuyên giáp" }, true: "B" },
-        { q: "278. Trong ngành hàng hải, người ta cũng đã đóng được những con tàu đáy nhọn... mỗi tàu đều có trang bị:", a: { A: "La bàn, thước phương vị để xác định vị trí trên biển", B: "La bàn, đồng hồ cơ khí", C: "La bàn, gậy và mặt trời", D: "La bàn, phương pháp Owen Doff" }, true: "A" },
-        { q: "279. Từ cuối thế kỉ XI, giáo hoàng Grêgôriut VII (1073-1085) đã nêu ra nguyên tắc giáo hội La Mã là:", a: { A: "Do chúa trời sáng lập nên tuyệt đối không có sai lầm", B: "Quyền uy của giáo hoàng bao trùm một nước", C: "Vị trí của giáo hoàng chỉ thấp hơn chính quyền", D: "Giáo hoàng có thể bị vua phế truất." }, true: "A" },
-        { q: "280. Giáo hội còn là một thế lực lũng đoạn về tư tưởng... thể hiện ở:", a: { A: "Tất cả tư tưởng tiến bộ được chấp nhận", B: "Tất cả tư tưởng tiến bộ nhưng trái với kinh thánh, đều bị cấm đoán", C: "Tất cả tư tưởng tiến bộ về khoa học, đều được chấp nhận", D: "Tất cả tư tưởng tiến bộ về tôn giáo, đều được chấp nhận" }, true: "B" },
-        { q: "281. Từ thế kỉ XIV, Uyclip (Wyclip) ... đã từng đề xướng cải cách tôn giáo ở hai phương diện:", a: { A: "Phủ nhận vai trò của Hồng y giáo chủ...", B: "Phủ nhận vai trò của Tổng giám mục...", C: "Phủ nhận vai trò của Giáo hoàng, đề nghị chính phủ sở hữu ruộng đất của giáo hội", D: "Phủ nhận vai trò của Giám mục..." }, true: "C" },
-        { q: "282. Đầu thế kỉ XV, Ian Hút (Séc) cũng vận động cải cách giáo hội... Vì vậy, Ông bị Hội nghị tôn giáo ở Cônxtanxơ xử:", a: { A: "Tử hình", B: "Trục xuất khỏi giáo hội", C: "Thiêu chết", D: "Biệt giam" }, true: "C" },
-        { q: "283. Chữ Phúc âm có nghĩa là:", a: { A: "Tin mừng, tin lành", B: "Tin vui, nhiều phúc", C: "Tôn giáo trong sạch", D: "Cả 3 phương án trên đều đúng" }, true: "A" },
-        { q: "284. Nội dung: sự phân công lao động rõ ràng trong xưởng... là của quy tắc:", a: { A: "Đồng bộ hóa", B: "Tập trung hóa", C: "Tiêu chuẩn hóa", D: "Chuyên môn hóa" }, true: "D" },
-        { q: "285. Nội dung: các cá nhân làm việc theo dây chuyền, quy trình... là của quy tắc:", a: { A: "Đồng bộ hóa", B: "Tập trung hóa", C: "Tiêu chuẩn hóa", D: "Chuyên môn hóa" }, true: "A" },
-        { q: "286. Nội dung: sản xuất công nghiệp cần có sự tập trung từ nhà xưởng... là của quy tắc:", a: { A: "Đồng bộ hóa", B: "Tập trung hóa", C: "Tiêu chuẩn hóa", D: "Chuyên môn hóa" }, true: "B" },
-        { q: "287. Phát minh về phương pháp luyện than cốc năm 1735 là một đóng góp quan trọng cho việc:", a: { A: "Luyện gang", B: "Luyện thép", C: "Luyện gang thép", D: "Luyện đồng thép" }, true: "C" },
-        { q: "288. Người chủ trương xóa bỏ chế độ chuyên chế nhưng vẫn giữ thể chế quân chủ với những vị vua sáng suốt... là:", a: { A: "Vônte", B: "Rutxô", C: "Môngtexkiơ (Montesquieu)", D: "Điđơrô" }, true: "C" },
-        { q: "289. Công trình nổi bật của thế kỉ XIX là học thuyết về sinh học của Đacuyn (Charles Darwin). Nội dung cơ bản của học thuyết Đacuyn là:", a: { A: "Quy luật tự nhiên cạnh tranh để sinh tồn", B: "Khả năng sinh tồn của mỗi giống loài kể cả con người.", C: "Tất cả các giống loài đều trải qua quá trình tiến hóa để thích nghi", D: "Cả 3 phương án trên đều đúng" }, true: "D" },
-        { q: "290. Đoạn đường sắt đầu tiên được khánh thành ở Anh nối liền Mantretxto với Livecpun được xây dựng năm:", a: { A: "1822", B: "1823", C: "1824", D: "1825" }, true: "D" },
-        { q: "291. Người được coi là cha đẻ của môn di truyền học là:", a: { A: "Gregor Mendel", B: "Charles Darwin", C: "Denis Diderot", D: "Louis Pasteur" }, true: "A" },
-        { q: "292. Người đã thiết lập Bảng tuần hoàn các nguyên tố hóa học là:", a: { A: "Menđêlêep", B: "Farađây", C: "Beccoren", D: "Anhxtanh" }, true: "A" },
-        { q: "293. Nhà vật lí người Anh nêu lên nguyên lí về cảm ứng điện từ là:", a: { A: "Anhxtanh", B: "Farađây (Michael Faraday)", C: "Beccoren", D: "Menđêlêep" }, true: "B" },
-        { q: "294. Nguyên nhân chính của sự ra đời nền văn minh công nghiệp là:", a: { A: "Phong phú về số lượng và chất lượng", B: "Có sự chuyên môn hóa cao", C: "Chi phối nhiều lĩnh vực tác động đến toàn xã hội", D: "Đáp ứng những đòi hỏi của xã hội công nghiệp" }, true: "D" },
-        { q: "295. Những quy tắc cơ bản của nền văn minh công nghiệp bắt buộc phải tuân theo thứ tự là:", a: { A: "Tiêu chuẩn hóa, tập trung hóa, chuyên môn hóa, đồng bộ hóa", B: "Tiêu chuẩn hóa, chuyên môn hóa, đồng bộ hóa, tập trung hóa", C: "Tiêu chuẩn hóa, đồng bộ hóa, tập trung hóa, chuyên môn hóa", D: "Tiêu chuẩn hóa, chuyên môn hóa, tập trung hóa, đồng bộ hóa" }, true: "B" },
-        { q: "296. Yêu cầu đầu tiên về những quy tắc cơ bản của nền văn minh công nghiệp là:", a: { A: "Đồng bộ hóa", B: "Tập trung hóa", C: "Tiêu chuẩn hóa", D: "Chuyên môn hóa" }, true: "C" },
-        { q: "297. Người được dựng bức tượng tại kỉ niệm tại Oetxmintơ (Westminster)... với dòng chữ: Người đã nhân lên gấp bội sức mạnh của con người là:", a: { A: "Giêm Oát (James Watt)", B: "Giêm Hacgrivo", C: "Risot Accrai tơ", D: "Etmơn Cacraito" }, true: "A" },
-        { q: "298. Năm 1785, có một kỹ sư sáng chế ra máy dệt đưa năng suất lên gấp 39 lần... ông là:", a: { A: "Giêm Oát", B: "Giêm Hacgrivo", C: "Risot Accraj to", D: "Etmơn Cacraito" }, true: "D" },
-        { q: "299. Đến đầu thế kỉ XX, có một nhà khoa học người Pháp phát minh tính phóng xạ của uranium... đặt cơ sở đầu tiên cho lí thuyết về hạt nhân là:", a: { A: "Anhxtanh", B: "Farađây", C: "Beccoren (Antoine Becquerel)", D: "Menđêlêep" }, true: "C" },
-        { q: "300. Giải thưởng Nôben đầu tiên về vật lí được trao tặng năm 1901 cho nhà khoa học:", a: { A: "Rơn-ghen (Roentgen)", B: "Farađây", C: "Becơren và ông bà Quyri", D: "Anhxtanh" }, true: "A" },
-        { q: "301. Ông là nhà khoa học người Đức, với công trình nghiên cứu về Thuyết tương đối... được trao giải Nôben năm 1921:", a: { A: "Menđêlêep", B: "Faradây", C: "Beccoren", D: "Anhxtanh (Albert Einsetein)" }, true: "D" },
-        { q: "302. Ông là nhà khoa học người Mĩ, phát minh ra bóng đèn điện và xây dựng nhà máy điện vào nửa sau thế kỉ XIX:", a: { A: "Edixơn (Thomas Edison)", B: "Faraday", C: "Beccoren", D: "Anhxtanh" }, true: "A" },
-        { q: "303. Tác giả cuốn Luận về tự do người Anh đã nêu lên nguyên tắc: cá nhân có thể làm bất cứ điều gì không hại đến người khác...:", a: { A: "Tốccovin", B: "Giôn Min (John Stuart Mill)", C: "Vichto Huygô", D: "Lep Tônxtôi" }, true: "B" },
-        { q: "304. Ông là nhà thơ và nhà văn, người đại diện cho trào lưu lãng mạn tiến bộ với các tác phẩm Nhà thờ Đức bà Paris, Những người khốn khổ...:", a: { A: "Tốccovin", B: "Giôn Min", C: "Vichto Huygô (Victor Hugo)", D: "Lep Tônxtôi" }, true: "C" },
-        { q: "305. Chiến tranh và hòa bình là một bản anh hùng ca về cuộc kháng chiến của nhân dân Nga chống lại sự xâm lược của Napôlêông... Người sáng tác là:", a: { A: "Tốccơvin", B: "Giôn Min", C: "Vichto Huygô", D: "Lep Tônxtôi (Lev Tolstoy)" }, true: "D" },
-        { q: "306. Ông được mệnh danh là \"Chàng khổng lồ của nghệ thuật âm nhạc phương Tây\":", a: { A: "Moda (Mozart)", B: "Bach (Johann Sebastian Bach)", C: "Bêthôven (Beethoven)", D: "Đêbuyxi (Debussy)" }, true: "B" }
-    ];
 
-    // --- PHẦN XỬ LÝ LOGIC TRẮC NGHIỆM ---
+    const quizData = {
+       qp1: [
+            // --- BÀI: XÂY DỰNG LỰC LƯỢNG VŨ TRANG NHÂN DÂN ---
+            { q: "Thực trạng của lực lượng vũ trang nhân dân trong giai đoạn hiện nay là một trong những:", a: { A: "Nhiệm vụ xây dựng lực lượng công an nhân dân.", B: "Yêu cầu xây dựng lực lượng vũ trang nhân dân trong điều kiện khu vực Đông Nam Á đã thay đổi nhiều diễn biến phức tạp.", C: "Biện pháp xây dựng lực lượng vũ trang trong điều kiện đất nước đã thay đổi có nhiều diễn biến phức tạp.", D: "Đặc điểm liên quan đến xây dựng lực lượng vũ trang nhân dân Việt Nam." }, true: "D" },
+            { q: "Lực lượng vũ trang nhân dân là các tổ chức vũ trang và bán vũ trang của nhân dân Việt Nam do tổ chức nào lãnh đạo?", a: { A: "Đảng Cộng sản Việt Nam.", B: "Quốc hội nước cộng hòa xã hội chủ nghĩa Việt Nam.", C: "Nhà nước cộng hòa xã hội chủ nghĩa Việt Nam.", D: "Mặt trận Tổ quốc Việt Nam." }, true: "A" },
+            { q: "Đảm bảo cho lực lượng vũ trang nhân dân luôn trong tư thế sẵn sàng chiến đấu và chiến đấu thắng lợi được xác định là một trong những:", a: { A: "Phương hướng lãnh đạo của Đảng đối với lực lượng vũ trang.", B: "Phương châm hành động cách mạng của quân đội.", C: "Giải pháp chiến đấu của công an nhân dân.", D: "Quan điểm, nguyên tắc cơ bản trong xây dựng lực lượng vũ trang nhân dân ta hiện nay." }, true: "D" },
+            { q: "Phương hướng xây dựng lực lượng vũ trang nhân dân hiện nay:", a: { A: "Cách mạng, chính quy, tinh nhuệ, từng bước hiện đại.", B: "Mua sắm vũ khí trang bị hiện đại cho quân đội.", C: "Nhanh chóng hiện đại hóa vũ khí trang bị cho quân đội.", D: "Chú trọng xây dựng đời sống văn hóa tinh thần của quân đội." }, true: "A" },
+            { q: "Đảng lãnh đạo lực lượng vũ trang nhân dân Việt Nam theo nguyên tắc?", a: { A: "Tuyệt đối, toàn diện.", B: "Tuyệt đối và trực tiếp.", C: "Tuyệt đối, trực tiếp về mọi mặt.", D: "Trực tiếp về mọi mặt." }, true: "C" },
+            { q: "Đội quân chiến đấu, đội quân công tác, đội quân sản xuất. Được xác định là:", a: { A: "Biện pháp xây dựng quân đội.", B: "Nhiệm vụ của quân đội.", C: "Chức năng của quân đội.", D: "Nguyên tắc xây dựng của quân đội." }, true: "C" },
+            { q: "Một trong những quan điểm, nguyên tắc của Đảng về xây dựng lực lượng vũ trang nhân dân Việt Nam là:", a: { A: "Lấy chất lượng là chính, lấy xây dựng chính trị làm cơ sở.", B: "Lấy số lượng là chính, lấy xây dựng chính trị làm cơ sở.", C: "Lấy chất lượng là chính, lấy xây dựng quân sự làm cơ sở.", D: "Lấy số lượng là chính, lấy xây dựng quân sự làm cơ sở." }, true: "A" },
+            { q: "Tổ chức các đơn vị lực lượng vũ trang:", a: { A: "Nhanh, mạnh, chính xác.", B: "Tinh gọn, có sức cơ động nhanh.", C: "Bảo đảm số lượng, chất lượng.", D: "Gọn, mạnh, cơ động." }, true: "B" },
+            { q: "Xây dựng đội ngũ cán bộ lực lượng vũ trang nhân dân có:", a: { A: "Trình độ khoa học cao.", B: "Phẩm chất, năng lực tốt.", C: "Trình độ chuyên môn giỏi.", D: "Thể lực tốt." }, true: "B" },
+            { q: "Tổ chức các đơn vị lực lượng vũ trang phù hợp với:", a: { A: "Tình hình thế giới, khu vực và thế trận cả nước.", B: "Tình hình cụ thể khu vực và thế trận cả nước.", C: "Tình hình trong nước, khu vực và thế trận cả nước.", D: "Tình hình cụ thể ở từng địa phương, khu vực và thế trận cả nước." }, true: "D" },
+            { q: "Chiến lược bảo vệ tổ quốc xác định: “Tập trung xây dựng Lực lượng quân đội, công an có bản lĩnh chính trị vững vàng, lòng trung thành tuyệt đối với Tổ quốc và nhân dân..” hội nghị lần thứ mấy, khóa bao nhiêu của BCH TƯ Đảng xác định?", a: { A: "Hội nghị lần thứ 7, khóa VIII.", B: "Hội nghị lần thứ 8, khóa IX.", C: "Hội nghị lần thứ 9, khóa X.", D: "Hội nghị lần thứ 10, khóa XI." }, true: "B" },
+            { q: "Quân đội nhân dân Việt Nam gồm có mấy Quân khu, Quân đoàn?", a: { A: "05 Quân khu, 02 Quân đoàn.", B: "06 Quân khu, 03 Quân đoàn.", C: "07 Quân khu, 04 Quân đoàn.", D: "08 Quân khu, 05 Quân đoàn." }, true: "C" },
+            { q: "Vì sao sự lãnh đạo của Đảng CS đối với lực lượng vũ trang là nguyên tắc quan trọng nhất?", a: { A: "Quyết định đến sự trưởng thành của quân đội nhân dân.", B: "Quyết định đến mục tiêu, phương hướng chiến đấu.", C: "Quyết định sức mạnh, sự tồn tại, phát triển, chiến đấu, chiến thắng của LLVT.", D: "Quyết định đến cơ chế hoạt động của công an nhân dân." }, true: "C" },
+            { q: "Quân đội nhân dân Việt Nam hiện nay có mấy Quân chủng, Binh chủng?", a: { A: "05 Quân chủng, 02 Binh chủng.", B: "02 Quân chủng, 05 Binh chủng.", C: "03 Quân chủng, 06 Binh chủng.", D: "06 Quân chủng, 03 Binh chủng." }, true: "B" },
+            { q: "Giữ vững và tăng cường sự lãnh đạo của Đảng Cộng sản Việt Nam đối với lực lượng vũ trang nhân dân Việt Nam. Được xác định là:", a: { A: "Biện pháp xây dựng lực lượng vũ trang nhân dân.", B: "Nội dung, nhiệm vụ xây dựng lực lượng vũ trang nhân dân.", C: "Quan điểm, nguyên tắc xây dựng lực lượng vũ trang nhân dân.", D: "Phương hướng xây dựng lực lượng vũ trang nhân dân." }, true: "C" },
+            { q: "Đứng trước diễn biến của tình hình, có khả năng phân tích và kết luận chính xác đúng, sai từ đó có thái độ đúng đắn với sự việc đó. Được xác định là:", a: { A: "Tinh nhuệ về kĩ thuật của lực lượng vũ trang nhân dân.", B: "Tinh nhuệ về chính trị của lực lượng vũ trang nhân dân.", C: "Tinh nhuệ về chiến thuật của lực lượng vũ trang nhân dân.", D: "Tất cả các phương án trên đúng." }, true: "B" },
+            { q: "Xây dựng quân đội nhân dân, công an nhân dân chính quy là:", a: { A: "Thực hiện thống nhất về mọi mặt (tổ chức biên chế, trang bị...).", B: "Thực hiện thống nhất về chính trị, quân sự, hậu cần.", C: "Thực hiện thống nhất về nhận thức chính trị, tư tưởng.", D: "Thực hiện thống nhất về nhận thức chính trị, mục tiêu chiến đấu." }, true: "A" },
+            { q: "Một trong những nội dung xây dựng quân đội cách mạng là:", a: { A: "Xây dựng lòng tự hào, tự tôn dân tộc.", B: "Xây dựng truyền thống đánh giặc giữ nước.", C: "Xây dựng truyền thống thống nhất của dân, do dân, vì dân.", D: "Xây dựng bản chất giai cấp công nhân." }, true: "D" },
+            { q: "Một trong những đặc điểm liên quan đến việc xây dựng lực lượng vũ trang nhân dân Việt Nam hiện nay?", a: { A: "Xây dựng LLVTND trong điều kiện quốc tế đã thay đổi có nhiều diễn biến phức tạp.", B: "Xây dựng quân đội trong điều kiện quốc tế đã thay đổi có nhiều diễn biến phức tạp.", C: "Xây dựng công an trong điều kiện quốc tế đã thay đổi có nhiều diễn biến phức tạp.", D: "Xây dựng dân quân tự vệ trong điều kiện quốc tế đã thay đổi có nhiều diễn biến phức tạp." }, true: "A" },
+            { q: "Lực lượng vũ trang nhân dân Việt Nam bao gồm:", a: { A: "Quân đội nhân dân, công an nhân dân, dân quân tự vệ.", B: "Quân đội nhân dân, dân quân tự vệ.", C: "Hải quân, dự bị động viên, dân quân tự vệ.", D: "Không quân, cảnh sát biển, dân quân tự vệ." }, true: "A" },
+            { q: "“Chính trị trọng hơn quân sự” được Chủ tịch Hồ Chí Minh viết trong chỉ thị?", a: { A: "Thành lập lực lượng Việt Minh.", B: "Thành lập lực lượng vũ trang địa phương.", C: "Thành lập Đội Việt Nam tuyên truyền giải phóng quân.", D: "Thành lập lực lượng vũ trang ba thứ quân." }, true: "C" },
+            { q: "Xây dựng quân đội về chính trị trong đó vấn đề nào là cốt lõi?", a: { A: "Bản chất giai cấp công nhân.", B: "Tính nhân dân.", C: "Tính dân tộc.", D: "Phương án b, c đúng." }, true: "A" },
+            { q: "“Dân tộc Việt Nam nhất định phải được giải phóng. Muốn đánh chúng phải có lực lượng quân sự, phải có tổ chức”. Ai khẳng định?", a: { A: "Chủ tịch Hồ Chí Minh.", B: "Đại tướng Võ Nguyên Giáp.", C: "Đại tướng Nguyễn Chí Thanh.", D: "Đại tướng Phạm Văn Trà." }, true: "A" },
+            { q: "Đội Việt Nam tuyên truyền giải phóng quân được thành lập với bao nhiêu chiến sỹ, ai làm đội trưởng?", a: { A: "34 chiến sỹ, Võ nguyên giáp", B: "34 chiến sỹ, Hoàng Sâm", C: "34 chiến sỹ, Xích Thắng", D: "34 chiến sỹ, Hoàng Văn Thái" }, true: "B" },
+            { q: "Theo tư tưởng Hồ Chí Minh: Quân đội ta có sức mạnh vô địch vì:", a: { A: "Có Đảng xây dựng, Đảng lãnh đạo và giáo dục.", B: "Được trang bị vũ khí trang bị hiện đại.", C: "Nhà nước xây dựng quản lý điều hành.", D: "Được kế thừa truyền thống dựng nước và giữ nước của dân tộc." }, true: "A" },
+
+            // --- BÀI: XÂY DỰNG NỀN QUỐC PHÒNG TOÀN DÂN, AN NINH NHÂN DÂN ---
+            { q: "Nền quốc phòng toàn dân, an ninh nhân dân chỉ có mục đích duy nhất là tự vệ chính đáng. Được xác định là:", a: { A: "Vị trí.", B: "Đặc trưng.", C: "Khái niệm.", D: "Mục đích." }, true: "B" },
+            { q: "Thế trận chiến tranh nhân dân bố trí rộng khắp trên cả nước nhưng phải có:", a: { A: "Kế hoạch huấn luyện sẵn sàng chiến đấu.", B: "Kế hoạch tác chiến.", C: "Trọng tâm, trọng điểm.", D: "Phương án a, b, c đúng." }, true: "C" },
+            { q: "Nền quốc phòng, an ninh của dân, do dân và vì dân, do ai tiến hành?", a: { A: "Công an nhân dân tiến hành.", B: "Toàn thể nhân dân tiến hành.", C: "Quân đội nhân dân tiến hành.", D: "Dân quân tự vệ tiến hành." }, true: "B" },
+            { q: "Xây dựng lực lượng quốc phòng, an ninh đáp ứng yêu cầu bảo vệ vững chắc Tổ quốc Việt Nam xã hội chủ nghĩa. Được xác định là:", a: { A: "Nội dung xây dựng nền quốc phòng", B: "Vị trí xây dựng nền quốc phòng", C: "Khái niệm xây dựng nền quốc phòng", D: "Nhiệm vụ xây dựng nền quốc phòng." }, true: "D" },
+            { q: "An ninh nhân dân là sự nghiệp của:", a: { A: "Toàn dân lấy lực lượng bộ đội biên phòng làm nòng cốt.", B: "Toàn dân, do nhân dân tiến hành, lực lượng an ninh nhân dân làm nòng cốt.", C: "Toàn dân lấy lực lượng công an nhân dân làm nòng cốt.", D: "Toàn dân lấy lực lượng dân quân tự vệ làm nòng cốt." }, true: "B" },
+            { q: "Quốc phòng toàn dân, an ninh nhân dân là hoạt động tổng thể của cả nước, trên mọi lĩnh vực lấy:", a: { A: "Lực lượng an ninh làm nòng cốt.", B: "Lực lượng vũ trang làm nòng cốt.", C: "Lực lượng vũ trang địa phương làm nòng cốt.", D: "Phương án a, b, c đúng." }, true: "B" },
+            { q: "Một trong những quan điểm xây dựng nền quốc phòng toàn dân là:", a: { A: "Tự lực, tự cường, tự tôn dân tộc.", B: "Độc lập tự chủ, tự lực, tự cường.", C: "Mở rộng quan hệ đa phương, đa dạng hóa các mối quan hệ quốc tế.", D: "Phát triển kinh tế, gắn với xây dựng nền quốc phòng toàn dân." }, true: "B" },
+            { q: "Nền quốc phòng toàn dân là sức mạnh quốc phòng của đất nước, được xây dựng trên nền tảng:", a: { A: "Chủ nghĩa Mác – Lênin.", B: "Tư tưởng Hồ Chí Minh.", C: "Nhà nước của dân, do dân, vì dân.", D: "Nhân lực, vật lực, tinh thần." }, true: "D" },
+            { q: "Nền quốc phòng toàn dân, an ninh nhân dân được xây dựng toàn diện và:", a: { A: "Phát triển, đào tạo khoa học công nghệ.", B: "Hiện đại hóa nền công nghiệp quốc phòng.", C: "Từng bước hiện đại.", D: "Đẩy mạnh công nghiệp hóa, hiện đại hóa đất nước." }, true: "C" },
+            { q: "“Trong khi đặt trọng tâm vào nhiệm vụ xây dựng CNXH, chúng ta không một chút lơi lỏng nhiệm vụ bảo vệ Tổ quốc, luôn luôn coi trọng quốc phòng an ninh...”. Đảng ta khẳng định trong:", a: { A: "Văn kiện đại hội đại biểu Đảng toàn quốc lần thứ X.", B: "Văn kiện đại hội đại biểu Đảng toàn quốc lần thứ IX.", C: "Văn kiện đại hội đại biểu Đảng toàn quốc lần thứ VIII.", D: "Văn kiện đại hội đại biểu Đảng toàn quốc lần thứ XI." }, true: "C" },
+            { q: "Chọn câu sai. Phương châm xây dựng nền quốc phòng toàn dân?", a: { A: "Độc lập tự chủ.", B: "Liên minh quân sự với các nước khác.", C: "Kết hợp sức mạnh dân tộc với sức mạnh thời đại.", D: "Tranh thủ sự ủng hộ giúp đỡ của bạn bè quốc tế." }, true: "B" },
+            { q: "“Xây dựng thế trận lòng dân làm nền tảng phát huy sức mạnh tổng hợp của toàn dân tộc, trong đó Quân đội nhân dân và Công an nhân dân là nòng cốt”. Đảng ta khẳng định trong:", a: { A: "Văn kiện đại hội Đảng toàn quốc lần thứ X.", B: "Văn kiện đại hội Đảng toàn quốc lần thứ IX.", C: "Văn kiện đại hội Đảng toàn quốc lần thứ VIII.", D: "Văn kiện đại hội Đảng toàn quốc lần thứ XI." }, true: "A" },
+            { q: "Xây dựng nền quốc phòng toàn dân, an ninh nhân dân vững mạnh nhằm:", a: { A: "Bảo vệ Tổ quốc Việt Nam XH xã hội chủ nghĩa.", B: "Tạo ra sức mạnh tổng hợp của đất nước.", C: "Tạo thế chủ động cho sự nghiệp xây dựng, bảo vệ Tổ quốc.", D: "Phương án a, b, c đúng." }, true: "D" },
+            { q: "Tiềm lực nào là cơ sở quyết định sức mạnh vật chất và kĩ thuật của nền quốc phòng toàn dân?", a: { A: "Tiềm lực chính trị tinh thần.", B: "Tiềm lực kinh tế.", C: "Tiềm lực quân sự.", D: "Tiềm lực khoa học công nghệ." }, true: "B" },
+            { q: "Chọn câu sai. Mục đích của việc xây dựng nền quốc phòng toàn dân?", a: { A: "Tạo thế chủ động cho sự nghiệp xây dựng bảo vệ Tổ quốc.", B: "Tạo ra sức mạnh tổng hợp của đất nước.", C: "Tạo điều kiện liên kết quân sự phát triển an ninh.", D: "Bảo vệ vững chắc Tổ quốc Việt Nam xã hội chủ nghĩa." }, true: "C" },
+            { q: "Sự khác nhau giữa nền quốc phòng toàn dân với nền an ninh nhân dân?", a: { A: "Phương thức tổ chức lực lượng, hoạt động cụ thể theo mục tiêu cụ thể được phân công.", B: "Phương thức tổ chức lực lượng, hoạt động cụ thể theo nhiệm vụ.", C: "Phương thức tổ chức lực lượng, hoạt động cụ thể theo mục tiêu.", D: "Phương thức tổ chức quản sự, hoạt động theo mục tiêu cụ thể được phân công." }, true: "A" },
+            { q: "Thực chất của việc xây dựng tiềm lực chính trị tinh thần là:", a: { A: "Xây dựng nhân tố con người mới Việt Nam XHCN.", B: "Xây dựng lực lượng tiến hành công tác tư tưởng.", C: "Xây dựng thế trận lòng dân.", D: "Xây dựng hệ thống chính trị trong thời chiến." }, true: "A" },
+            { q: "Tiềm lực chính trị, tinh thần của nền quốc phòng, an ninh nhân dân. Được xác định là:", a: { A: "Nhân tố cần thiết tạo nên sức mạnh của quốc phòng – an ninh.", B: "Nhân tố quyết định tạo nên sức mạnh của quốc phòng – an ninh.", C: "Nhân tố cơ bản tạo nên sức mạnh của quốc phòng – an ninh.", D: "Nhân tố hàng đầu tạo nên sức mạnh của quốc phòng – an ninh." }, true: "C" },
+            { q: "Thế trận quốc phòng, an ninh là:", a: { A: "Sự tổ chức, bố trí lực lượng, tiềm lực mọi mặt của đất nước và của toàn dân trên toàn lãnh thổ.", B: "Sự bố trí lực lượng, tiềm lực mọi mặt của đất nước và của toàn dân trên toàn lãnh thổ.", C: "Sự tổ chức, bố trí lực lượng của đất nước và của toàn dân trên toàn lãnh thổ.", D: "Sự tổ chức, bố trí tiềm lực mọi mặt của đất nước và của toàn dân trên toàn lãnh thổ." }, true: "A" },
+            { q: "“Xây dựng thế trận quốc phòng toàn dân kết hợp chặt chẽ với thế trận an ninh vững chắc”. Đảng ta khẳng định trong:", a: { A: "Văn kiện đại hội Đảng toàn quốc lần thứ VIII.", B: "Văn kiện đại hội Đảng toàn quốc lần thứ IX.", C: "Văn kiện đại hội Đảng toàn quốc lần thứ X.", D: "Văn kiện đại hội Đảng toàn quốc lần thứ XI." }, true: "D" },
+            { q: "Chọn câu sai. Các chính sách xây dựng thế trận chiến tranh nhân dân của cha ông ta?", a: { A: "Bách tính giai binh.", B: "Tiên phát chế nhân.", C: "Tận dân vi binh.", D: "Cử quốc nghênh địch." }, true: "C" },
+            { q: "Cơ chế lãnh đạo, chỉ huy nền quốc phòng toàn dân?", a: { A: "Đảng lãnh đạo, nhà nước thống nhất quản lý.", B: "Quân đội chỉ huy, quản lý.", C: "Nhân dân tự nguyện tham gia.", D: "Bộ quốc phòng lãnh đạo, chỉ huy." }, true: "A" },
+            { q: "“Phải đặc biệt coi trọng giữ vững ổn định chính trị - xã hội, tăng cường quốc phòng, an ninh, bảo vệ vững chắc Tổ quốc...”. Đảng ta khẳng định trong:", a: { A: "Văn kiện đại hội Đảng toàn quốc lần thứ XI.", B: "Văn kiện đại hội Đảng toàn quốc lần thứ X.", C: "Văn kiện đại hội Đảng toàn quốc lần thứ IX.", D: "Văn kiện đại hội Đảng toàn quốc lần thứ VIII." }, true: "A" },
+            { q: "“Không quân đội nào, không khí giới nào có thể đánh ngã được tinh thần hy sinh của toàn thể một dân tộc”. Ai khẳng định:", a: { A: "C. Mác.", B: "Ph. Ăngghen.", C: "V.I. Lênin.", D: "Hồ Chí Minh." }, true: "D" },
+
+            // --- BÀI: QUAN ĐIỂM CN MÁC LÊNIN - TƯ TƯỞNG HỒ CHÍ MINH VỀ CHIẾN TRANH... ---
+            { q: "Chọn câu sai. Nội dung học thuyết bảo vệ Tổ quốc XHCN của Lênin?", a: { A: "Bảo vệ Tổ quốc XHCN là một tất yếu khách quan", B: "Bảo vệ Tổ quốc XHCN là nghĩa vụ, trách nhiệm của toàn dân", C: "Đảng Cộng sản lãnh đạo mọi mặt sự nghiệp bảo vệ Tổ quốc XHCN.", D: "Là nhiệm vụ riêng của quân đội và lực lượng vũ trang." }, true: "D" },
+            { q: "Theo tư tưởng Hồ Chí Minh, sự ra đời của quân đội là:", a: { A: "Tính quy luật trong đấu tranh giai cấp, đấu tranh dân tộc ở Việt Nam.", B: "Một tất yếu, là tính quy luật trong đấu tranh giai cấp, đấu tranh dân tộc ở Việt Nam.", C: "Đúng quy luật trong đấu tranh giải phóng dân tộc ở Việt Nam.", D: "Yêu cầu tất yếu trong đấu tranh giai cấp ở Việt Nam." }, true: "B" },
+            { q: "Quan điểm của chủ nghĩa Mác - Lênin về chiến tranh:", a: { A: "Chiến tranh có từ khi xuất hiện xã hội loài người.", B: "Chiến tranh là hiện tượng chính trị – xã hội.", C: "Chiến tranh là hiện tượng chính trị – xã hội có tính lịch sử." }, true: "C" },
+            { q: "Theo quan điểm chủ nghĩa Mác - Lênin: Chiến tranh kiểm tra sức sống của:", a: { A: "Đường lối quân sự và nghệ thuật quân sự.", B: "Toàn bộ chế độ chính trị xã hội.", C: "Nền kinh tế xã hội.", D: "Phương án a,c đúng." }, true: "B" },
+            { q: "Chủ tịch Hồ Chí Minh khẳng định Quân đội nhân dân Việt Nam có:", a: { A: "3 nhiệm vụ, 2 chức năng.", B: "3 nhiệm vụ, 3 chức năng.", C: "2 nhiệm vụ, 2 chức năng.", D: "2 nhiệm vụ, 3 chức năng." }, true: "D" },
+            { q: "Tư tưởng Hồ Chí Minh về bảo vệ Tổ quốc Việt Nam XHCN?", a: { A: "Bảo vệ Tổ quốc Việt Nam XHCN là tất yếu khách quan.", B: "Mục tiêu bảo vệ Tổ quốc là độc lập dân tộc và CNXH là nghĩa vụ trách nhiệm của mọi công dân.", C: "Xây dựng đất nước độc lập, dân giàu, nước mạnh, xã hội dân chủ, công bằng, văn minh", D: "Phương án a, b đúng." }, true: "A" },
+            { q: "Một trong những quan điểm chủ nghĩa Mác - Lênin về bảo vệ Tổ quốc XHCN là:", a: { A: "Bảo vệ Tổ quốc xã hội chủ nghĩa là một tất yếu khách quan.", B: "Bảo vệ Tổ quốc là một tất yếu khách quan.", C: "Bảo vệ Tổ quốc xã hội chủ nghĩa là một tất yếu khách quan.", D: "Bảo vệ Tổ quốc là một quy luật khách quan." }, true: "A" },
+            { q: "Theo quan điểm của chủ nghĩa Mác - Lênin: Bảo vệ Tổ quốc xã hội chủ nghĩa, phải thường xuyên tăng cường:", a: { A: "Tiềm lực quốc phòng gắn với phát triển kinh tế - xã hội.", B: "Tiềm lực quân sự gắn với phát triển kinh tế - xã hội.", C: "Sức mạnh quân sự gắn với phát triển kinh tế - xã hội.", D: "Tiềm lực an ninh gắn với phát triển kinh tế - xã hội." }, true: "A" },
+            { q: "Theo tư tưởng Hồ Chí Minh, sử dụng bạo lực cách mạng để:", a: { A: "Giải phóng dân tộc.", B: "Giành chính quyền và bảo vệ chính quyền.", C: "Xây dựng và bảo vệ chính quyền cách mạng.", D: "Phương án a và c đúng." }, true: "B" },
+            { q: "Khi nói về bản chất của chủ nghĩa đế quốc, Hồ Chí Minh đã khái quát bằng hình ảnh:", a: { A: "Con rắn độc.", B: "Con bạch tuộc.", C: "Con rồng tre.", D: "Con đỉa hai vòi." }, true: "D" },
+            { q: "“Giành chính quyền đã khó, nhưng giữ được chính quyền còn khó khăn hơn”. Ai khẳng định?", a: { A: "C. Mác.", B: "V.I. Lênin.", C: "Ph. Ăng ghen.", D: "Chủ tịch Hồ Chí Minh." }, true: "B" },
+            { q: "“...Ai có súng dùng súng, ai có gươm dùng gươm, không có súng gươm thì dùng cuốc thuổng, gậy gộc...”. Được Chủ Tịch Hồ Chí Minh kêu gọi trong thời kì nào?", a: { A: "Chống Mĩ.", B: "Chống Pháp.", C: "Chống phát xít Nhật.", D: "Phương án a, b đúng." }, true: "B" },
+            { q: "Chủ tịch Hồ Chí Minh xác định yếu tố con người có vai trò như thế nào trong xây dựng Quân đội nhân dân?", a: { A: "Con người giữ vai trò quan trọng nhất, chi phối các yếu tố khác.", B: "Con người là quan trọng cùng với yếu tố quân sự là quyết định.", C: "Con người có tri thức giữ vai trò quyết định.", D: "Con người với trình độ chính trị cao giữ vai trò quyết định." }, true: "D" },
+            { q: "Trong thời đại ngày nay còn chủ nghĩa đế quốc thì còn nguy cơ xảy ra chiến tranh, chiến tranh là bạn đường của chủ nghĩa đế quốc. Ai khẳng định?", a: { A: "C. Mác.", B: "Ph. Ăngghen.", C: "V.I. Lênin.", D: "C. Ph. Claudovit." }, true: "C" },
+            { q: "Tìm câu trả lời đúng nhất. Lênin khẳng định: “Trong mọi cuộc chiến tranh rốt cuộc thắng lợi đều tùy thuộc vào:", a: { A: "Tinh thần của quần chúng đang đổ máu trên chiến trường quyết định.", B: "Khả năng cơ động của quần chúng trên chiến trường quyết định.", C: "Con người và vũ khí trên chiến trường quyết định.", D: "Con người với trình độ sẵn sàng chiến đấu cao giữ vai trò quyết định." }, true: "A" },
+            { q: "Theo quan điểm của C.Mác – Ph.Ăngghen: Con người, kinh tế, chính trị, văn hóa, xã hội, vũ khí trang bị, khoa học quân sự. Được xác định là:", a: { A: "Bản chất giai cấp của quân đội.", B: "Sức mạnh chiến đấu của quân đội.", C: "Nguyên tắc xây dựng quân đội.", D: "Nguồn gốc ra đời của quân đội." }, true: "B" },
+            { q: "“Dân tộc Việt Nam nhất định phải được giải phóng. Muốn đánh chúng phải có lực lượng quân sự, phải có tổ chức”. Ai khẳng định?", a: { A: "Chủ Tịch Hồ Chí Minh.", B: "Chủ Tịch Tôn Đức Thắng", C: "Thủ tướng Phạm Văn Đồng.", D: "Đại tướng Võ Nguyên Giáp." }, true: "A" },
+            { q: "Khi bàn về chiến tranh, Claudovit đã quan niệm: Chiến tranh là một hành vi bạo lực. Lênin đánh giá ông đã không lý giải được:", a: { A: "Bản chất của chiến tranh.", B: "Quy luật của chiến tranh.", C: "Tính chất của chiến tranh", D: "Đặc điểm của chiến tranh" }, true: "A" },
+            { q: "Chọn câu sai. Nguyên tắc xây dựng quân đội kiểu mới của V.I.Lênin?", a: { A: "Đoàn kết thống nhất quân đội với nhân dân.", B: "Xây dựng quân đội chính quy.", C: "Trung thành với chủ nghĩa quốc tế vô sản.", D: "Xây dựng quân đội làm công cụ bạo lực sắc bén." }, true: "D" },
+            { q: "Muốn xóa bỏ chiến tranh phải xóa bỏ:", a: { A: "Mâu thuẫn chính trị xã hội.", B: "Lực lượng quân đội.", C: "Nguồn gốc kinh tế, xã hội.", D: "Nguồn gốc kinh tế, chính trị." }, true: "C" },
+            { q: "Xác định tính chất xã hội của chiến tranh, phân tích tính chất chính trị - xã hội của chiến tranh... Được xác định là:", a: { A: "Quan điểm C.Mác - Ph.Ăngghen về chiến tranh.", B: "Tư tưởng Hồ Chí Minh về chiến tranh.", C: "Quan điểm V.I.Lênin về chiến tranh", D: "Quan điểm của C.Mác – V.I.Lênin về chiến tranh" }, true: "B" },
+            { q: "Không ngừng hoàn thiện cơ cấu tổ chức; phát triển hài hòa các quân binh chủng. Được xác định là một trong những:", a: { A: "Nguyên tắc xây dựng quân đội kiểu mới của V.I.Lênin.", B: "Nội dung xây dựng quân đội kiểu mới của V.I.Lênin.", C: "Quan điểm xây dựng quân đội kiểu mới của V.I.Lênin.", D: "Biện pháp xây dựng quân đội kiểu mới của V.I.Lênin." }, true: "A" },
+            { q: "Theo tư tưởng Hồ Chí Minh: Quân đội ta có mấy chức năng?", a: { A: "Có 3, đội quân chiến đấu, công tác và sản xuất.", B: "Có 3, đội quân sẵn sàng chiến đấu, công tác, sản xuất.", C: "Có 3, đội quân phục vụ chiến đấu, công tác và sản xuất.", D: "Có 3, đội quân chiến đấu, cơ động và công tác." }, true: "A" },
+            { q: "Bản chất giai cấp của quân đội phụ thuộc vào:", a: { A: "Tiềm lực kinh tế của đất nước bảo đảm cho quân đội", B: "Bản chất giai cấp của nhà nước đã tổ chức ra nó.", C: "Sự ủng hộ của quần chúng nhân dân đối với quân đội.", D: "Phương án a, c đúng." }, true: "B" },
+            { q: "Theo quan điểm của chủ nghĩa C.Mác – V.I.Lênin nguồn gốc nảy sinh chiến tranh?", a: { A: "Chế độ cộng hữu về tư liệu sản xuất và sự tồn tại của giai cấp và đối kháng giai cấp.", B: "Chế độ tư hữu về tư liệu sản xuất và sự tồn tại của giai cấp và đối kháng giai cấp.", C: "Bản năng sinh vật của con người", D: "Do định mệnh của loài người" }, true: "B" }
+        ],
+       qp2: [
+            // --- BÀI 8: PHÒNG CHỐNG CHIẾN LƯỢC DIỄN BIẾN HÒA BÌNH ---
+            { q: "Chiến lược “Diễn biến hòa bình” được tiến hành bằng:", a: { A: "Biện pháp phi quân sự do chủ nghĩa đế quốc và các thế lực phản động tiến hành.", B: "Biện pháp quân sự do chủ nghĩa đế quốc tiến hành.", C: "Biện pháp kinh tế do chủ nghĩa đế quốc tiến hành.", D: "Biện pháp vũ trang do chủ nghĩa đế quốc tiến hành." }, true: "A" },
+            { q: "Ngày 11 tháng 7 năm 1995, Mỹ tuyên bố nội dung gì với Việt Nam?", a: { A: "Xóa bỏ cấm vận kinh tế với Việt Nam.", B: "Xóa bỏ cấm vận quân sự với Việt Nam.", C: "Bình thường hóa quan hệ ngoại giao với Việt Nam.", D: "Phương án A và C đúng." }, true: "C" },
+            { q: "Năm 1957, Tổng thống Mĩ nào đã tuyên bố: Mĩ sẽ giành thắng lợi bằng hòa bình?", a: { A: "Kennơđi", B: "Aixênhao", C: "Truman", D: "G. Pho" }, true: "B" },
+            { q: "Nguyên nhân nào dẫn đến sự sụp đổ của Liên Xô và các nước XHCN Đông Âu?", a: { A: "Quan niệm và vận dụng không đúng chủ nghĩa Mác – Lênin.", B: "Những sai lầm, khuyết điểm của Đảng Cộng sản.", C: "Chống phá của chủ nghĩa đế quốc sử dụng chiến lược “Diễn biến hòa bình”.", D: "Các phương án A, B và C đúng." }, true: "D" },
+            { q: "Bạo loạn lật đổ là hành động chống phá bằng bạo lực có tổ chức do:", a: { A: "Lực lượng phản động, li khai, đối lập trong nước cấu kết với nước ngoài tiến hành.", B: "Lực lượng phản động chống phá các nước XHCN.", C: "Lực lượng quân sự tiến hành để lật đổ chính quyền.", D: "Lực lượng gián điệp tiến hành." }, true: "A" },
+            { q: "Mục tiêu nhất quán của chủ nghĩa đế quốc sử dụng chiến lược “Diễn biến hòa bình” đối với VN là:", a: { A: "Xóa bỏ vai trò lãnh đạo của Đảng.", B: "Xóa bỏ chế độ XHCN.", C: "Lái nước ta đi theo tư bản và lệ thuộc vào đế quốc.", D: "Phương án A, B, C đúng." }, true: "D" },
+            { q: "Trong thủ đoạn chống phá về kinh tế, chủ nghĩa đế quốc muốn chuyển hóa nền kinh tế VN dần theo:", a: { A: "Kinh tế thị trường tư bản chủ nghĩa, khích lệ kinh tế tư nhân phát triển.", B: "Từng bước làm mất vai trò chủ đạo của kinh tế nhà nước.", C: "Kinh tế thị trường định hướng XHCN.", D: "Phương án A và B đúng." }, true: "A" },
+            { q: "Mục đích chống phá về tư tưởng trong chiến lược “Diễn biến hòa bình” là:", a: { A: "Xóa bỏ vai trò lãnh đạo của Đảng.", B: "Xóa bỏ chủ nghĩa Mác Lênin, tư tưởng Hồ Chí Minh.", C: "Xóa bỏ sự quản lý của nhà nước.", D: "Phương án A và B đúng." }, true: "B" },
+            { q: "Mục đích chống phá trên lĩnh vực đối ngoại trong chiến lược “Diễn biến hòa bình” là:", a: { A: "Chia rẽ tình đoàn kết giữa VN với các nước XHCN.", B: "Chia rẽ tình đoàn kết giữa VN với Lào, Campuchia.", C: "Lợi dụng chính sách để đầu tư vốn tạo sức ép về chính trị.", D: "Phương án A và B đúng." }, true: "D" },
+            { q: "Mục đích chống phá về lĩnh vực dân tộc, tôn giáo, chủ nghĩa đế quốc dùng thủ đoạn gì?", a: { A: "Lợi dụng những khó khăn ở vùng đồng bào dân tộc ít người.", B: "Lợi dụng trình độ dân trí của một bộ phận đồng bào còn thấp.", C: "Lợi dụng những khuyết điểm về chủ trương chính sách dân tộc của Đảng.", D: "Các phương án A, B và C đúng." }, true: "D" },
+            { q: "Bạo loạn lật đổ thường xảy ra ở những nơi nào?", a: { A: "Trung tâm kinh tế, chính trị, văn hóa lớn. Nơi nhạy cảm về chính trị.", B: "Những nơi có khu công nghiệp, khu chế xuất, sân bay.", C: "Những địa điểm, công trình văn hóa quốc phòng an ninh.", D: "Các phương án A, B và C đúng." }, true: "A" },
+            { q: "Nguyên tắc xử lí bạo loạn lật đổ là:", a: { A: "Nhanh gọn, kiên quyết, linh hoạt, đúng đối tượng.", B: "Sử dụng lực lượng và phương thức đấu tranh phù hợp, không để lan rộng.", C: "Sử dụng lực lượng quân sự để trấn áp.", D: "Phương án A và B đúng." }, true: "D" },
+            { q: "Giải pháp phòng chống chiến lược “Diễn biến hòa bình” là:", a: { A: "Xây dựng cơ sở chính trị xã hội vững mạnh về mọi mặt.", B: "Bảo vệ sự nghiệp đổi mới và lợi ích quốc gia dân tộc.", C: "Chủ động khôn khéo xử lý tình huống khi bạo loạn xảy ra.", D: "Tranh thủ sự ủng hộ của nhân dân trong nước." }, true: "A" },
+            { q: "Chọn câu sai. Diễn biến hòa bình là chiến lược cơ bản nhằm:", a: { A: "Lật đổ chế độ chính trị của các nước XHCN từ bên trong.", B: "Lật đổ chế độ kinh tế xã hội của các nước tiến bộ từ bên trong.", C: "Lật đổ chế độ chính trị của các nước tư bản từ bên trong.", D: "Phương án B và C." }, true: "C" },
+            { q: "Ai là người khởi xướng chiến lược “Diễn biến hòa bình” của chủ nghĩa đế quốc?", a: { A: "Kennan.", B: "Mác San.", C: "Truman.", D: "Aixênhao." }, true: "A" },
+            { q: "Trong thủ đoạn chống phá về chính trị, các thế lực thù địch tận dụng những:", a: { A: "Sơ hở trong đường lối của Đảng.", B: "Sơ hở về chính sách của nhà nước ta.", C: "Trình độ dân trí để lật đổ Việt Nam.", D: "Phương án A và B đúng." }, true: "D" },
+            { q: "Chủ trương của Đảng và Nhà nước Việt Nam hiện nay trong quan hệ quốc phòng với các nước là:", a: { A: "Không tham gia liên minh quân sự với nước ngoài.", B: "Không cho nước ngoài đặt căn cứ quân sự ở Việt Nam.", C: "Cho các tổ chức quân sự nước ngoài đặt căn cứ.", D: "Phương án A và B đúng." }, true: "D" },
+
+            // --- BÀI 9: PHÒNG CHỐNG ĐỊCH TIẾN CÔNG VŨ KHÍ CÔNG NGHỆ CAO ---
+            { q: "Vũ khí được nghiên cứu, thiết kế, chế tạo dựa trên thành tựu của cuộc cách mạng khoa học công nghệ hiện đại...Được xác định là:", a: { A: "Vũ khí công nghệ cao.", B: "Khái niệm vũ khí công nghệ cao.", C: "Đặc điểm vũ khí công nghệ cao.", D: "Tính chất của vũ khí công nghệ cao." }, true: "B" },
+            { q: "Đặc điểm của vũ khí công nghệ cao đó là:", a: { A: "Hiệu suất của vũ khí, phương tiện tăng nhiều lần.", B: "Hàm lượng tri thức, kĩ năng tự động hóa cao.", C: "Có tính cạnh tranh cao và được nâng cấp liên tục.", D: "Tất cả các phương án trên đúng." }, true: "D" },
+            { q: "Một trong những đặc điểm của vũ khí công nghệ cao là:", a: { A: "Khả năng tự động hóa cao.", B: "Tầm bắn rất xa.", C: "Hiệu suất của vũ khí, phương tiện tăng nhiều lần.", D: "Uy lực sát thương lớn." }, true: "C" },
+            { q: "Đặc điểm nổi bật nhất vũ khí công nghệ cao đó là:", a: { A: "Khả năng tự động hóa rất cao.", B: "Độ chính xác cao với tầm bắn rất xa.", C: "Uy lực sát thương lớn.", D: "Tất cả các phương án trên đúng." }, true: "D" },
+            { q: "Điểm yếu của vũ khí công nghệ cao là:", a: { A: "Dựa hoàn toàn vào phương tiện kỹ thuật, dễ bị đối phương đánh lừa.", B: "Tốc độ bắn chậm.", C: "Tầm hoạt động bị hạn chế.", D: "Uy lực sát thương không cao." }, true: "A" },
+            { q: "Tổ hợp tên lửa S.300 là vũ khí:", a: { A: "Thông thường.", B: "Vũ khí công nghệ cao.", C: "Vũ khí hủy diệt lớn.", D: "Vũ khí sinh học." }, true: "B" },
+            { q: "Phi công bắn rơi máy bay B.52 đầu tiên trong trận Điện Biên Phủ trên không tháng 12 năm 1972 là:", a: { A: "Phạm Tuân.", B: "Nguyễn Văn Cốc.", C: "Nguyễn Thành Trung.", D: "Vũ Xuân Thiều." }, true: "A" },
+            { q: "Phi công nào đã nói: Bắn B.52 mà không rơi tại chỗ, tôi sẽ lao thẳng vào nó?", a: { A: "Phạm Tuân.", B: "Vũ Xuân Thiều.", C: "Nguyễn Văn Cốc.", D: "Nguyễn Thành Trung." }, true: "B" },
+            { q: "Phi công Việt Nam nào bắn rơi nhiều máy bay của đế quốc Mỹ nhất?", a: { A: "Phạm Tuân.", B: "Vũ Xuân Thiều.", C: "Nguyễn Văn Cốc.", D: "Nguyễn Thành Trung." }, true: "C" },
+            { q: "Trong 12 ngày đêm Điện Biên Phủ trên không tháng 12 năm 1972, quân và dân ta bắn rơi bao nhiêu máy bay các loại?", a: { A: "80 máy bay.", B: "81 máy bay.", C: "34 máy bay.", D: "64 máy bay." }, true: "B" },
+            { q: "Trong 12 ngày đêm Điện Biên Phủ trên không tháng 12 năm 1972, quân và dân ta bắn rơi bao nhiêu máy bay B.52?", a: { A: "80 máy bay.", B: "81 máy bay.", C: "34 máy bay.", D: "64 máy bay." }, true: "C" },
+            { q: "Phòng chống trinh sát của địch, Dụ địch đánh vào mục tiêu có giá trị thấp, tổ chức bố trí phân tán... Được hiểu là:", a: { A: "Biện pháp thụ động của phòng chống vũ khí CNC.", B: "Biện pháp chủ động của phòng chống vũ khí CNC.", C: "Đặc điểm của vũ khí công nghệ cao.", D: "Điểm mạnh của vũ khí công nghệ cao." }, true: "A" },
+            { q: "Một trong những biện pháp chủ động của phòng chống vũ khí công nghệ cao là:", a: { A: "Gây nhiễu các trang bị trinh sát để làm giảm hiệu quả của địch.", B: "Tổ chức bố trí lực lượng phân tán.", C: "Kết hợp xây dựng hạ tầng với hầm ngầm.", D: "Dụ đánh vào mục tiêu có giá trị thấp." }, true: "A" },
+            { q: "Nắm chắc thời cơ, chủ động đánh địch từ xa, phá thế tiến công của địch. Được hiểu là:", a: { A: "Biện pháp chủ động trong phòng chống vũ khí CNC.", B: "Biện pháp thụ động trong phòng chống vũ khí CNC.", C: "Khái niệm phòng chống vũ khí CNC.", D: "Đặc điểm của tác chiến CNC." }, true: "A" },
+            { q: "Trong phòng chống địch tiến công bằng VK CNC, tại sao phải bố trí phân tán?", a: { A: "Để giảm thiểu tổn thất.", B: "Làm giảm hiệu quả tác chiến của địch.", C: "Tăng khó khăn cho địch trong trinh sát phát hiện mục tiêu.", D: "Tất cả các phương án trên đúng." }, true: "D" },
+
+            // --- BÀI 10: XÂY DỰNG LỰC LƯỢNG DQTV, LL DBĐV VÀ ĐV CNQP ---
+            { q: "Lực lượng vũ trang quần chúng không thoát li sản xuất công tác là:", a: { A: "Bộ đội chủ lực.", B: "Dân quân tự vệ.", C: "Bộ đội địa phương.", D: "Dự bị động viên." }, true: "B" },
+            { q: "Lực lượng vũ trang quần chúng tổ chức ở các cơ quan nhà nước, tổ chức chính trị, xã hội là:", a: { A: "Bộ đội địa phương.", B: "Dân quân.", C: "Tự vệ.", D: "Bộ đội chủ lực." }, true: "C" },
+            { q: "Chỉ huy trực tiếp dân quân tự vệ là:", a: { A: "Công an xã, phường.", B: "Cơ quan quân sự địa phương.", C: "Ủy ban nhân dân xã phường.", D: "Bộ đội chủ lực." }, true: "B" },
+            { q: "Lãnh đạo trực tiếp, tuyệt đối về mọi mặt đối với lực lượng dân quân tự vệ là:", a: { A: "Đảng Cộng sản Việt Nam.", B: "Nhà nước cộng hòa xã hội chủ nghĩa Việt Nam", C: "Lực lượng vũ trang nhân dân Việt Nam.", D: "Bộ Quốc Phòng." }, true: "A" },
+            { q: "Lực lượng dân quân tự vệ nòng cốt gồm:", a: { A: "Dân quân tự vệ bộ binh, binh chủng và DQTV biển.", B: "Dân quân tự vệ bộ binh, DQTV tại chỗ và cảnh sát biển.", C: "Dân quân tự vệ binh chủng, DQTV biển, Cảnh sát biển.", D: "Dân quân tự vệ bộ binh, DQTV cơ động và dân quân tự vệ biển." }, true: "A" },
+            { q: "Một trong những nhiệm vụ của dân quân tự vệ là:", a: { A: "Sẵn sàng chiến đấu, chiến đấu, phục vụ chiến đấu.", B: "Chiến đấu, huấn luyện, phục vụ chiến đấu.", C: "Sẵn sàng chiến đấu, tham gia lao động sản xuất.", D: "Chiến đấu, huấn luyện, tham gia lao động sản xuất." }, true: "A" },
+            { q: "Lực lượng dự bị động viên bao gồm:", a: { A: "Sĩ quan, quân nhân chuyên nghiệp và công an nhân dân dự bị.", B: "Quân nhân dự bị và phương tiện kỹ thuật đã xếp trong kế hoạch.", C: "Quân nhân dự bị đã xếp trong kế hoạch.", D: "Vật chất, khí tài trang bị đã xếp trong kế hoạch." }, true: "B" },
+            { q: "Quân nhân dự bị gồm:", a: { A: "Sĩ quan dự bị, quân nhân chuyên nghiệp dự bị và hạ sĩ quan, binh sĩ dự bị.", B: "Sĩ quan dự bị và hạ sĩ quan, binh sĩ dự bị.", C: "Sĩ quan dự bị, quân nhân chuyên nghiệp, binh sĩ dự bị.", D: "Quân nhân chuyên nghiệp dự bị và hạ sĩ quan dự bị." }, true: "A" },
+            { q: "Phương châm xây dựng dân quân tự vệ theo hướng:", a: { A: "Vững mạnh, rộng khắp, coi trọng chất lượng là chính.", B: "Vững mạnh, toàn diện, coi trọng chất lượng là chính.", C: "Vững mạnh, rộng khắp, có trọng tâm, trọng điểm.", D: "Vững mạnh, toàn diện, có trọng tâm, trọng điểm." }, true: "A" },
+            { q: "Dân quân tự vệ được tổ chức thành những lực lượng nào?", a: { A: "Lực lượng chiến đấu và lực lượng cơ động.", B: "Lực lượng quân sự và lực lượng chính trị.", C: "Lực lượng cơ động và lực lượng dự bị.", D: "Lực lượng nòng cốt và lực lượng rộng rãi." }, true: "D" },
+            { q: "Độ tuổi lực lượng dân quân tự vệ nòng cốt qui định như thế nào?", a: { A: "Nam từ 18 tuổi đến hết 40; Nữ từ 18 tuổi đến hết 35 tuổi.", B: "Nam từ 18 tuổi đến hết 35; Nữ từ 18 tuổi đến hết 25 tuổi.", C: "Nam từ 18 tuổi đến hết 45; Nữ từ 18 tuổi đến hết 40 tuổi.", D: "Nam từ 18 tuổi đến hết 25; Nữ từ 18 tuổi đến hết 30 tuổi." }, true: "C" },
+            { q: "Lực lượng dự bị động viên được xây dựng để bổ sung cho:", a: { A: "Lực lượng thường trực của quân đội.", B: "Lực lượng công an nhân dân.", C: "Lực lượng dân quân tự vệ.", D: "Lực lượng vũ trang ở địa phương." }, true: "A" },
+            { q: "Phương châm huấn luyện lực lượng dự bị động viên là:", a: { A: "Cơ bản, thiết thực, hiệu quả, tập trung có trọng tâm, trọng điểm.", B: "Chất lượng, thiết thực, hiệu quả, tập trung có trọng tâm, trọng điểm.", C: "Cơ bản, chất lượng, thiết thực, hiệu quả, có trọng tâm.", D: "Chất lượng, hiệu quả có trọng tâm, trọng điểm." }, true: "B" },
+            { q: "Động viên công nghiệp quốc phòng được chuẩn bị từ:", a: { A: "Trong chiến tranh.", B: "Thời bình.", C: "Khi đất nước có chiến tranh.", D: "Thời kỳ đầu có chiến tranh." }, true: "B" },
+             // --- BÀI 11: BIÊN GIỚI QUỐC GIA ---
+            { q: "Các yếu tố nào cấu thành nên Quốc gia?", a: { A: "Lãnh thổ, dân cư và hệ thống pháp lý.", B: "Lãnh thổ, dân cư và hệ thống chính trị.", C: "Lãnh thổ, dân cư và chế độ chính trị.", D: "Lãnh thổ, dân cư và quyền lực công cộng." }, true: "D" },
+            { q: "Lãnh thổ quốc gia là phạm vi không gian được giới hạn ở đâu?", a: { A: "Chủ quyền quốc gia.", B: "Lãnh thổ và lãnh hải quốc gia.", C: "Biên giới quốc gia.", D: "Chủ quyền lãnh thổ quốc gia." }, true: "C" },
+            { q: "Lãnh thổ quốc gia Việt Nam bao gồm:", a: { A: "Vùng đất, vùng trời, vùng biển đặc biệt.", B: "Vùng đất, vùng trời và thềm lục địa.", C: "Vùng đất, vùng biển, vùng trời ngoài ra còn có lãnh thổ quốc gia đặc biệt.", D: "Vùng đất, vùng biển, ngoài ra còn có lãnh thổ quốc gia đặc biệt." }, true: "C" },
+            { q: "Biển Việt Nam có mấy vùng?", a: { A: "Có 3 vùng.", B: "Có 4 vùng.", C: "Có 5 vùng.", D: "Có 6 vùng." }, true: "C" },
+            { q: "Nội thủy là gì?", a: { A: "Vùng biển nằm ở phía trong đường cơ sở.", B: "Vùng biển nằm ở phía ngoài đường cơ sở.", C: "Vùng biển nằm ở phía ngoài vùng đặc quyền kinh tế.", D: "Vùng biển nằm phía ngoài vùng lãnh hải." }, true: "A" },
+            { q: "Tôn trọng chủ quyền lãnh thổ quốc gia, được xác định là:", a: { A: "Nguyên tắc trong quan hệ quốc tế.", B: "Nguyên tắc trong xây dựng và bảo vệ Tổ quốc.", C: "Nguyên tắc đấu tranh bảo vệ Tổ quốc.", D: "Nguyên tắc cơ bản trong quan hệ và luật pháp quốc tế." }, true: "A" },
+            { q: "Biên giới quốc gia Việt Nam gồm:", a: { A: "Biên giới trên đất liền, trên biển, trên không và trong lòng đất.", B: "Biên giới trên đất liền, trên không, lãnh thổ quốc gia đặc biệt.", C: "Biên giới trên đất liền, trên biển, trên không, thềm lục địa.", D: "Biên giới trên đất liền, trên biển, trên không, dưới lòng đất." }, true: "A" },
+            { q: "Lãnh hải là vùng biển có chiều rộng bao nhiêu hải lí?", a: { A: "12 hải lí.", B: "24 hải lí.", C: "188 hải lí.", D: "200 hải lí." }, true: "A" },
+            { q: "Biên giới quốc gia trên biển cách đường cơ sở bao nhiêu hải lí?", a: { A: "12 hải lí.", B: "24 hải lí.", C: "188 hải lí.", D: "200 hải lí." }, true: "A" },
+            { q: "Vùng tiếp giáp lãnh hải rộng bao nhiêu hải lí?", a: { A: "24 hải lí.", B: "12 hải lí.", C: "200 hải lí.", D: "350 hải lí." }, true: "B" },
+            { q: "Biên giới quốc gia trên biển được hoạch định và đánh dấu bằng:", a: { A: "Hệ thống mốc quốc giới.", B: "Tọa độ trên bản đồ.", C: "Tọa độ trên hải đồ.", D: "Bản đồ kĩ thuật số." }, true: "C" },
+            { q: "Biên giới quốc gia trên đất liền được hoạch định và đánh dấu bằng:", a: { A: "Hệ thống bản đồ kĩ thuật số.", B: "Hệ thống mốc quốc giới.", C: "Hệ thống tọa độ trên hải đồ.", D: "Hệ thống tọa độ trên bản đồ." }, true: "B" },
+            { q: "Biên giới Việt Nam - Trung quốc trên đất liền bao nhiêu kilômét?", a: { A: "Dài 1.346 km.", B: "Dài 2.046 km.", C: "Dài 2.067 km.", D: "Dài 1.350 km." }, true: "D" },
+
+            // --- BÀI 12: DÂN TỘC TÔN GIÁO ---
+            { q: "Cộng đồng người ổn định, hình thành trong lịch sử tạo lập một quốc gia, kinh tế, ngôn ngữ, truyền thống văn hóa... Được xác định là:", a: { A: "Khái niệm dân tộc.", B: "Đặc điểm dân tộc.", C: "Nguồn gốc dân tộc.", D: "Tính chất dân tộc." }, true: "A" },
+            { q: "“Các dân tộc hoàn toàn bình đẳng, các dân tộc được quyền tự quyết...”. Là quan điểm của ai?", a: { A: "V.I.Lênin.", B: "Mác – Lênin.", C: "Ph. Ăngghen.", D: "Hồ Chí Minh." }, true: "A" },
+            { q: "Đặc điểm các dân tộc thiểu số ở Việt Nam là:", a: { A: "Cư trú tập trung ở nông thôn.", B: "Cư trú phân tán và xen kẽ trên địa bàn rộng lớn.", C: "Cư trú tập trung trên địa bàn hẹp.", D: "Cư trú chủ yếu ở đồng bằng và trung du." }, true: "B" },
+            { q: "Một hình thái ý thức xã hội, phản ánh hiện thực khách quan, theo quan niệm hoang đường, ảo tưởng... Được xác định là:", a: { A: "Khái niệm tôn giáo.", B: "Nguồn gốc tôn giáo.", C: "Tính chất tôn giáo.", D: "Đặc điểm tôn giáo." }, true: "A" },
+            { q: "Quan điểm, chính sách của Đảng và Nhà nước ta hiện nay về tôn giáo:", a: { A: "Tôn giáo còn tồn tại lâu dài, còn là nhu cầu tinh thần của một bộ phận nhân dân.", B: "Tôn giáo có giá trị văn hóa đạo đức tích cực phù hợp xã hội mới.", C: "Đồng bào có đạo bộ phận quan trọng khối đại đoàn kết toàn dân tộc.", D: "Tất cả phương án đúng." }, true: "D" },
+
+            // --- BÀI 13: AN NINH QUỐC GIA ---
+            { q: "Nội dung bảo vệ an ninh quốc gia gồm:", a: { A: "Bảo vệ an ninh chính trị nội bộ; an ninh kinh tế.", B: "Bảo vệ an ninh tư tưởng, văn hóa; an ninh tôn giáo.", C: "Bảo vệ an ninh biên giới; an ninh thông tin.", D: "Tất cả các phương án trên." }, true: "D" },
+            { q: "Nội dung giữ gìn trật tự, an toàn xã hội:", a: { A: "Đấu tranh phòng, chống tội phạm; bài trừ các tệ nạn xã hội; giữ gìn trật tự nơi công cộng.", B: "Đảm bảo trật tự, an toàn giao thông.", C: "Phòng ngừa tai nạn lao động, chống thiên tai, phòng ngừa dịch bệnh; bảo vệ môi trường.", D: "Tất cả các phương án trên." }, true: "D" },
+            { q: "Đối tượng xâm phạm an ninh quốc gia là:", a: { A: "Các tổ chức phản động ở nước ngoài.", B: "Gián điệp và phản động.", C: "Tội phạm ma túy.", D: "Các tổ chức tội phạm quốc tế." }, true: "B" },
+            { q: "Thuận lợi trong bảo vệ an ninh quốc gia, giữ gìn trật tự, an toàn xã hội ở nước ta là:", a: { A: "Đảng Cộng sản Việt Nam có bản lĩnh chính trị vững vàng, dày dạn kinh nghiệm.", B: "Lực lượng vũ trang cách mạng tuyệt đối trung thành với Đảng, với Tổ quốc.", C: "Nhân dân Việt Nam có truyền thống yêu nước, đoàn kết, tin tưởng vào Đảng và chế độ.", D: "Tất cả các phương án trên." }, true: "D" },
+            { q: "Bảo vệ an ninh quốc gia, giữ gìn trật tự, an toàn xã hội là sự nghiệp của:", a: { A: "Công an nhân dân.", B: "Quân đội nhân dân.", C: "Lực lượng vũ trang.", D: "Toàn dân." }, true: "D" },
+            
+            // --- BÀI 14: PHONG TRÀO TOÀN DÂN BẢO VỆ ANTQ ---
+            { q: "“Dễ trăm lần không dân cũng chịu, khó vạn lần dân liệu cũng xong”. Là quan điểm của ai?", a: { A: "Chủ tịch Hồ Chí Minh.", B: "Đại tướng Võ Nguyên Giáp.", C: "Tổng bí thư Lê Duẩn.", D: "Nguyễn Trãi." }, true: "A" },
+            { q: "Vai trò của quần chúng nhân dân trong phong trào toàn dân bảo vệ an ninh Tổ quốc:", a: { A: "Nghiên cứu, xác định nguyên nhân, điều kiện của tội phạm.", B: "Phát hiện, quản lý, giáo dục, cải tạo các loại tội phạm.", C: "Tham mưu cho Nhà nước ban hành các chủ trương.", D: "Phát hiện những nguyên nhân của tội phạm." }, true: "B" },
+            { q: "Phong trào toàn dân bảo vệ an ninh Tổ quốc giữ vị trí như thế nào?", a: { A: "Vị trí then chốt.", B: "Vị trí chiến lược.", C: "Vị trí quan trọng.", D: "Vị trí quyết định." }, true: "B" },
+            { q: "Ngày hội \"Toàn dân bảo vệ an ninh Tổ quốc\" là ngày nào?", a: { A: "Ngày 19 tháng 8.", B: "Ngày 2 tháng 9.", C: "Ngày 22 tháng 12.", D: "Ngày 19 tháng 5." }, true: "A" },
+
+            // --- BÀI 15: PHÒNG CHỐNG TỘI PHẠM - TỆ NẠN XÃ HỘI ---
+            { q: "Phòng ngừa tội phạm là việc làm của các cơ quan Nhà nước, các tổ chức xã hội và của công dân, bằng nhiều biện pháp để:", a: { A: "Khắc phục những nguyên nhân, điều kiện của tình trạng phạm tội.", B: "Thủ tiêu những nguyên nhân, điều kiện của tình trạng phạm tội.", C: "Hạn chế những điều kiện của tình trạng phạm tội.", D: "Tất cả các phương án trên." }, true: "D" },
+            { q: "Mục đích của công tác phòng ngừa tội phạm là:", a: { A: "Khắc phục, thủ tiêu những nguyên nhân của tình trạng phạm tội.", B: "Khắc phục những nguyên nhân, điều kiện của tình trạng phạm tội.", C: "Khắc phục, thủ tiêu những nguyên nhân, điều kiện của tình trạng phạm tội.", D: "Hạn chế điều kiện của tình trạng phạm tội." }, true: "C" },
+            { q: "Tư tưởng chỉ đạo trong công tác đấu tranh phòng chống tội phạm là:", a: { A: "Phòng ngừa chung kết hợp với phòng chống riêng.", B: "Phòng ngừa là phương hướng chính.", C: "Phòng ngừa kết hợp với tuyên truyền và giáo dục.", D: "Nghiên cứu, xác định rõ các nguyên nhân, điều kiện." }, true: "B" },
+            { q: "Một hiện tượng xã hội tiêu cực có tính phổ biến bằng những hành vi sai lệch chuẩn mực xã hội, vi phạm đạo đức gây hậu quả nghiêm trọng trong đời sống cộng đồng. Được hiểu là:", a: { A: "Khái niệm tệ nạn xã hội.", B: "Mục đích tệ nạn xã hội.", C: "Đặc điểm tệ nạn xã hội.", D: "Nội dung tệ nạn xã hội." }, true: "A" },
+            { q: "Đánh bạc là hành vi:", a: { A: "Dùng tiền thông qua các trò chơi để trục lợi.", B: "Dùng vật chất thông qua các trò chơi để trục lợi.", C: "Dùng vật chất để trục lợi cho mình qua những người đánh bạc.", D: "Phương án a và b đúng." }, true: "D" },
+            { q: "Hành vi dùng nhà ở của mình hoặc địa điểm khác để chứa các đám bạc từ đó trục lợi cho mình qua những người đánh bạc. Được xác định là:", a: { A: "Đánh bạc.", B: "Tổ chức đánh bạc.", C: "Gá bạc.", D: "Tất cả phương án trên." }, true: "C" },
+            { q: "“Tội phạm là hành vi nguy hiểm cho xã hội do người có năng lực trách nhiệm hình sự thực hiện một cách cố ý hay vô ý”. Được quy định trong:", a: { A: "Luật Quốc phòng.", B: "Luật Hình sự.", C: "Luật tố tụng hình sự.", D: "Luật An ninh quốc gia." }, true: "B" },
+            { q: "Phân loại tội phạm có:", a: { A: "Tội phạm ít nghiêm trọng; nghiêm trọng; rất nghiêm trọng và đặc biệt nghiêm trọng.", B: "Tội phạm ít nghiêm trọng; rất nghiêm trọng và đặc biệt nghiêm trọng.", C: "Tội phạm ít nghiêm trọng; nghiêm trọng và rất nghiêm trọng.", D: "Tội phạm ít nghiêm trọng; nghiêm trọng; rất nghiêm trọng và đặc biệt nghiêm trọng." }, true: "A" },
+            // --- BÀI: KẾT HỢP PHÁT TRIỂN KINH TẾ VỚI QUỐC PHÒNG AN NINH ---
+
+            { q: "Kinh tế là yếu tố suy đến cùng quyết định đến quốc phòng, an ninh. Được xác định là:", a: { A: "Cơ sở lí luận của sự kết hợp kinh tế với quốc phòng.", B: "Cơ sở thực tiễn của sự kết hợp kinh tế với quốc phòng.", C: "Nội dung của sự kết hợp kinh tế với quốc phòng.", D: "Giải pháp của sự kết hợp kinh tế với quốc phòng." }, true: "A" },
+            { q: "Kết hợp phát triển kinh tế - xã hội với tăng cường củng cố quốc phòng - an ninh được xác định là qui luật của:", a: { A: "Chế độ xã hội chủ nghĩa.", B: "Mọi quốc gia có chủ quyền.", C: "Mọi quốc gia dân tộc có độc lập chủ quyền.", D: "Chế độ tư bản chủ nghĩa." }, true: "B" },
+            { q: "“Kết hợp phát triển kinh tế - xã hội với quốc phòng - an ninh trong các vùng lãnh thổ”. Được xác định là:", a: { A: "Cơ sở lí luận của kết hợp kinh tế với quốc phòng.", B: "Giải pháp kết hợp kinh tế với quốc phòng.", C: "Nội dung kết hợp kinh tế với quốc phòng.", D: "Thực tiễn của kết hợp kinh tế với quốc phòng." }, true: "C" },
+            { q: "Đảng ta xác định: Để thực hiện thắng lợi hai nhiệm vụ chiến lược của cách mạng Việt Nam, chúng ta phải kết hợp phát triển kinh tế - xã hội với tăng cường củng cố quốc phòng – an ninh trong một:", a: { A: "Chủ trương thống nhất.", B: "Qui hoạch thống nhất.", C: "Kế hoạch thống nhất.", D: "Chỉnh thể thống nhất." }, true: "D" },
+            { q: "Trong kháng chiến chống thực dân Pháp, để thực hiện tốt sự kết hợp phát triển kinh tế - xã hội với tăng cường củng cố quốc phòng - an ninh. Đảng ta đã đề ra chủ trương gì?", a: { A: "Vừa kháng chiến, vừa kiến quốc.", B: "Vừa đánh, vừa đàm.", C: "Thóc không thiếu một cân, quân không thiếu một người.", D: "Tất cả cho tiền tuyến." }, true: "A" },
+            { q: "Xây dựng chiến lược tổng thể kết hợp phát triển kinh tế - xã hội với tăng cường củng cố quốc phòng - an ninh trong thời kì mới. Được xác định là:", a: { A: "Cơ sở lí luận.", B: "Nội dung.", C: "Giải pháp.", D: "Cơ sở thực tiễn." }, true: "C" },
+            { q: "Mặt tiêu cực của hoạt động quốc phòng - an ninh có thể dẫn đến:", a: { A: "Hủy hoại môi trường sinh thái và để lại hậu quả nặng nề cho nền kinh tế.", B: "Ảnh hưởng đến đường lối phát triển kinh tế, cơ cấu kinh tế.", C: "Tạo môi trường hòa bình ổn định lâu dài.", D: "Phương án a, b đúng." }, true: "A" },
+            { q: "Trong mục tiêu chiến lược phát triển kinh tế - xã hội Đảng ta đã xác định bao quát mấy vấn đề lớn của đời sống xã hội:", a: { A: "03.", B: "04.", C: "05.", D: "06." }, true: "C" },
+            { q: "Bản chất của nền kinh tế - xã hội quyết định đến:", a: { A: "Bản chất của quốc phòng - an ninh.", B: "Sức mạnh quốc phòng - an ninh.", C: "Sự phát triển của lực lượng vũ trang.", D: "Phương án b, c đúng." }, true: "A" },
+            { q: "Nội dung kết hợp phát triển kinh tế xã hội với quốc phòng – an ninh trong các ngành, các lĩnh vực kinh tế chủ yếu?", a: { A: "Kết hợp trong công nghiệp", B: "Kết hợp trong nông, lâm, ngư nghiệp.", C: "Kết hợp trong giao thông vận tải, bưu điện, y tế, khoa học, giáo dục...", D: "Tất cả phương án trên đúng." }, true: "D" },
+            { q: "Một trong những giải pháp chủ yếu thực hiện kết hợp phát triển kinh tế xã hội với quốc phòng – an ninh là:", a: { A: "Kết hợp trong chiến lược bảo vệ Tổ quốc.", B: "Kết hợp trong các ngành vực kinh tế chủ yếu.", C: "Kết hợp trong giao thông vận tải, bưu điện, y tế, khoa học, giáo dục...", D: "Xây dựng chiến lược tổng thể kết hợp phát triển KT-XH với quốc phòng – an ninh." }, true: "D" },
+            { q: "Trong xây dựng các công trình quốc phòng, quân sự, phòng thủ dân sự, thiết bị chiến trường phải bảo đảm tính:", a: { A: "“Vững chắc”.", B: "“Kiên cố”.", C: "“Lưỡng dụng”.", D: "“Khoa học”." }, true: "C" },
+            { q: "Một trong những giải pháp kết hợp phát triển kinh tế - xã hội với tăng cường củng cố quốc phòng - an ninh?", a: { A: "Tăng cường sự lãnh đạo của Đảng và hiệu lực quản lý nhà nước của chính quyền các cấp.", B: "Tăng cường sự lãnh đạo của Đảng và hiệu lực quản lý của công an.", C: "Kết hợp trong nhiệm vụ chiến lược bảo vệ Tổ quốc.", D: "Kết hợp trong chiến lược phát triển kinh tế - xã hội." }, true: "A" },
+            { q: "“Thắng lợi hay thất bại của chiến tranh đều phụ thuộc vào điều kiện kinh tế ”. Ai khẳng định?", a: { A: "V.I.Lênin.", B: "Ph. Ăngghen.", C: "C. Mác.", D: "Hồ Chí Minh." }, true: "B" },
+            { q: "Nơi có mật độ dân cư và tính chất đô thị hóa cao; tập trung các đầu mối giao thông quan trọng, các sân bay, bến cảng, kho tàng là:", a: { A: "Đặc điểm về khoa học công nghệ các vùng kinh tế trọng điểm.", B: "Đặc điểm về an ninh các vùng kinh tế trọng điểm.", C: "Đặc điểm về quốc phòng các vùng kinh tế trọng điểm.", D: "Đặc điểm về kinh tế các vùng kinh tế trọng điểm." }, true: "D" },
+            { q: "Là địa bàn sinh sống chủ yếu của đồng bào dân tộc ít người, mật độ dân số thấp, kinh tế chậm phát triển, trình độ dân trí thấp, đời sống dân cư còn nhiều khó khăn là:", a: { A: "Đặc điểm của đồng bằng sông Cửu Long.", B: "Đặc điểm của các vùng biển.", C: "Đặc điểm của các vùng núi biên giới.", D: "Đặc điểm của vùng núi biên giới." }, true: "C" },
+            { q: "Chọn câu sai. Các chính sách kết hợp phát triển kinh tế - xã hội với tăng cường củng cố quốc phòng - an ninh của ông cha ta?", a: { A: "Khoan thư sức dân.", B: "Tiên phát chế nhân.", C: "Động vi binh, tĩnh vi dân.", D: "Ngụ binh ư nông." }, true: "B" },
+            { q: "Trong quy hoạch, kế hoạch xây dựng các thành phố, các khu công nghiệp cần lựa chọn quy mô trung bình, bố trí phân tán, trải dài... để làm gì?", a: { A: "Hạn chế thiệt hại khi chiến tranh xảy ra.", B: "Thu hút các nhà đầu tư nước ngoài.", C: "Khai thác tiềm năng của từng địa phương.", D: "Điều chỉnh mật độ dân cư." }, true: "A" },
+            { q: "“Việt Nam là bạn, là đối tác tin cậy...”. Đảng ta khẳng định trong:", a: { A: "Văn kiện đại hội Đảng toàn quốc lần thứ XI.", B: "Văn kiện đại hội Đảng toàn quốc lần thứ X.", C: "Văn kiện đại hội Đảng toàn quốc lần thứ IX.", D: "Văn kiện đại hội Đảng toàn quốc lần thứ VIII." }, true: "A" },
+            { q: "Thực chất kết hợp phát triển kinh tế - xã hội với tăng cường quốc phòng - an ninh nhằm:", a: { A: "Tạo tiềm lực sức mạnh cho nền kinh tế đất nước phát triển.", B: "Tạo điều kiện thuận lợi cho xây dựng khu vực phòng thủ.", C: "Triển khai xây dựng vùng kinh tế chiến lược của đất nước.", D: "Thực hiện thắng lợi hai nhiệm vụ chiến lược xây dựng và bảo vệ Tổ quốc." }, true: "D" },
+
+            // --- BÀI: NGHỆ THUẬT QUÂN SỰ VIỆT NAM ---
+            { q: "Lịch sử dân tộc ta từ khi lập nước đến nay đã trải qua 14 cuộc chiến tranh lớn, nhỏ để:", a: { A: "Đánh bại mọi kẻ thù.", B: "Giải phóng dân tộc.", C: "Bảo vệ Tổ quốc.", D: "Bảo vệ Tổ quốc và giải phóng dân tộc." }, true: "D" },
+            { q: "Trong lịch sử đấu tranh dựng nước và giữ nước của dân tộc. Người Việt muốn tồn tại, bảo vệ cuộc sống và nền văn hóa của mình chỉ có con đường duy nhất là:", a: { A: "Đứng lên đánh giặc giữ nước.", B: "Đoàn kết đứng lên đánh giặc giữ nước.", C: "Có giai cấp lãnh đạo đánh giặc giữ nước.", D: "Có lực lượng vũ trang làm nòng cốt đánh giặc." }, true: "B" },
+            { q: "Cuộc khởi nghĩa Lam Sơn năm 1418 – 1427 do ai lãnh đạo?", a: { A: "Lê Lợi – Nguyễn Trãi.", B: "Nguyễn Trãi - Trần Nguyên Hãn.", C: "Quang Trung - Ngô Thì Nhậm.", D: "Trần Quốc Tuấn – Trần Quang Khải." }, true: "A" },
+            { q: "Thời nhà Trần chống quân Nguyên - Mông lần thứ 2 diễn ra vào thời gian nào?", a: { A: "Năm 1258.", B: "Năm 1285.", C: "Năm 1287.", D: "Năm 1288." }, true: "B" },
+            { q: "Mặt trận nào giữ vai trò quyết định đến thắng lợi trong chiến tranh?", a: { A: "Ngoại giao.", B: "Kinh tế.", C: "Quân sự.", D: "Chính trị." }, true: "C" },
+            { q: "Trong lịch sử chống giặc ngoại xâm. Ai là người lãnh đạo quân dân ta đã giành thắng lợi đánh quân Nam Hán ở đâu, thời gian nào?", a: { A: "Lý Thường Kiệt trên sông Như Nguyệt, năm 1077.", B: "Ngô Quyền trên sông Bạch Đằng, năm 938.", C: "Lê Lợi – Nguyễn Trãi cuộc khởi nghĩa Lam Sơn, năm 1418", D: "Quang Trung với cuộc hành quân thần tốc vào mùa xuân Kỉ Dậu 1789." }, true: "B" },
+            { q: "Kể từ khi Đảng Cộng sản Việt Nam ra đời và lãnh đạo, nghệ thuật quân sự Việt Nam đã có bước phát triển về chất so với nghệ thuật truyền thống, cơ sở nào quyết định:", a: { A: "Chủ nghĩa C.Mác – V.I.Lênin, tư tưởng Hồ Chí Minh.", B: "Truyền thống và nghệ thuật đánh giặc của dân tộc.", C: "Truyền thống yêu nước và tinh thần đoàn kết chiến đấu của dân tộc.", D: "Sức mạnh dân tộc kết hợp sức mạnh thời đại." }, true: "A" },
+            { q: "Tổng thể phương châm, chính sách và mưu lược được hoạch định để ngăn ngừa và sẵn sàng tiến hành chiến tranh thắng lợi. Được xác định là:", a: { A: "Nghệ thuật chiến dịch.", B: "Chiến lược quân sự.", C: "Nghệ thuật chiến thuật.", D: "Phương án a, c đúng." }, true: "B" },
+            { q: "Chiến lược quân sự, nghệ thuật chiến dịch và nghệ thuật chiến thuật. Được xác định là:", a: { A: "Nghệ thuật chiến dịch.", B: "Chiến lược quân sự.", C: "Nghệ thuật quân sự Việt Nam.", D: "Nghệ thuật chiến thuật." }, true: "C" },
+            { q: "Ba lần tiến công xâm lược nước ta, đế quốc Nguyên - Mông thực hiện vào những năm nào?", a: { A: "Năm 1258, 1285 và 1287 – 1288.", B: "Năm 1285, 1286 và 1287 – 1288.", C: "Năm 1258, 1285 và 1288 – 1289.", D: "Năm 1258, 1285 và 1289 – 1290." }, true: "A" },
+            { q: "Cuộc chiến tranh nào dưới đây được coi là chiến tranh giải phóng dân tộc?", a: { A: "Kháng chiến chống Pháp năm 1945 – 1954.", B: "Kháng chiến chống Mĩ năm 1954 – 1975.", C: "Phương án a và b đúng.", D: "Chiến tranh hai đầu biên giới năm 1979 - 1989." }, true: "C" },
+            { q: "Trong lịch sử đấu tranh dựng nước và giữ nước... “Khoan thư sức dân, để làm kế sâu rễ bền gốc”, là kế sách của ai?", a: { A: "Quang Trung.", B: "Lê Lợi.", C: "Trần Quốc Tuấn.", D: "Nguyễn Trãi." }, true: "C" },
+            { q: "Trong nghệ thuật quân sự Việt Nam. Bộ phận nào dưới đây giữ vai trò chủ đạo?", a: { A: "Chiến lược quân sự.", B: "Nghệ thuật chiến dịch.", C: "Nghệ thuật chiến thuật.", D: "Phương án a, b, c đúng." }, true: "A" },
+            { q: "Người phất cờ khởi nghĩa tại núi Nưa – Triệu Sơn – Thanh Hóa, vào năm nào?", a: { A: "Triệu Thị Trinh, năm 248.", B: "Trưng Nữ Vương, năm 248.", C: "Công chúa Ngọc Hân, năm 1770 - 1799.", D: "Bùi Thị Xuân, năm 1802." }, true: "A" },
+            { q: "Trước đối tượng tác chiến là quân Nguyên Mông có sức mạnh hơn ta nhiều lần... ta đã:", a: { A: "Rút lui chiến lược để bảo toàn lực lượng.", B: "Rút lui chiến lược để tổ chức phòng ngự.", C: "Rút lui chiến lược, tạm nhường Thăng Long cho giặc trong thời gian nhất định.", D: "Rút lui chiến lược để tạo lập thế trận." }, true: "C" },
+            { q: "Chiến dịch Điện Biên Phủ năm 1954, được xác định là loại hình chiến dịch gì?", a: { A: "Tiến công.", B: "Phòng ngự.", C: "Phản công.", D: "Tập kích." }, true: "A" },
+            { q: "“Sức dùng một nửa mà công được gấp đôi”. Được xác định là:", a: { A: "Nghệ thuật tạo sức mạnh thế thời, mưu kế.", B: "Nghệ thuật tạo sức mạnh bằng mưu kế, lực lượng.", C: "Nghệ thuật tạo sức mạnh tổng hợp bằng lực, thế, thời và mưu kế.", D: "Nghệ thuật tạo sức mạnh bằng lực lượng, mưu kế." }, true: "C" },
+            { q: "Để đánh thắng 29 vạn quân xâm lược Mãn Thanh... Quang Trung đã dùng lối đánh:", a: { A: "Đánh chắc, tiến chắc, bất ngờ.", B: "Thần tốc, táo bạo.", C: "Táo bạo, thần tốc, bất ngờ.", D: "Thần tốc, quyết chiến, quyết thắng." }, true: "C" },
+            { q: "“Đánh cho để dài tóc, đánh cho để đen răng...”. Câu nói trên của ai?", a: { A: "Quang Trung.", B: "Lê Lợi.", C: "Trần Quốc Tuấn.", D: "Lý Thường Kiệt." }, true: "A" },
+            { q: "Nghĩa quân Tây Sơn tiêu diệt 5 vạn quân Xiêm tại đâu? Vào năm nào?", a: { A: "Rạch Gầm Xoài Mút, năm 1783.", B: "Rạch Gầm Xoài Mút, năm 1784.", C: "Rạch Gầm Xoài Mút, năm 1785.", D: "Rạch Gầm Xoài Mút, năm 1786." }, true: "C" },
+
+            // --- BÀI: CHIẾN TRANH NHÂN DÂN ---
+            { q: "Một trong những biện pháp khi tiến hành chiến tranh nhân dân, toàn dân đánh giặc theo quan điểm của Đảng là:", a: { A: "Tăng cường giáo dục quốc phòng, an ninh cho lực lượng vũ trang nhân dân.", B: "Tăng cường giáo dục quốc phòng, an ninh cho mọi tầng lớp nhân dân.", C: "Tăng cường giáo dục quốc phòng, an ninh cho học sinh, sinh viên.", D: "Tăng cường giáo dục quốc phòng an ninh cho thế hệ trẻ." }, true: "B" },
+            { q: "Điền vào chỗ trống: Tiến hành chiến tranh nhân dân bảo vệ Tổ quốc, lấy đấu tranh quân sự là chủ yếu, .... là yếu tố quyết định.", a: { A: "Thắng lợi trên chiến trường.", B: "Thắng lợi trên mặt trận chính trị.", C: "Thắng lợi trên mặt trận kinh tế.", D: "Phương án a, b, c đúng." }, true: "A" },
+            { q: "Khi tiến hành chiến tranh nhân dân cần kết hợp tác chiến của:", a: { A: "Quân đội nhân dân với công an nhân dân.", B: "Bộ đội chủ lực với bộ đội địa phương.", C: "Lực lượng vũ trang địa phương với các binh đoàn chủ lực.", D: "Bộ đội chủ lực với bộ đội biên phòng." }, true: "C" },
+            { q: "Mục đích của chiến tranh nhân dân là:", a: { A: "Làm thất bại chiến lược “Diễn biến hòa bình” của các thế lực thù địch", B: "Sử dụng tiềm lực của đất nước, nhất là tiềm lực quốc phòng, an ninh nhằm đánh bại ý đồ xâm lược của kẻ thù.", C: "Làm thất bại âm mưu, thủ đoạn bạo loạn lật đổ của các thế lực thù địch.", D: "Phương án a, b, c đúng" }, true: "D" },
+            { q: "Chiến tranh nhân dân bảo vệ Tổ quốc Việt Nam xã hội chủ nghĩa là cuộc chiến tranh toàn dân, toàn diện. Trong đó lực lượng nào làm nòng cốt?", a: { A: "Lực lượng quân đội và công an.", B: "Lực lượng quân đội.", C: "Lực lượng vũ trang ba thứ quân.", D: "Lực lượng vũ trang địa phương." }, true: "C" },
+            { q: "Chiến tranh nhân dân bảo vệ Tổ quốc Việt Nam XHCN là cuộc chiến tranh hiện đại về vũ khí, trang bị, tri thức và nghệ thuật quân sự. Được hiểu là:", a: { A: "Điểm mạnh của chiến tranh.", B: "Đặc điểm của chiến tranh.", C: "Tính chất của chiến tranh.", D: "Quan điểm của chiến tranh." }, true: "C" },
+            { q: "“Trong chiến tranh mạng được yếu thua, sĩ quan quân đội Mỹ được đào tạo đầy đủ bài bản hơn sĩ quan quân đội Việt Nam... mà trong thế trận ai xử trí nhanh hơn người đó sẽ giành chiến thắng”. Câu nói trên là của ai?", a: { A: "Đại tướng Phạm Văn Trà.", B: "Đại tướng Võ Nguyên Giáp.", C: "Thượng tướng Hoàng Minh Thảo.", D: "Đại tướng Nguyễn Chí Thanh." }, true: "C" },
+            { q: "Chọn câu trả lời sai. Tính chất xã hội của các cuộc chiến tranh?", a: { A: "Chính nghĩa và phi nghĩa.", B: "Thế giới và cục bộ.", C: "Cách mạng và phản cách mạng.", D: "Tiến bộ và phản động." }, true: "B" },
+            { q: "“Mỹ đánh Việt Nam mà không hiểu Việt Nam, không hiểu lịch sử, địa lý, văn hóa, phong tục, con người dân tộc nói chung... Chúng tôi có một học thuyết quân sự độc đáo, mưu trí sáng tạo”. Ai khẳng định?", a: { A: "Đại tướng Võ Nguyên Giáp.", B: "Chủ tịch Hồ Chí Minh.", C: "Đại tướng Văn Tiến Dũng.", D: "Đại tướng Nguyễn Chí Thanh." }, true: "A" },
+            { q: "Bản chất của chiến tranh?", a: { A: "Là sự kế tục của chính trị bằng thủ đoạn bạo lực.", B: "Là thủ đoạn của kinh tế, chính trị xã hội.", C: "Là qui luật của xã hội loài người.", D: "Là bản chất của xã hội loài người." }, true: "A" },
+            { q: "Lực lượng nòng cốt của chiến tranh nhân dân?", a: { A: "Lực lượng vũ trang nhân dân.", B: "Bộ đội chủ lực.", C: "Hải quân, cảnh sát biển.", D: "Bộ đội địa phương." }, true: "A" },
+            { q: "Tiêu chí để phân biệt tính chất chiến tranh chính nghĩa và phi nghĩa?", a: { A: "Mục đích của cuộc chiến tranh.", B: "Chủng loại vũ khí dùng trong chiến tranh.", C: "Hoàn cảnh tiến hành chiến tranh.", D: "Phương án a, b đúng." }, true: "A" }
+        ],
+
+        qp34: [
+            // --- BÀI: VŨ KHÍ HỦY DIỆT LỚN ---
+            { q: "Vũ khí hủy diệt lớn dựa trên cơ sở sử dụng năng lượng rất lớn được giải phóng ra từ phản ứng phân hạch dây truyền và phản ứng tổng hợp hạt nhân để tiêu diệt các mục tiêu. Được xác định là:", a: { A: "Khái niệm vũ khí hạt nhân.", B: "Khái niệm vũ khí hóa học.", C: "Khái niệm vũ khí sinh học.", D: "Khái niệm vũ khí lửa." }, true: "A" },
+            { q: "Có bao nhiêu nhân tố sát thương, phá hoại của vũ khí hạt nhân:", a: { A: "4 nhân tố.", B: "5 nhân tố.", C: "6 nhân tố.", D: "7 nhân tố." }, true: "B" },
+            { q: "Bức xạ quang của vũ khí hạt nhân chiếm bao nhiêu phần trăm năng lượng của vụ nổ:", a: { A: "50 %", B: "35 %", C: "10 %", D: "5 %" }, true: "B" },
+            { q: "Nhân tố sát thương, phá hoại đặc trưng của vũ khí hạt nhân là:", a: { A: "Bức xạ quang.", B: "Chất phóng xạ.", C: "Hiệu ứng điện từ.", D: "Bức xạ xuyên (phóng xạ xuyên)." }, true: "D" },
+            { q: "Là vũ khí hủy diệt lớn mà tác dụng sát thương trên cơ sở sử dụng độc tính của các chất độc quân sự để gây độc đối với người, sinh vật và phá hủy môi trường sinh thái:", a: { A: "Khái niệm vũ khí hạt nhân.", B: "Khái niệm vũ khí hóa học.", C: "Khái niệm vũ khí sinh học.", D: "Khái niệm vũ khí lửa." }, true: "B" },
+            { q: "Phạm vi gây tác hại rộng của vũ khí hóa học phụ thuộc vào yếu tố:", a: { A: "Phương pháp sử dụng, loại chất độc.", B: "Phụ thuộc vào địa hình và thời tiết.", C: "Phụ thuộc đối tượng sử dụng.", D: "Cả A và B đều đúng." }, true: "D" },
+            { q: "Căn cứ cách phân loại chất độc hóa học theo bệnh lý được chia thành:", a: { A: "4 nhóm.", B: "5 nhóm.", C: "6 nhóm.", D: "7 nhóm." }, true: "C" },
+            { q: "Dịch sử dụng phương pháp truyền bệnh dịch hạch là:", a: { A: "Người mắc bệnh dịch hạch truyền sang người lành.", B: "Chuột bị nhiễm bệnh và truyền sang người (do chuột cắn).", C: "Do côn trùng đốt (Bọ chét).", D: "Do muỗi đốt." }, true: "C" },
+            { q: "Việt Nam ký hiệp ước cấm phổ biến vũ khí hạt nhân (NPT) thời gian nào:", a: { A: "Tháng 6/1968.", B: "Tháng 6/1982.", C: "Tháng 6/1994.", D: "Tháng 3/2006." }, true: "B" },
+
+            // --- BÀI: TỪNG NGƯỜI TRONG CHIẾN ĐẤU TIẾN CÔNG & PHÒNG NGỰ ---
+            { q: "Trong chiến đấu tiến công, trước khi vận động đến gần địch người chiến sỹ phải:", a: { A: "Quan sát địch, địa hình, thời tiết, ánh sáng.", B: "Xác định đường, hướng vận động, vị trí tạm dừng.", C: "Xác định cách nghi binh, lừa địch trên đường vận động.", D: "Phương án A, B, C đúng." }, true: "D" },
+            { q: "Chiến sĩ thường nhận nhiệm vụ chiến đấu từ:", a: { A: "Tiểu đoàn trưởng giao.", B: "Đại đội trưởng giao.", C: "Trung đội trưởng giao.", D: "Tổ trưởng hoặc tiểu đội trưởng giao." }, true: "D" },
+            { q: "Từng người trong chiến đấu tiến công, cấp trên thường giao nhiệm vụ cho chiến sĩ ở:", a: { A: "Trên bản đồ địa hình.", B: "Trên sa bàn.", C: "Ngay tại thực địa.", D: "Trên cả sa bàn và bản đồ địa hình." }, true: "C" },
+            { q: "Hiệp đồng trong chiến đấu nhằm mục đích:", a: { A: "Giữ vững trận địa, tạo nên yếu tố bí mật bất ngờ.", B: "Tạo nên sức mạnh tổng hợp, chi viện, hỗ trợ cho nhau.", C: "Nhằm phát huy cao độ hiệu quả các loại vũ khí.", D: "Giữ vững trận địa, tiêu diệt địch nhanh làm chủ trận địa." }, true: "B" },
+            { q: "Bí mật bất ngờ tính khôn mưu mẹo. Được xác định là:", a: { A: "Một trong những yêu cầu chiến thuật.", B: "Một trong những nhiệm vụ.", C: "Một trong những cách đánh.", D: "Một trong những nguyên tắc." }, true: "A" },
+            { q: "Một trong những nhiệm vụ của từng người trong chiến đấu phòng ngự:", a: { A: "Tiêu diệt và đánh bại địch tiến công phía trước, hai bên sườn, và trên không trận địa phòng ngự của ta.", B: "Xây dựng công sự chiến đấu vững chắc, ngụy trang bí mật.", C: "Vận chuyển vũ khí, đạn và làm nhiệm vụ.", D: "Tham gia làm nhiệm vụ đánh địch vòng ngoài." }, true: "A" },
+            { q: "Một trong những yêu cầu chiến thuật của từng người trong chiến đấu phòng ngự:", a: { A: "Có quyết tâm chiến đấu cao, chuẩn bị mọi mặt chu đáo, bảo đảm đánh địch dài ngày.", B: "Đánh nhanh, sục sạo kỹ, vừa đánh vừa địch vận.", C: "Độc lập chiến đấu, chủ động hiệp đồng, liên tục chiến đấu.", D: "Bí mật bất ngờ tính khôn mưu mẹo." }, true: "A" },
+            { q: "Hành động của từng người sau mỗi lần đánh lùi các đợt tiến công của địch:", a: { A: "Chủ động cứu chữa thương binh, củng cố công sự trận địa, bổ sung vật chất.", B: "Nhận nhiệm vụ mới do cấp trên giao, làm công tác chuẩn bị...", C: "Nhanh chóng rời khỏi trận địa và sẵn sàng nhận nhiệm vụ tiếp theo.", D: "Làm lực lượng dự bị hỗ trợ đồng đội đánh địch tiến công trận địa." }, true: "A" },
+
+            // --- BÀI: THUỐC NỔ VÀ ĐỒ DÙNG GÂY NỔ ---
+            { q: "Một hợp chất hoặc một hỗn hợp hóa học, khi bị tác động như nhiệt, thi có phản ứng nổ sinh nhiệt cao. Lượng khí lớn tạo thành áp lực mạnh phá hủy các vật thể xung quanh. Được xác định là:", a: { A: "Khái niệm thuốc nổ.", B: "Tác dụng thuốc nổ.", C: "Yêu cầu thuốc nổ.", D: "Đặc điểm thuốc nổ." }, true: "A" },
+            { q: "Dùng để tiêu diệt sinh lực địch, phá huỷ phương tiện chiến tranh, công sự, vật cản của địch, tăng tốc độ phá đất đá, làm công sự, khai thác gỗ... là:", a: { A: "Khái niệm.", B: "Tác dụng.", C: "Yêu cầu.", D: "Đặc điểm." }, true: "B" },
+            { q: "Tốc độ cháy trung bình trong không khí của dây cháy chậm là:", a: { A: "1 cm/giây.", B: "2 cm/giây.", C: "3 cm/giây.", D: "4 cm/giây." }, true: "A" },
+            { q: "Tốc độ truyền nổ của dây nổ là:", a: { A: "6.500 mét/giây.", B: "5.500 mét/giây.", C: "4.500 mét/giây.", D: "3.500 mét/giây." }, true: "A" },
+            { q: "Đồ dùng gây nổ bao gồm:", a: { A: "Thuốc nổ, dây cháy chậm, nụ xòe.", B: "Kíp nổ, dây cháy chậm, nụ xòe.", C: "Kíp, nụ xòe, dây cháy chậm, dây nổ.", D: "Kíp nổ thường, thuốc nổ, nụ xoè." }, true: "C" },
+            { q: "Phân loại cấu tạo vật liệu vỏ kíp có:", a: { A: "2 loại: Kíp đồng và kíp nhôm.", B: "5 loại: Kíp đồng, kíp nhôm, kíp nhựa, kíp giấy và kíp sắt.", C: "3 loại: Kíp đồng, kíp nhôm và kíp giấy.", D: "4 loại: Kíp đồng, kíp nhôm, kíp nhựa và kíp giấy." }, true: "C" },
+            { q: "Cấu tạo của kíp thường có bao nhiêu bộ phận:", a: { A: "4 bộ phận.", B: "3 bộ phận.", C: "5 bộ phận.", D: "6 bộ phận." }, true: "A" },
+            { q: "Lượng nổ dài thường dùng để đánh, phá các loại mục tiêu nào?", a: { A: "Đánh ụ súng lô cốt.", B: "Đánh xe tăng xe bọc thép.", C: "Đánh địch ở ngã ba hào.", D: "Hàng rào dây thép gai, tường, bãi mìn." }, true: "D" },
+            { q: "Tốc độ nổ của thuốc nổ TNT là:", a: { A: "5.500 - 8.800 m/s.", B: "4.700 - 7.000 m/s.", C: "4.000 - 5.800 m/s.", D: "3.300 - 4.000 m/s." }, true: "B" },
+            { q: "Tốc độ nổ của thuốc nổ C4 là:", a: { A: "4.700 m/s.", B: "8.400 m/s.", C: "7.380 m/s.", D: "6.800 m/s." }, true: "C" },
+            { q: "Đặc điểm nhận dạng của thuốc nổ C4:", a: { A: "Màu xanh nhạt, dẻo, mùi hắc vị nhạt.", B: "Màu trắng đục, dẻo, mùi hắc vị nhạt.", C: "Màu nâu úa, dẻo, mùi hắc vị nhạt.", D: "Màu đen hạt dẻ, dẻo, mùi hắc vị nhạt." }, true: "B" },
+            // --- BÀI: KỸ THUẬT BẮN SÚNG TIỂU LIÊN AK ---
+            { q: "Khi bắn súng tiểu liên AK, nếu có gió ngang so với hướng bắn thì:", a: { A: "Làm cho đầu đạn bay thấp và gần hơn.", B: "Làm cho đầu đạn bay cao và gần hơn.", C: "Làm cho đầu đạn lệch theo chiều hướng gió.", D: "Làm cho đầu đạn bay theo chiều ngược hướng gió." }, true: "C" },
+            { q: "Nếu đầu ngắm thấp hơn mép trên khe ngắm và lệch phải, thì điểm chạm:", a: { A: "Cao hơn so với điểm bắn trúng.", B: "Thấp hơn và lệch sang phải so với điểm bắn trúng.", C: "Không cao, không thấp so với điểm bắn trúng.", D: "Cao hơn và lệch sang phải so với điểm định bắn trúng." }, true: "B" },
+            { q: "Góc tạo bởi trục nòng súng khi đã lấy xong đường ngắm và trục nòng súng ở thời điểm đạn ra khỏi nòng:", a: { A: "Khái niệm góc nảy.", B: "Khái niệm góc bắn.", C: "Đặc điểm của đường đạn.", D: "Đặc điểm của ngắm bắn." }, true: "A" },
+            { q: "Tính từ khi bóp cò cho đến khi kết thúc chuyển động về phía trước của kim hỏa. Được xác định là:", a: { A: "Giới hạn thời kỳ giật thứ nhất.", B: "Giới hạn thời kỳ giật thứ hai.", C: "Giới hạn thời kỳ giật thứ ba.", D: "Tất cả phương án trên đúng." }, true: "A" },
+            { q: "Khi bắn súng trung liên RPĐ, trong điều kiện lý tưởng, tầm bay xa nhất của đầu đạn:", a: { A: "800 mét.", B: "1500 mét.", C: "3000 mét.", D: "3600 mét." }, true: "C" },
+
+            // --- BÀI: SỬ DỤNG BẢN ĐỒ ---
+            { q: "Phân loại bản đồ trong quân sự gồm:", a: { A: "3 loại. Bản đồ cấp chiến thuật; chiến dịch và chiến lược.", B: "3 loại. Bản đồ cấp chiến thuật; chiến dịch; chiến lược và địa lý đại cương.", C: "3 loại. Bản đồ cấp chiến thuật; chiến dịch; chiến lược và bản đồ địa hình.", D: "3 loại. Bản đồ cấp chiến thuật; cấp phân đội và cấp chiến lược." }, true: "A" },
+            { q: "Tỉ lệ bản đồ viết dưới dạng phân số, dùng để:", a: { A: "Chỉ tỉ số giữa độ chênh cao trên bản đồ với độ chênh cao tương ứng ngoài thực địa.", B: "Chỉ tỉ số độ dài trên bản đồ với độ cao, diện tích tương ứng ngoài thực địa.", C: "Chỉ tỉ số giữa diện tích trên bản đồ với diện tích tương ứng ngoài thực địa.", D: "Chỉ tỉ số giữa độ dài trên bản đồ với độ dài tương ứng ngoài thực địa." }, true: "D" },
+            { q: "Có mấy phương pháp định hướng bản đồ và kể tên các phương pháp đó:", a: { A: "3 phương pháp: Định hướng bằng địa bàn; Địa vật dài thẳng; Ống nhòm.", B: "3 phương pháp: Định hướng bằng địa bàn; Địa vật dài thẳng; Đường phương hướng giữa hai địa vật.", C: "4 phương pháp: Định hướng bằng địa bàn; Địa vật dài thẳng; Đường hướng giữa hai địa vật, và bằng sa bàn.", D: "4 phương pháp: Định hướng bằng địa bàn; Địa vật dài thẳng; Đường hướng giữa hai địa vật và bằng ống nhòm." }, true: "B" },
+            { q: "Tỉ lệ bản đồ là:", a: { A: "Tỉ số giữa độ dài trên bản đồ với độ dài thật ngoài thực địa.", B: "Tỉ số giữa diện tích trên bản đồ với diện tích thật ngoài thực địa.", C: "Tỉ số giữa độ dài trên bản đồ với diện tích thật ngoài thực địa.", D: "Tỉ số giữa diện tích trên bản đồ với độ dài thật ngoài thực địa." }, true: "A" },
+
+            // --- BÀI: KỸ THUẬT BĂNG BÓ CHUYỂN THƯƠNG ---
+            { q: "Đưa cuộn băng đi nhiều vòng từ dưới lên trên theo hình vòng xoắn lò xo như hình con rắn quấn quanh thân cây. Được xác định là:", a: { A: "Băng vòng xoắn.", B: "Băng vòng.", C: "Băng dấu nhân.", D: "Băng số 8." }, true: "A" },
+            { q: "Băng số 8 là:", a: { A: "Đưa cuộn băng đi vòng theo hình số chữ nhân, theo hình vòng xoắn lò xo.", B: "Đưa cuộn băng đi vòng theo hình lò xo.", C: "Đưa cuộn băng đi vòng theo hình số 8, theo hình vòng xoắn lò xo.", D: "Đưa cuộn băng đi vòng theo hình số 8." }, true: "C" },
+            { q: "Các loại băng cơ bản thường dùng gồm:", a: { A: "Băng cá nhân, băng cuộn, băng dính.", B: "Băng cá nhân, băng cuộn, băng dính và băng dính.", C: "Băng cá nhân, băng cuộn, băng tam giác, băng bốn dải và băng dính.", D: "Băng cá nhân, băng tam giác và băng dính." }, true: "C" },
+            { q: "Cấp cứu ban đầu vết thương phần mềm:", a: { A: "Băng vết thương, đưa thương binh về nơi an toàn, chờ tổ chức vận chuyển về sau.", B: "Đưa thương binh về nơi an toàn, rồi băng vết thương, chờ dịp tổ chức vận chuyển về cơ sở điều trị.", C: "Đưa thương binh về nơi điều trị để tuyến sau cứu chữa.", D: "Nhanh chóng hô hấp nhân tạo." }, true: "A" },
+            { q: "Có mấy phương pháp cầm máu cơ bản:", a: { A: "3.", B: "4.", C: "5.", D: "6." }, true: "B" },
+            { q: "Bỏng nặng là chiếm bao nhiêu % diện tích cơ thể trở lên:", a: { A: "7%", B: "8%", C: "9%", D: "10%" }, true: "D" },
+
+            // --- BÀI: ĐIỀU LỆNH ĐỘI NGŨ ---
+            { q: "Đội hình đội ngũ của tiểu đội bộ binh gồm:", a: { A: "Một hàng ngang, hai hàng ngang, ba hàng ngang, bốn hàng ngang.", B: "Một hàng ngang, hai hàng ngang, một hàng dọc, hai hàng dọc.", C: "Hai hàng ngang, hai hàng dọc.", D: "Một hàng dọc, hai hàng dọc, ba hàng dọc, bốn hàng dọc." }, true: "B" },
+            { q: "Đội hình hàng dọc vị trí chỉ huy tiểu đội khi hành tiến:", a: { A: "Đi ở phía sau đội hình của tiểu đội, cách từ 2 - 3 bước.", B: "Đi ở bên trái đội hình của tiểu đội, cách từ 2 - 3 bước.", C: "Đi ở bên phải đội hình của tiểu đội, cách từ 3 - 5 bước.", D: "Đi ở bên trái đội hình của tiểu đội, cách từ 3 - 5 bước." }, true: "B" },
+            { q: "Khi vào vị trí tập hợp giãn cách giữa hai gót chân của hai người đứng cạnh nhau (hàng ngang) là:", a: { A: "50 cm.", B: "60 cm.", C: "70 cm.", D: "80 cm." }, true: "C" },
+            { q: "Thứ tự các bước thực hiện tập hợp đội hình tiểu đội một hàng dọc:", a: { A: "4 bước: 1 tập hợp, 2 điểm số, 3 chỉnh đốn hàng ngũ, 4 giải tán.", B: "3 bước: 1 tập hợp, 2 chỉnh đốn hàng ngũ, 3 giải tán.", C: "4 bước: 1 tập hợp, 2 chỉnh đốn hàng ngũ, 3 điểm số, 4 giải tán.", D: "3 bước: 1 tập hợp, 2 điểm số, 3 giải tán." }, true: "A" }
+        ],
+    };
+
+    // --- BIẾN CẤU HÌNH TOÀN CỤC ---
+    let isShuffle = true; 
+    let instantFeedback = false; 
+    let isTestSubmitted = false; 
+    let currentQuestions = [];
+    let userAnswers = {};
+    const questionsPerPage = 10; 
     let currentPage = 1;
-    const questionsPerPage = 20;
-    const totalPages = Math.ceil(allQuestions.length / questionsPerPage);
-    const userAnswers = {}; 
+    let totalPages = 1;
+    let displayModuleName = "";
+
+    function openSettings() {
+        document.getElementById('start-banner').style.display = 'flex';
+        document.getElementById('start-btn-action').innerText = "TẠO ĐỀ MỚI & LÀM LẠI";
+        document.getElementById('close-banner-btn').style.display = 'inline-block';
+    }
+
+    function closeSettings() {
+        document.getElementById('start-banner').style.display = 'none';
+    }
+
+    function startApp() {
+        isShuffle = document.getElementById('setting-shuffle').value === 'yes';
+        instantFeedback = document.getElementById('setting-answer').value === 'yes';
+        let moduleCode = document.getElementById('setting-module').value;
+        let limit = document.getElementById('setting-limit').value;
+        
+        document.getElementById('start-banner').style.display = 'none';
+        document.getElementById('main-content').style.display = 'block';
+
+        if(!instantFeedback) {
+            document.getElementById('submit-test-btn').style.display = 'inline-block';
+        } else {
+            document.getElementById('submit-test-btn').style.display = 'none';
+        }
+
+        generateTest(moduleCode, limit); 
+    }
+
+    function switchTab(moduleCode) {
+        document.getElementById('setting-module').value = moduleCode;
+        let limit = document.getElementById('setting-limit').value;
+        generateTest(moduleCode, limit);
+    }
+
+    function shuffleArray(array) {
+        let shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+    }
+
+    // TẠO ĐỀ THI DỰA TRÊN CẤU HÌNH
+    function generateTest(moduleCode, limit) {
+        userAnswers = {};
+        currentPage = 1;
+        isTestSubmitted = false; 
+
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        if(document.getElementById(`btn-${moduleCode}`)) {
+            document.getElementById(`btn-${moduleCode}`).classList.add('active');
+        }
+
+        if(moduleCode === 'qp1') displayModuleName = "QP1";
+        else if(moduleCode === 'qp2') displayModuleName = "QP2";
+        else if(moduleCode === 'qp34') displayModuleName = "QP3 & 4";
+        else displayModuleName = "TỔNG HỢP";
+
+        let sourceData = [];
+        if(moduleCode === 'all') {
+            sourceData = [...quizData.qp1, ...quizData.qp2, ...quizData.qp34];
+        } else {
+            sourceData = [...quizData[moduleCode]];
+        }
+
+        if(isShuffle) {
+            sourceData = shuffleArray(sourceData);
+        }
+
+        if(limit !== 'all') {
+            currentQuestions = sourceData.slice(0, parseInt(limit));
+        } else {
+            currentQuestions = sourceData;
+        }
+
+        if(currentQuestions.length === 0) {
+            document.getElementById('quiz-area').innerHTML = "<h3 style='text-align:center; color:#7f8c8d;'>Chưa có câu hỏi nào! Bạn hãy thêm dữ liệu vào code nhé.</h3>";
+            document.getElementById('global-stats').innerText = `Học phần: ${displayModuleName} | Đã làm: 0/0`;
+            return;
+        }
+
+        totalPages = Math.ceil(currentQuestions.length / questionsPerPage);
+        const select = document.getElementById('page-select');
+        select.innerHTML = '';
+        for (let i = 1; i <= totalPages; i++) {
+            let opt = document.createElement('option');
+            opt.value = i;
+            opt.innerHTML = `Trang ${i}`;
+            select.appendChild(opt);
+        }
+
+        updateStats();
+        renderQuiz();
+    }
 
     function renderQuiz() {
+        if(currentQuestions.length === 0) return;
         const quizArea = document.getElementById('quiz-area');
         quizArea.innerHTML = "";
         
         const start = (currentPage - 1) * questionsPerPage;
-        const end = Math.min(start + questionsPerPage, allQuestions.length);
+        const end = Math.min(start + questionsPerPage, currentQuestions.length);
 
         for (let i = start; i < end; i++) {
-            const item = allQuestions[i];
-            const qIndex = i;
-            
+            const item = currentQuestions[i];
             let answersHtml = "";
+            
             for (let key in item.a) {
-                let isChecked = userAnswers[qIndex] === key ? "checked" : "";
+                let isChecked = userAnswers[i] === key ? "checked" : "";
                 let classResult = "";
                 
-                if (userAnswers[qIndex]) {
-                    if (key === item.true) classResult = "correct";
-                    else if (userAnswers[qIndex] === key) classResult = "wrong";
+                if (userAnswers[i]) {
+                    if (instantFeedback || isTestSubmitted) {
+                        if (key === item.true) classResult = "correct";
+                        else if (userAnswers[i] === key) classResult = "wrong";
+                    } else {
+                        if (userAnswers[i] === key) classResult = "selected";
+                    }
                 }
+                
+                let disableInput = (instantFeedback && userAnswers[i]) || isTestSubmitted ? 'disabled' : '';
 
                 answersHtml += `
-                    <label class="answer-label ${classResult} ${userAnswers[qIndex] ? 'disabled' : ''}" id="lbl-${qIndex}-${key}">
-                        <input type="radio" name="q${qIndex}" value="${key}" ${isChecked} 
-                            onclick="handleAnswer(${qIndex}, '${key}')"> 
-                        ${key}. ${item.a[key]}
-                    </label>
-                `;
+                <label class="answer-label ${classResult} ${disableInput}" id="lbl-${i}-${key}">
+                    <input type="radio" name="q${i}" value="${key}" ${isChecked} 
+                    onclick="handleAnswer(${i}, '${key}')"> 
+                    <b>${key}.</b> ${item.a[key]}
+                </label>`;
             }
-
+            
             quizArea.innerHTML += `
-                <div class="question-box" id="box-${qIndex}">
-                    <div class="question-title">Câu ${i + 1}: ${item.q.replace(/^\d+\.\s*/, '')}</div>
-                    <div>${answersHtml}</div>
-                </div>
-            `;
+            <div class="question-box" id="box-${i}">
+                <div class="question-title">Câu ${i + 1}: ${item.q}</div>
+                <div>${answersHtml}</div>
+            </div>`;
         }
-        
         updateNavigation();
     }
 
     function handleAnswer(qIndex, selectedKey) {
         userAnswers[qIndex] = selectedKey;
-        const item = allQuestions[qIndex];
 
+        if(!instantFeedback && !isTestSubmitted) {
+            const allLabels = document.querySelectorAll(`#box-${qIndex} .answer-label`);
+            allLabels.forEach(lbl => lbl.classList.remove('selected'));
+            document.getElementById(`lbl-${qIndex}-${selectedKey}`).classList.add('selected');
+            updateStats();
+            return; 
+        }
+
+        const item = currentQuestions[qIndex];
         const allLabels = document.querySelectorAll(`#box-${qIndex} .answer-label`);
-        allLabels.forEach(lbl => lbl.classList.add('disabled')); 
-
+        allLabels.forEach(lbl => lbl.classList.add('disabled'));
+        
         const selectedLabel = document.getElementById(`lbl-${qIndex}-${selectedKey}`);
         const correctLabel = document.getElementById(`lbl-${qIndex}-${item.true}`);
 
@@ -472,32 +690,75 @@
             selectedLabel.classList.add('correct');
         } else {
             selectedLabel.classList.add('wrong');
-            correctLabel.classList.add('correct');
+            if(correctLabel) correctLabel.classList.add('correct');
         }
-
         updateStats();
+    }
+
+    // --- CÁC HÀM XỬ LÝ NỘP BÀI MỚI (XÓA BỎ NÚT CONFIRM THÔ KỆCH) ---
+
+    // 1. Mở Bảng Xác Nhận khi ấn "Nộp Bài Tổng"
+    function openConfirmModal() {
+        document.getElementById('confirm-modal').style.display = 'flex';
+    }
+
+    // 2. Đóng Bảng Xác Nhận nếu chọn "Hủy bỏ"
+    function closeConfirmModal() {
+        document.getElementById('confirm-modal').style.display = 'none';
+    }
+
+    // 3. Thực hiện chấm điểm nếu chọn "Đồng ý nộp"
+    function processSubmit() {
+        // Tắt bảng Xác nhận
+        document.getElementById('confirm-modal').style.display = 'none';
+
+        // Chấm điểm
+        isTestSubmitted = true;
+        renderQuiz(); 
+        updateStats();
+        
+        let correct = 0;
+        for (let idx in userAnswers) {
+            if (userAnswers[idx] === currentQuestions[idx].true) correct++;
+        }
+        let point = (correct / currentQuestions.length * 10).toFixed(1);
+        
+        // Hiện dữ liệu lên Bảng Điểm
+        document.getElementById('score-text').innerText = point + " Điểm";
+        document.getElementById('score-text').style.color = point >= 5 ? "#27ae60" : "#e74c3c";
+        document.getElementById('detail-text').innerText = `Trả lời đúng: ${correct} / ${currentQuestions.length} câu`;
+        
+        // Mở bảng Điểm
+        document.getElementById('result-modal').style.display = 'flex';
+        document.documentElement.scrollTop = 0;
+    }
+
+    // Đóng bảng điểm để xem đáp án
+    function closeResult() {
+        document.getElementById('result-modal').style.display = 'none';
+    }
+
+    // Đóng bảng điểm và mở Cài đặt làm lại
+    function openSettingsFromResult() {
+        document.getElementById('result-modal').style.display = 'none';
+        openSettings();
     }
 
     function updateStats() {
         let answered = Object.keys(userAnswers).length;
         let correct = 0;
-        for (let idx in userAnswers) {
-            if (userAnswers[idx] === allQuestions[idx].true) correct++;
+        if (instantFeedback || isTestSubmitted) {
+            for (let idx in userAnswers) {
+                if (userAnswers[idx] === currentQuestions[idx].true) correct++;
+            }
+            document.getElementById('global-stats').innerText = `Học phần: ${displayModuleName} | Đã làm: ${answered}/${currentQuestions.length} | Đúng: ${correct}`;
+        } else {
+            document.getElementById('global-stats').innerText = `Học phần: ${displayModuleName} | Đã làm: ${answered}/${currentQuestions.length} | Đang ẩn đáp án`;
         }
-        document.getElementById('global-stats').innerText = `Đã làm: ${answered}/${allQuestions.length} | Đúng: ${correct}`;
     }
 
-    function changePage(delta) {
-        currentPage += delta;
-        renderQuiz();
-        document.documentElement.scrollTop = 0; 
-    }
-
-    function goToPage(page) {
-        currentPage = parseInt(page);
-        renderQuiz();
-        document.documentElement.scrollTop = 0;
-    }
+    function changePage(delta) { currentPage += delta; renderQuiz(); document.documentElement.scrollTop = 0; }
+    function goToPage(page) { currentPage = parseInt(page); renderQuiz(); document.documentElement.scrollTop = 0; }
 
     function updateNavigation() {
         document.getElementById('page-info').innerText = `Trang ${currentPage} / ${totalPages}`;
@@ -505,46 +766,46 @@
         document.getElementById('next-btn').disabled = currentPage === totalPages;
         document.getElementById('page-select').value = currentPage;
     }
-
-    // --- PHẦN XỬ LÝ HIỆU ỨNG TUYẾT RƠI ---
     function createSnowflake() {
         const snowflake = document.createElement('div');
         snowflake.classList.add('snowflake');
-        
-        // Ngẫu nhiên hóa vị trí, kích thước và tốc độ
         snowflake.style.left = Math.random() * 100 + 'vw';
-        const size = Math.random() * 10 + 5 + 'px'; // Kích thước từ 5px đến 15px
+        const size = Math.random() * 10 + 5 + 'px'; 
         snowflake.style.width = size;
         snowflake.style.height = size;
-        snowflake.style.opacity = Math.random() * 0.6 + 0.2; // Độ mờ từ 0.2 đến 0.8
-        const duration = Math.random() * 5 + 5 + 's'; // Thời gian rơi từ 5s đến 10s
-        snowflake.style.animationDuration = duration;
-
-        // Tạo độ trôi dạt ngang ngẫu nhiên
         const drift = (Math.random() - 0.5) * 200 + 'px';
         snowflake.style.setProperty('--drift-x', drift);
-
+        const duration = Math.random() * 5 + 5 + 's';
+        snowflake.style.animationDuration = duration;
         document.body.appendChild(snowflake);
-
-        
+        setTimeout(() => { snowflake.remove(); }, parseFloat(duration) * 1000);
     }
+    setInterval(createSnowflake, 300);
 
-    // Khởi tạo
-    (function init() {
-        // Tạo options cho dropdown chọn trang
-        const select = document.getElementById('page-select');
-        for (let i = 1; i <= totalPages; i++) {
-            let opt = document.createElement('option');
-            opt.value = i;
-            opt.innerHTML = `Trang ${i}`;
-            select.appendChild(opt);
+
+
+    document.addEventListener('contextmenu', event => event.preventDefault());
+
+
+    document.onkeydown = function(e) {
+
+        if (e.keyCode === 123) {
+            return false;
         }
-        renderQuiz();
 
-        // Bắt đầu hiệu ứng tuyết rơi (tạo 1 bông mỗi 200ms)
-        setInterval(createSnowflake, 200);
-    })();
+        if (e.ctrlKey && e.shiftKey && e.keyCode === 73) {
+            return false;
+        }
+
+        if (e.ctrlKey && e.shiftKey && e.keyCode === 74) {
+            return false;
+        }
+
+        if (e.ctrlKey && e.keyCode === 85) {
+            return false;
+        }
+    };
+
 </script>
-
 </body>
 </html>
